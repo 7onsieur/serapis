@@ -111,18 +111,18 @@ class RedesignHonestyTests(unittest.TestCase):
     def test_modules_page_card_grid_preserves_unknown_title(self) -> None:
         body = self.client.get("/modules").text
         self.assertIn("SYN102", body)
-        self.assertIn("UNKNOWN", body)  # SYN102's title is genuinely unknown
+        self.assertIn("Title unknown", body)  # SYN102's title is genuinely unknown
 
     def test_provenance_tags_survive_the_redesign(self) -> None:
         body = self.client.get("/modules/SYN101/weeks/1").text
         self.assertIn("Lecture slides", body)
-        self.assertIn("UNLINKED", body)
-        self.assertIn("academic-state", body)
-        self.assertIn("intake-ledger", body)
+        self.assertIn("No source match", body)
+        self.assertIn("Course", body)
+        self.assertIn("Blackboard", body)
 
     def test_week_unknown_study_state_is_never_rendered_as_not_studied(self) -> None:
         body = self.client.get("/modules/SYN101/weeks/2").text
-        self.assertIn("UNKNOWN", body)
+        self.assertIn("No study record exists", body)
         self.assertNotIn("not studied", body.lower())
 
     def test_all_five_week_actions_still_present_as_forms(self) -> None:

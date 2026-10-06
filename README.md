@@ -1,80 +1,75 @@
-# Serapis by Limitless
+# Serapis
 
-Serapis is a local-first academic workflow assistant developed by Selom Topanou. Development is AI-assisted using Claude and ChatGPT/Codex.
+Serapis is a local-first academic organizer. It helps you keep modules, assessments, and course materials together, inspect what is known and where it came from, and optionally use AI for richer study help. Serapis is useful without AI and substantially more powerful with AI.
 
-It helps learners organise supplied course information, prepare bounded source-based context, capture their own lecture notes, and create study artefacts. The included dataset is explicitly fictional and uses Avery Example at Example University. Its sample assessment facts are invented and supported only by a clearly labelled synthetic brief.
+## Student quick start
 
-## Current capabilities
-
-- Loads and validates editable version 2 academic state.
-- Tracks `CONFIRMED`, `NEEDS_VERIFICATION`, or `UNKNOWN` for consequential module and assessment facts, with source IDs for evidence. Legacy values without evidence are never auto-confirmed.
-- Selects a requested module/week and its directly referenced sources.
-- Extracts local PDF text on macOS and builds bounded, source-labelled preparation context.
-- Uses a reasoning-provider boundary for preparation, teaching, quiz, revision, and assignment-planning workflows. OpenAI requests require configuration and may send the selected context externally.
-- Builds a persistent JSON academic record, Word study pack, and Markdown source for manual NotebookLM upload from cached preparation.
-- Captures learner-reported after-class notes locally without a model call.
-- Provides read-only Blackboard retrieval and optional Google Drive sync flows when explicitly invoked and configured.
-- Includes a localhost academic Hub. Loading a Hub page does not itself call Blackboard, Drive, or a model.
-
-These are bounded user-invoked workflows. Serapis does not monitor courses autonomously, measure mastery, predict grades, or guarantee academic outcomes.
-
-## Architecture
-
-Editable state lives in `data/academic-state.json`. The sample dataset is marked `fictional_example`; its assessment brief, facts, institutions and source materials are synthetic and contain no real university material. Other source files are referenced by project-relative locators and are not bundled. The `university_jarvis` Python package validates state, selects relevant sources, creates bounded workflow contexts, and stores generated workflow cache separately from the canonical study record. The internal Python package name remains `university_jarvis`; the product, package metadata, and command are Serapis.
-
-## Installation
-
-Python 3.11 or newer is required. Local PDF extraction currently uses macOS PDFKit. From this directory:
+Python 3.11 or newer is required.
 
 ```sh
 python3 -m venv .venv
-.venv/bin/pip install -e '.[test]'
-.venv/bin/serapis status
+.venv/bin/pip install -e .
+.venv/bin/serapis setup
 ```
 
-Install Playwright's Chromium browser only if using the optional browser-backed Blackboard sign-in flow.
-
-## Configuration and use
-
-Start with `./serapis status` or the installed `serapis status` command. The included state has one fictional module, `SYN101`, week 1. Preparation and model-backed workflows require a local source file at the locator in state and configured reasoning credentials. Set `OPENAI_API_KEY` for uncached reasoning, or configure a supported local credential source; `JARVIS_REASONING_MODEL` selects the model. Generated preparation is cached under `.jarvis-cache/`; `JARVIS_CACHE_DIR` changes that location. `JARVIS_STATE_FILE` selects another state file.
-
-To use your own materials, edit the state to reflect information you are permitted to use, place source files in your local project, and update their locators. Do not commit private course files, personal notes, generated study outputs, or credentials. Use `JARVIS_WORKSPACE_DIR` to choose where study records and derived files are stored.
-
-Example local commands:
+Setup creates or continues your private workspace. It does not change the fictional sample included with the project. You can add modules, assessments, and course files during setup, then open the Hub with:
 
 ```sh
-./serapis status
-./serapis prepare SYN101 --week 1
-./serapis workspace SYN101 --week 1
-./serapis after-lecture SYN101 --week 1 --notes "My recollection of the topic"
-./serapis teach SYN101 --week 1 --topic "questions and evidence"
-./serapis quiz SYN101 --week 1
+.venv/bin/serapis hub
 ```
 
-Blackboard commands require either `JARVIS_BLACKBOARD_BASE_URL` or an explicit `--base-url`. For example, set it to your institution's Blackboard host before using a Blackboard command. Sign in through your institution's sign-in/SSO in the dedicated browser profile when prompted. The API integration is read-only; retrieval and Drive sync are user initiated. Google Drive operations require Google OAuth configuration and can upload selected files.
+In the Hub, open a module to add or manage assessments and PDF or PowerPoint materials. Module and assessment details can be edited without editing JSON. The Hub is local to your computer and binds to `127.0.0.1` by default.
 
-## Privacy and external services
+## What works without AI
 
-State, sources, caches, and workspaces are local files. Model-backed commands may send the selected source excerpts, state-derived context, and user-entered notes to the configured provider. Blackboard retrieval sends requests to the configured institution host; Drive commands communicate with Google when invoked. NotebookLM upload is manual and sends the selected Markdown file to Google. Review provider and institutional policies before using personal or course material. Credentials and browser authentication state must remain private and outside version control.
+Setup, module and assessment management, supported material import, Hub navigation, academic picture, source inspection, and trust status are local. Serapis does not claim that an unknown fact is false or that a student-entered fact is confirmed.
 
-## NotebookLM
+## Optional AI study help
 
-Serapis can generate a Markdown study source from an existing academic record. Upload it manually through NotebookLM if desired. NotebookLM output is a study aid and is not automatically imported as academic evidence. See [NotebookLM workflow](docs/notebooklm-integration.md).
+To enable the current OpenAI-backed preparation, teaching, quiz, and revision features, install the AI extra and configure an API credential:
 
-## Academic integrity
+```sh
+.venv/bin/pip install -e '.[ai]'
+export OPENAI_API_KEY='your-key'
+```
 
-Serapis supports explanation, practice, organisation, planning, and critique. The learner remains responsible for checking institutional rules and producing their own assessed work. Verify generated claims against cited source material.
+AI actions are explicit. When used, selected source excerpts and relevant student input may be sent to OpenAI. Setup, imports, and ordinary Hub page loads do not call an AI provider. Review your institution's rules before using course material with an external provider.
 
-## Limitations and status
+## Local storage and privacy
 
-This is an early software candidate. PDF extraction support is platform dependent; Blackboard response shapes and institutional authentication vary. The sample dataset and source are fictional. Integrations require separate configuration and have not been exercised against external services as part of this project.
+Personal state, imported materials, records, and generated files are stored locally in the operating system's application-data location under `serapis`. `SERAPIS_HOME` selects a different workspace directory. Existing `JARVIS_STATE_FILE`, `JARVIS_WORKSPACE_DIR`, `JARVIS_CACHE_DIR`, `JARVIS_LEDGER_FILE`, and other explicit overrides continue to be honored. Credentials are not stored in academic state.
 
-## Development
+The repository's sample data is fictional and is separate from your personal workspace. Do not commit private course files, notes, generated study outputs, or credentials.
 
-Run the test suite offline with mocked providers and transports (the pytest fixture blocks real socket connections):
+## Supported materials and platforms
+
+- **PPTX:** direct text extraction uses Python's standard ZIP/XML libraries and is portable.
+- **PDF:** direct text extraction currently uses macOS PDFKit. On other platforms a PDF can be stored and managed, but its text cannot currently be extracted by Serapis.
+- **DOCX and other formats:** not currently supported for source text extraction/import.
+
+Text extraction can still fail for damaged files, image-only PDFs, or files without extractable text. Serapis reports that condition and does not send unextractable content to AI workflows.
+
+## Optional integrations
+
+Core installation includes the local Hub. Extra packages are available only for features that need them:
+
+```sh
+.venv/bin/pip install -e '.[ai]'          # OpenAI study workflows
+.venv/bin/pip install -e '.[blackboard]'  # browser-backed Blackboard sign-in
+.venv/bin/pip install -e '.[drive]'       # Google Drive sync
+.venv/bin/pip install -e '.[test]'        # development and tests
+```
+
+Blackboard and Drive features are advanced, explicitly invoked integrations. They are not needed for normal first use. Blackboard retrieval is read-only; Drive actions communicate with Google when invoked. No cloud account or hosted Serapis service is required.
+
+## Sample and development
+
+The fictional example is in `data/academic-state.json` and is marked as sample data. To inspect it without creating personal state, use a clean `SERAPIS_HOME` or point `JARVIS_STATE_FILE` at that file.
+
+Run the offline tests with:
 
 ```sh
 python3 -m pytest -q
 ```
 
-The suite blocks real network sockets globally. Tests use synthetic data and fakes. See [SECURITY.md](SECURITY.md) for reporting and local-data handling guidance. Licensed under Apache-2.0; see [LICENSE](LICENSE).
+Tests use synthetic data and block real network sockets. Serapis does not monitor courses autonomously, measure mastery, predict grades, or guarantee academic outcomes. Licensed under Apache-2.0; see [LICENSE](LICENSE).

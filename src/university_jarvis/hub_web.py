@@ -65,11 +65,14 @@ rendered by this module.
 from __future__ import annotations
 
 from pathlib import Path
+import os
+import sys
 from typing import Any, Callable, ContextManager
 from urllib.parse import parse_qsl
 
 from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, RedirectResponse
+from starlette.responses import Response
 from fastapi.templating import Jinja2Templates
 
 from . import hub_service
@@ -268,8 +271,128 @@ def create_app(
                 "modules": picture["modules"],
                 "dataset_kind": picture.get("dataset_kind"),
                 "active_nav": "home",
+                "setup_status": "Add a module to begin." if not picture["modules"] else f"{len(picture['modules'])} module(s) set up.",
             },
         )
+
+    @app.post("/modules", response_class=HTMLResponse)
+    async def add_module_route(request: Request) -> HTMLResponse:
+        from .student_setup import add_module
+        form = await _form_fields(request)
+        try:
+            add_module(form.get("code", ""), form.get("title", ""))
+            return RedirectResponse("/modules", status_code=303)
+        except StateError as exc:
+            picture = _picture(request)
+            return templates.TemplateResponse(request, "modules.html", {"modules": picture["modules"], "error": str(exc), "active_nav": "modules"}, status_code=400)
+
+    @app.post("/modules/{module_code}/edit", response_class=HTMLResponse)
+    async def edit_module_route(request: Request, module_code: str) -> HTMLResponse:
+        from .student_setup import update_module
+        form = await _form_fields(request)
+        try:
+            update_module(module_code, form.get("title", ""), new_code=form.get("code") or None)
+            return RedirectResponse("/modules", status_code=303)
+        except StateError as exc:
+            return _not_found(request, str(exc))
+
+    @app.post("/modules/{module_code}/remove")
+    def remove_module_route(request: Request, module_code: str) -> Response:
+        from .student_setup import remove_module
+        try:
+            remove_module(module_code)
+            return RedirectResponse("/modules", status_code=303)
+        except StateError as exc:
+            return _not_found(request, f"Module was not removed: {exc}")
+
+    @app.post("/modules/{module_code}/assessments", response_class=HTMLResponse)
+    async def add_assessment_route(request: Request, module_code: str) -> HTMLResponse:
+        from .student_setup import save_assessment
+        form = await _form_fields(request)
+        try:
+            save_assessment(module_code, title=form.get("title", ""), deadline=form.get("deadline", ""), weight_percent=form.get("weight", ""), requirements=form.get("requirements", ""))
+            return RedirectResponse(f"/modules/{module_code}", status_code=303)
+        except StateError as exc:
+            return _not_found(request, str(exc))
+
+    @app.post("/modules/{module_code}/assessments/{assessment_id}/remove")
+    def remove_assessment_route(request: Request, module_code: str, assessment_id: str) -> Response:
+        from .student_setup import remove_assessment
+        try:
+            remove_assessment(module_code, assessment_id)
+            return RedirectResponse(f"/modules/{module_code}", status_code=303)
+        except StateError as exc:
+            return _not_found(request, f"Assessment was not removed: {exc}")
+
+    @app.post("/modules/{module_code}/assessments/{assessment_id}/edit")
+    async def edit_assessment_route(request: Request, module_code: str, assessment_id: str) -> Response:
+        from .student_setup import save_assessment
+        form = await _form_fields(request)
+        try:
+            save_assessment(module_code, assessment_id=assessment_id, title=form.get("title", ""), deadline=form.get("deadline", ""), weight_percent=form.get("weight", ""), requirements=form.get("requirements", ""))
+            return RedirectResponse(f"/modules/{module_code}", status_code=303)
+        except StateError as exc:
+            return _not_found(request, f"Assessment was not saved: {exc}")
+
+    @app.post("/modules/{module_code}/materials", response_class=HTMLResponse)
+    async def add_material_route(request: Request, module_code: str) -> HTMLResponse:
+        from .student_setup import import_material
+        from .state import StateError
+        try:
+            form = await request.form()
+            upload = form.get("file")
+            if upload is None or not getattr(upload, "filename", ""):
+                raise StateError("Choose a PDF or PowerPoint (.pptx) file to add.")
+            week_text = str(form.get("week", "")).strip()
+            week = int(week_text) if week_text else None
+            import tempfile
+            scratch = Path(tempfile.gettempdir()) / ("serapis-upload-" + os.urandom(8).hex() + Path(upload.filename).suffix)
+            try:
+                scratch.write_bytes(await upload.read())
+                result = import_material(module_code, scratch, week=week)
+            finally:
+                scratch.unlink(missing_ok=True)
+            return RedirectResponse(f"/modules/{module_code}?imported=1", status_code=303)
+        except (StateError, ValueError, OSError) as exc:
+            return _not_found(request, f"Material could not be added: {exc}")
+
+    @app.post("/materials/{source_id}/remove")
+    def remove_material_route(request: Request, source_id: str) -> Response:
+        from .student_setup import remove_material
+        try:
+            remove_material(source_id)
+            return RedirectResponse("/modules", status_code=303)
+        except StateError as exc:
+            return _not_found(request, f"Material was not removed: {exc}")
+
+    @app.post("/materials/{source_id}/replace")
+    async def replace_material_route(request: Request, source_id: str) -> RedirectResponse:
+        from .student_setup import replace_material
+        form = await request.form()
+        upload = form.get("file")
+        if upload is None or not getattr(upload, "filename", ""):
+            return _not_found(request, "Choose a replacement PDF or PowerPoint file.")
+        import tempfile
+        scratch = Path(tempfile.gettempdir()) / ("serapis-replace-" + os.urandom(8).hex() + Path(upload.filename).suffix)
+        try:
+            scratch.write_bytes(await upload.read())
+            result = replace_material(source_id, scratch)
+            return RedirectResponse("/modules", status_code=303)
+        except (StateError, OSError) as exc:
+            return _not_found(request, f"Replacement was not saved: {exc}")
+        finally:
+            scratch.unlink(missing_ok=True)
+
+    @app.post("/materials/{source_id}/reassign")
+    async def reassign_material_route(request: Request, source_id: str) -> RedirectResponse:
+        from .student_setup import reassign_material
+        form = await _form_fields(request)
+        try:
+            week = int(form["week"]) if form.get("week", "").strip() else None
+            reassign_material(source_id, form.get("module_code", ""), week)
+            return RedirectResponse("/modules", status_code=303)
+        except (StateError, ValueError) as exc:
+            return _not_found(request, f"Material location was not changed: {exc}")
 
     @app.get("/modules", response_class=HTMLResponse)
     def modules(request: Request) -> HTMLResponse:
@@ -284,8 +407,11 @@ def create_app(
         module = _find_module(picture, module_code)
         if module is None:
             return _not_found(request, f"No module known as {module_code.upper()}.")
+        from .state import load_state
+        state = request.app.state.hub_state or load_state()
+        sources = [s for s in state.get("sources", []) if s.get("module_code", "").upper() == module_code.upper()]
         return templates.TemplateResponse(
-            request, "module.html", {"module": module, "dataset_kind": picture.get("dataset_kind"), "active_nav": "modules"}
+            request, "module.html", {"module": module, "materials": sources, "is_macos": sys.platform == "darwin", "dataset_kind": picture.get("dataset_kind"), "active_nav": "modules"}
         )
 
     @app.get("/modules/{module_code}/weeks/{week_number}", response_class=HTMLResponse)

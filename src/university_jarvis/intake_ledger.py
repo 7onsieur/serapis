@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from .sources import PROJECT_ROOT
-from .state import StateError
+from .state import StateError, personal_data_dir
 
 LEDGER_SCHEMA_VERSION = 1
 
@@ -29,7 +29,8 @@ def default_ledger_path() -> Path:
     configured = os.environ.get("JARVIS_LEDGER_FILE")
     if configured:
         return Path(configured)
-    return PROJECT_ROOT / "data" / "intake-ledger.json"
+    legacy = PROJECT_ROOT / "data" / "intake-ledger.json"
+    return legacy if legacy.exists() else personal_data_dir() / "intake-ledger.json"
 
 
 def new_ledger() -> dict[str, Any]:

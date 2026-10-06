@@ -11,7 +11,7 @@ from typing import Any, Callable, Protocol
 
 from .credentials import get_openai_api_key
 from .sources import PROJECT_ROOT, render_source_location
-from .state import StateError
+from .state import StateError, personal_data_dir
 
 
 DEFAULT_OPENAI_MODEL = "gpt-5.6-luna"
@@ -622,15 +622,14 @@ class OpenAIReasoningProvider:
         api_key = get_openai_api_key()
         if not api_key:
             raise ReasoningError(
-                "Reasoning cannot run because no OpenAI API credential is configured "
-                "in OPENAI_API_KEY or macOS Keychain"
+                "Reasoning cannot run because no OpenAI API credential is configured in OPENAI_API_KEY or macOS Keychain. For this AI action, install the optional AI extra and configure OPENAI_API_KEY; local setup and Hub features remain available without it."
             )
 
         try:
             from openai import OpenAI
         except ImportError as exc:
             raise ReasoningError(
-                "Reasoning cannot run because the OpenAI Python SDK is not installed"
+                "The OpenAI SDK is not installed. Run `pip install -e '.[ai]'` to enable AI study actions."
             ) from exc
 
         request = {
@@ -969,7 +968,8 @@ def _cache_key(
 
 def default_cache_dir(cache_name: str = "prepare") -> Path:
     configured = os.environ.get("JARVIS_CACHE_DIR")
-    root = Path(configured) if configured else PROJECT_ROOT / ".jarvis-cache"
+    legacy = PROJECT_ROOT / ".jarvis-cache"
+    root = Path(configured) if configured else (legacy if legacy.exists() else personal_data_dir() / "cache")
     return root / cache_name
 
 

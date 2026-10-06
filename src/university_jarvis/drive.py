@@ -46,6 +46,10 @@ class DriveError(StateError):
     """Raised for Google Drive client failures."""
 
 
+def _missing_drive_extra(exc: ImportError) -> DriveError:
+    return DriveError("This Google Drive action needs the optional Drive integration. Install `pip install -e '.[drive]'`.")
+
+
 class FilesResource(Protocol):
     def list(self, **kwargs: Any) -> Any: ...
     def create(self, **kwargs: Any) -> Any: ...
@@ -111,7 +115,10 @@ class DriveClient:
 
     def upload_or_update_file(self, local_path: Path, name: str, parent_id: str) -> str:
         """Idempotent: updates the existing file's content in place if one already exists."""
-        from googleapiclient.http import MediaFileUpload  # imported lazily: only needed for a real upload
+        try:
+            from googleapiclient.http import MediaFileUpload  # imported only for a real upload
+        except ImportError as exc:
+            raise _missing_drive_extra(exc) from exc
 
         media = MediaFileUpload(str(local_path), mimetype=guess_upload_mimetype(local_path), resumable=False)
         existing_id = self.find_file(name, parent_id)
@@ -153,7 +160,10 @@ def build_drive_credentials(token_json: str) -> Any:
     """
     import json
 
-    from google.oauth2.credentials import Credentials
+    try:
+        from google.oauth2.credentials import Credentials
+    except ImportError as exc:
+        raise _missing_drive_extra(exc) from exc
 
     return Credentials.from_authorized_user_info(json.loads(token_json), [DRIVE_FILE_SCOPE])
 
@@ -161,14 +171,20 @@ def build_drive_credentials(token_json: str) -> Any:
 def refresh_if_needed(credentials: Any) -> Any:
     """Refresh expired credentials in place. This is the one call that hits the network."""
     if credentials.expired and credentials.refresh_token:
-        from google.auth.transport.requests import Request
+        try:
+            from google.auth.transport.requests import Request
+        except ImportError as exc:
+            raise _missing_drive_extra(exc) from exc
 
         credentials.refresh(Request())
     return credentials
 
 
 def build_drive_service(credentials: Any) -> DriveService:
-    from googleapiclient.discovery import build
+    try:
+        from googleapiclient.discovery import build
+    except ImportError as exc:
+        raise _missing_drive_extra(exc) from exc
 
     return build("drive", "v3", credentials=credentials, cache_discovery=False)
 
@@ -210,7 +226,10 @@ def run_oauth_consent_flow(client_config: dict[str, Any]) -> Any:
     access. Returns Credentials whose ``.to_json()`` must go straight into
     Keychain (``credentials.store_google_drive_token``) and never be printed.
     """
-    from google_auth_oauthlib.flow import InstalledAppFlow
+    try:
+        from google_auth_oauthlib.flow import InstalledAppFlow
+    except ImportError as exc:
+        raise _missing_drive_extra(exc) from exc
 
     flow = InstalledAppFlow.from_client_config(client_config, scopes=[DRIVE_FILE_SCOPE])
     return flow.run_local_server(port=0)

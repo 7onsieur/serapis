@@ -29,7 +29,7 @@ from .reasoning import (
     load_cached_prepare_brief,
 )
 from .sources import PROJECT_ROOT, render_source_location
-from .state import StateError
+from .state import StateError, personal_data_dir
 from .workflows import build_prepare_context, build_week_context
 
 
@@ -125,7 +125,12 @@ class TeachResult:
 
 def default_workspace_root() -> Path:
     configured = os.environ.get("JARVIS_WORKSPACE_DIR")
-    return Path(configured) if configured else PROJECT_ROOT / "workspace"
+    if configured:
+        return Path(configured)
+    legacy = PROJECT_ROOT / "workspace"
+    if legacy.exists():
+        return legacy
+    return personal_data_dir() / "workspace"
 
 
 def _safe_component(value: str) -> str:

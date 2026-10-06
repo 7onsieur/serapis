@@ -4,13 +4,13 @@
   {% set fact = assessment.fact_provenance.get(field, {}) %}
   {% set status = fact.get("status", "UNKNOWN") %}
   {% if status == "CONFIRMED" %}<span class="tag trust-confirmed">Confirmed</span>
-  {% elif status == "NEEDS_VERIFICATION" %}<span class="tag trust-verify">Verify</span>
+  {% elif status == "NEEDS_VERIFICATION" %}<span class="tag trust-verify">Needs checking</span>
   {% else %}<span class="unknown trust-unknown">Unknown</span>{% endif %}
   {% if fact.get("evidence") %}
   <details class="fact-evidence"><summary>Source</summary>
     {% for ref in fact.get("evidence", []) %}
       {% set source = assessment.evidence_sources.get(ref.source_id, {}) %}
-      <div>{{ source.get("title", ref.source_id) }}{% if ref.get("location") %} — {{ ref.location }}{% endif %}<small>{{ source.get("source_class", "OTHER") }}</small></div>
+      <div>{{ source.get("title", "Linked source") }}{% if ref.get("location") %} — {{ ref.location }}{% endif %}<small>{{ source.get("source_class", "OTHER").replace("_", " ")|title }}</small></div>
     {% endfor %}
   </details>
   {% elif status == "NEEDS_VERIFICATION" %}<small class="fact-evidence-note">No source linked</small>{% endif %}
@@ -20,7 +20,7 @@
 <div class="page-head">
   <p class="eyebrow">Your Record</p>
   <h1>Assessments</h1>
-  <p class="lede">Exactly as recorded in academic-state.json. No date arithmetic, urgency, or due-soon logic — <span class="tag tbc">TBC</span> means the deadline itself is genuinely to-be-confirmed.</p>
+  <p class="lede">Assessment information as you entered it or as supported by sources. <span class="tag tbc">TBC</span> means the deadline is to be confirmed.</p>
 </div>
 {% set any_assessment = modules|selectattr("assessments")|list %}
 {% if any_assessment %}

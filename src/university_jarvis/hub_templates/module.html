@@ -4,11 +4,11 @@
   {% set fact = assessment.fact_provenance.get(field, {}) %}
   {% set status = fact.get("status", "UNKNOWN") %}
   {% if status == "CONFIRMED" %}<span class="tag trust-confirmed">Confirmed</span>
-  {% elif status == "NEEDS_VERIFICATION" %}<span class="tag trust-verify">Verify</span>
+  {% elif status == "NEEDS_VERIFICATION" %}<span class="tag trust-verify">Needs checking</span>
   {% else %}<span class="unknown trust-unknown">Unknown</span>{% endif %}
   {% if fact.get("evidence") %}<details class="fact-evidence"><summary>Source</summary>
     {% for ref in fact.get("evidence", []) %}{% set source = assessment.evidence_sources.get(ref.source_id, {}) %}
-      <div>{{ source.get("title", ref.source_id) }}{% if ref.get("location") %} — {{ ref.location }}{% endif %}<small>{{ source.get("source_class", "OTHER") }}</small></div>
+      <div>{{ source.get("title", "Linked source") }}{% if ref.get("location") %} — {{ ref.location }}{% endif %}<small>{{ source.get("source_class", "OTHER").replace("_", " ")|title }}</small></div>
     {% endfor %}
   </details>{% elif status == "NEEDS_VERIFICATION" %}<small class="fact-evidence-note">No source linked</small>{% endif %}
 {%- endmacro %}
@@ -17,12 +17,35 @@
 <p class="breadcrumb"><a href="/modules">&larr; Modules</a></p>
 <div class="page-head">
   <p class="eyebrow">{{ module.module_code }}</p>
-  <h1>{{ module.module_code }}{% if module.title %} — {{ module.title }}{% endif %} <span class="tag trust-{{ module.fact_provenance.get('title', {}).get('status', 'UNKNOWN')|lower }}">{{ {'CONFIRMED':'Confirmed','NEEDS_VERIFICATION':'Verify','UNKNOWN':'Unknown'}.get(module.fact_provenance.get('title', {}).get('status', 'UNKNOWN'), 'Unknown') }}</span></h1>
-  {% if module.fact_provenance.get("title", {}).get("evidence") %}<details class="fact-evidence"><summary>Module title source</summary>{% for ref in module.fact_provenance.title.evidence %}{% set source = module.evidence_sources.get(ref.source_id, {}) %}<div>{{ source.get("title", ref.source_id) }}{% if ref.get("location") %} — {{ ref.location }}{% endif %}</div>{% endfor %}</details>{% endif %}
+  <h1>{{ module.module_code }}{% if module.title %} — {{ module.title }}{% endif %} <span class="tag trust-{{ module.fact_provenance.get('title', {}).get('status', 'UNKNOWN')|lower }}">{{ {'CONFIRMED':'Confirmed','NEEDS_VERIFICATION':'Needs checking','UNKNOWN':'Unknown'}.get(module.fact_provenance.get('title', {}).get('status', 'UNKNOWN'), 'Unknown') }}</span></h1>
+  {% if module.fact_provenance.get("title", {}).get("evidence") %}<details class="fact-evidence"><summary>Module title source</summary>{% for ref in module.fact_provenance.title.evidence %}{% set source = module.evidence_sources.get(ref.source_id, {}) %}<div>{{ source.get("title", "Linked source") }}{% if ref.get("location") %} — {{ ref.location }}{% endif %}</div>{% endfor %}</details>{% endif %}
   <p class="lede">
-    {% if module.in_academic_state %}<span class="provenance-chip" title="Known via academic-state.json (curriculum, student-entered)"><span class="dot"></span>Curriculum</span>{% endif %}
-    {% if module.in_intake_ledger %}<span class="provenance-chip ledger" title="Known via intake-ledger.json (machine-observed on Blackboard)"><span class="dot"></span>Blackboard</span>{% endif %}
+    {% if module.in_academic_state %}<span class="provenance-chip" title="Entered in your course setup"><span class="dot"></span>Course</span>{% endif %}
+    {% if module.in_intake_ledger %}<span class="provenance-chip ledger" title="Observed from Blackboard when you requested a check"><span class="dot"></span>Blackboard</span>{% endif %}
   </p>
+</div>
+
+<div class="section card">
+  <h2>Edit module</h2>
+  <form method="post" action="/modules/{{ module.module_code }}/edit">
+    <label>Module code <input name="code" value="{{ module.module_code }}" required></label>
+    <label>Module title <input name="title" value="{{ module.title or '' }}" required></label>
+    <button type="submit">Save module</button>
+  </form>
+  <form method="post" action="/modules/{{ module.module_code }}/remove" onsubmit="return confirm('Remove this module and its material records?');"><button type="submit">Remove module</button></form>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>Course materials</h2></div>
+  {% if materials %}<ul>{% for source in materials %}<li>{{ source.title }} — {% if source.locator.endswith('.pptx') %}text extraction supported; file must contain readable slide text{% elif source.locator.endswith('.pdf') %}{{ 'PDF text extraction is supported on macOS' if is_macos else 'PDF is stored locally; text extraction is macOS-only' }}{% endif %}
+    <form method="post" enctype="multipart/form-data" action="/materials/{{ source.id }}/replace"><label>Replace file <input type="file" name="file" accept=".pdf,.pptx" required></label><button type="submit">Replace</button></form>
+    <form method="post" action="/materials/{{ source.id }}/reassign"><label>Module <input name="module_code" value="{{ module.module_code }}" required></label><label>Week (optional) <input name="week" type="number" min="1" value="{{ source.week if source.week else '' }}"></label><button type="submit">Save location</button></form>
+    <form method="post" action="/materials/{{ source.id }}/remove"><button type="submit">Remove</button></form></li>{% endfor %}</ul>{% else %}<p class="empty">No materials yet.</p>{% endif %}
+  <form method="post" enctype="multipart/form-data" action="/modules/{{ module.module_code }}/materials">
+    <label>Choose PDF or PowerPoint file <input type="file" name="file" accept=".pdf,.pptx" required></label>
+    <label>Week (optional) <input name="week" type="number" min="1"></label>
+    <button type="submit">Add material</button>
+  </form>
 </div>
 
 <div class="section">
@@ -46,7 +69,7 @@
           <span class="tag">{{ name }}: {{ status }}</span>
           {% endfor %}
         {% else %}
-          <span class="unknown">UNKNOWN — no academic-record.json</span>
+          <span class="unknown">Not available — no study record has been created for this week.</span>
         {% endif %}
       </td>
     </tr>
@@ -56,17 +79,26 @@
   {% else %}
   <div class="card"><p class="empty">Weeks: none known from either source.</p></div>
   {% endif %}
+  <h3>Add assessment</h3>
+  <form method="post" action="/modules/{{ module.module_code }}/assessments">
+    <label>Title <input name="title" required></label>
+    <label>Deadline (optional, YYYY-MM-DD) <input name="deadline" type="date"></label>
+    <label>Weight % (optional) <input name="weight" type="number" min="0" max="100" step="any"></label>
+    <label>Requirements (one per line) <textarea name="requirements"></textarea></label>
+    <p class="note">Details you enter are marked “Needs checking” until supported by an appropriate source.</p>
+    <button type="submit">Add assessment</button>
+  </form>
 </div>
 
 <div class="section">
   <div class="section-head">
     <h2>Assessments</h2>
-    <span class="kicker">As recorded in academic-state.json</span>
+    <span class="kicker">Your course information</span>
   </div>
   {% if module.assessments %}
   <div class="table-scroll">
   <table>
-    <tr><th>Title</th><th>Deadline</th><th>Weight</th><th>Requirements</th></tr>
+    <tr><th>Title</th><th>Deadline</th><th>Weight</th><th>Requirements</th><th></th></tr>
     {% for assessment in module.assessments %}
     <tr>
       <td>{{ assessment.title }} {{ fact_status(assessment, "title") }}</td>
@@ -76,6 +108,7 @@
       </td>
       <td>{{ (assessment.weight_percent ~ '%') if assessment.weight_percent is not none else '' }} {{ fact_status(assessment, "weight_percent") }}</td>
       <td>{% if assessment.requirements %}{{ assessment.requirements|join("; ") }}{% else %}<span class="unknown">No details</span>{% endif %} {{ fact_status(assessment, "requirements") }}</td>
+      <td><details><summary>Edit</summary><form method="post" action="/modules/{{ module.module_code }}/assessments/{{ assessment.assessment_id }}/edit"><label>Title <input name="title" value="{{ assessment.title or '' }}" required></label><label>Deadline <input name="deadline" type="date" value="{{ assessment.deadline or '' }}"></label><label>Weight % <input name="weight" type="number" min="0" max="100" step="any" value="{{ assessment.weight_percent if assessment.weight_percent is not none else '' }}"></label><label>Requirements <textarea name="requirements">{{ (assessment.requirements or [])|join('\n') }}</textarea></label><button type="submit">Save assessment</button></form></details><form method="post" action="/modules/{{ module.module_code }}/assessments/{{ assessment.assessment_id }}/remove"><button type="submit">Remove</button></form></td>
     </tr>
     {% endfor %}
   </table>
@@ -83,7 +116,7 @@
   {% elif module.in_academic_state %}
   <div class="card"><p class="empty">Assessments: none recorded.</p></div>
   {% else %}
-  <div class="card"><p class="empty">Module not known to academic-state.json — assessments UNKNOWN.</p></div>
+  <div class="card"><p class="empty">No assessments are recorded for this module yet.</p></div>
   {% endif %}
 </div>
 
@@ -114,13 +147,13 @@
 <div class="section">
   <div class="section-head"><h2>Actions</h2></div>
   <div class="action-form">
-    <h3><span aria-hidden="true">✦</span> Assignment coach <span class="badge ephemeral">Ephemeral · doesn't write</span></h3>
+    <h3><span aria-hidden="true">✦</span> AI: Assignment coach <span class="badge ephemeral">Sends selected course context to AI</span></h3>
     <p class="note">
-      Cache-first model call, generated fresh for this view only. Coaches planning and understanding
+      Cache-first AI call, generated fresh for this view only. Coaches planning and understanding
       only: it will not produce a finished, submittable assignment response.
     </p>
     <form method="post" action="/modules/{{ module.module_code }}/assignment">
-      <button type="submit">Get assignment coaching</button>
+      <button type="submit">Get coaching with AI</button>
     </form>
   </div>
 </div>

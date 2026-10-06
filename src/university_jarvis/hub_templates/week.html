@@ -6,11 +6,11 @@
   <p class="eyebrow">{{ module.module_code }} · Week {{ week.week }}</p>
   <h1>{{ module.module_code }} — Week {{ week.week }}</h1>
   <p class="lede">
-    {{ week.topic if week.topic else '' }}{% if not week.topic %}<span class="unknown">Topic UNKNOWN</span>{% endif %}
+    {{ week.topic if week.topic else '' }}{% if not week.topic %}<span class="unknown">Topic unknown</span>{% endif %}
   </p>
   <p class="lede">
-    {% if week.in_academic_state %}<span class="provenance-chip" title="Known via academic-state.json (curriculum, student-entered)"><span class="dot"></span>Curriculum</span>{% endif %}
-    {% if week.in_intake_ledger %}<span class="provenance-chip ledger" title="Known via intake-ledger.json (machine-observed on Blackboard)"><span class="dot"></span>Blackboard</span>{% endif %}
+    {% if week.in_academic_state %}<span class="provenance-chip" title="Entered in your course setup"><span class="dot"></span>Course</span>{% endif %}
+    {% if week.in_intake_ledger %}<span class="provenance-chip ledger" title="Observed from Blackboard when you requested a check"><span class="dot"></span>Blackboard</span>{% endif %}
     {% if not week.in_academic_state and not week.in_intake_ledger %}<span class="unknown">neither source</span>{% endif %}
   </p>
 </div>
@@ -27,8 +27,8 @@
     {% for material in week.materials %}
     <tr>
       <td>{{ material.filename }}</td>
-      <td>{{ material.last_seen_at if material.last_seen_at else '' }}{% if not material.last_seen_at %}<span class="unknown">UNKNOWN</span>{% endif %}</td>
-      <td><span class="unknown">{{ material.linkage_status }}</span></td>
+      <td>{{ material.last_seen_at if material.last_seen_at else '' }}{% if not material.last_seen_at %}<span class="unknown">Unknown</span>{% endif %}</td>
+      <td><span class="unknown">{{ 'No source match' if material.linkage_status == 'UNLINKED' else material.linkage_status }}</span></td>
     </tr>
     {% endfor %}
   </table>
@@ -69,7 +69,7 @@
     {% endif %}
   {% else %}
     <div class="card">
-      <p class="unknown">UNKNOWN — no academic-record.json exists for this week yet. This is an evidence gap, not a verdict either way about whether this material has been engaged with.</p>
+      <p class="unknown">No study record exists for this week yet. This does not indicate whether you have studied the material.</p>
     </div>
   {% endif %}
 </div>
@@ -103,37 +103,37 @@
 
   <div class="action-grid">
     <div class="action-form">
-      <h3><span aria-hidden="true">▣</span> Build / prepare workspace <span class="badge writes">Writes to your record</span></h3>
-      <p class="note">Cache-first: only calls the AI model on a local cache miss. Never runs on page load.</p>
+      <h3><span aria-hidden="true">▣</span> AI: Prepare study workspace <span class="badge writes">May send selected sources to AI</span></h3>
+      <p class="note">Uses AI on a cache miss and saves study files locally. Never runs on page load.</p>
       <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/build">
-        <button type="submit">Build workspace</button>
+        <button type="submit">Prepare with AI</button>
       </form>
     </div>
 
     <div class="action-form">
-      <h3><span aria-hidden="true">✦</span> Teach <span class="badge writes">Writes to your record</span></h3>
+      <h3><span aria-hidden="true">✦</span> AI: Teach <span class="badge writes">Sends selected sources to AI</span></h3>
       <p class="note">Always calls the model. Source-grounded; if no topic is given, targets your first open question or uncertainty.</p>
       <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/teach">
         <label>Topic (optional)
           <input type="text" name="topic" placeholder="leave blank to use an open captured item">
         </label>
-        <button type="submit">Teach</button>
+        <button type="submit">Teach with AI</button>
       </form>
     </div>
 
     <div class="action-form">
-      <h3><span aria-hidden="true">?</span> Quiz <span class="badge ephemeral">Ephemeral · doesn't write</span></h3>
+      <h3><span aria-hidden="true">?</span> AI: Quiz <span class="badge ephemeral">Sends selected sources to AI</span></h3>
       <p class="note">Cache-first model call, generated fresh for this view only.</p>
       <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/quiz">
-        <button type="submit">Generate quiz</button>
+        <button type="submit">Generate quiz with AI</button>
       </form>
     </div>
 
     <div class="action-form">
-      <h3><span aria-hidden="true">↻</span> Revise <span class="badge ephemeral">Ephemeral · doesn't write</span></h3>
+      <h3><span aria-hidden="true">↻</span> AI: Revision brief <span class="badge ephemeral">Sends selected sources to AI</span></h3>
       <p class="note">Cache-first model call, generated fresh for this view only.</p>
       <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/revise">
-        <button type="submit">Generate revision brief</button>
+        <button type="submit">Generate with AI</button>
       </form>
     </div>
 

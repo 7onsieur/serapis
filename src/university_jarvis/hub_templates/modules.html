@@ -11,10 +11,10 @@
   {% for module in modules %}
   <a class="card module-card-lg" href="/modules/{{ module.module_code }}">
     <div class="code"><span class="glow">{{ module.module_code }}</span></div>
-    <h3>{{ module.title if module.title else '' }}{% if not module.title %}<span class="unknown">UNKNOWN</span>{% endif %}</h3>
+    <h3>{{ module.title if module.title else '' }}{% if not module.title %}<span class="unknown">Title unknown</span>{% endif %}</h3>
     <div class="meta">
-      {% if module.in_academic_state %}<span class="provenance-chip" title="Known via academic-state.json (curriculum, student-entered)"><span class="dot"></span>Curriculum</span>{% endif %}
-      {% if module.in_intake_ledger %}<span class="provenance-chip ledger" title="Known via intake-ledger.json (machine-observed on Blackboard)"><span class="dot"></span>Blackboard</span>{% endif %}
+      {% if module.in_academic_state %}<span class="provenance-chip" title="Entered in your course setup"><span class="dot"></span>Course</span>{% endif %}
+      {% if module.in_intake_ledger %}<span class="provenance-chip ledger" title="Observed from Blackboard when you requested a check"><span class="dot"></span>Blackboard</span>{% endif %}
       <span class="tag">{{ module.weeks|length }} week{{ 's' if module.weeks|length != 1 else '' }} known</span>
     </div>
     <div class="enter">Enter workspace <span class="arrow">&rarr;</span></div>
@@ -22,6 +22,15 @@
   {% endfor %}
 </div>
 {% else %}
-<div class="card"><p class="empty">No modules known from academic-state.json or intake-ledger.json.</p></div>
+<div class="card"><p class="empty">No modules yet. Add a module to start organizing your course information and materials.</p></div>
 {% endif %}
+{% if error %}<div class="action-error">{{ error }}</div>{% endif %}
+<div class="section card">
+  <h2>Add a module</h2>
+  <form method="post" action="/modules">
+    <label>Module code <input name="code" required maxlength="32" placeholder="BIO101"></label>
+    <label>Module title <input name="title" required placeholder="Introduction to Biology"></label>
+    <button type="submit">Add module</button>
+  </form>
+</div>
 {% endblock %}

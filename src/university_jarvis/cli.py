@@ -84,6 +84,8 @@ from .workspace import capture_after_lecture, materialize_week_workspace, teach_
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="serapis")
     subparsers = parser.add_subparsers(dest="command", required=True)
+    setup = subparsers.add_parser("setup", help="create or continue your private Serapis workspace")
+    setup.add_argument("--no-open", action="store_true", help="do not open the Hub when setup finishes")
     subparsers.add_parser("status", help="show known academic state")
 
     subparsers.add_parser(
@@ -575,6 +577,69 @@ def main(
     oauth_flow_runner: Any | None = None,
 ) -> int:
     args = _parser().parse_args(argv)
+    if args.command == "setup":
+        from .student_setup import add_module, edit_profile, initialize_personal_state, save_assessment
+        from .state import personal_data_dir
+        try:
+            from .student_setup import existing_user_state_path
+            legacy_path = existing_user_state_path()
+            copy_existing = False
+            if legacy_path is not None:
+                copy_existing = input(
+                    f"An existing course setup was found at {legacy_path}. Copy it into your personal Serapis workspace? The original will remain unchanged. [y/N] "
+                ).strip().lower() == "y"
+            initialize_personal_state(copy_existing=copy_existing)
+            print("Welcome to Serapis setup. Press Enter to skip any optional detail.")
+            university = input("University (optional): ").strip()
+            programme = input("Programme or course (optional): ").strip()
+            edit_profile(university=university, programme=programme)
+            while True:
+                code = input("Module code (leave blank when finished): ").strip()
+                if not code: break
+                title = input("Module title: ").strip()
+                try:
+                    add_module(code, title)
+                    print(f"Added {code.upper()}.")
+                except StateError as exc:
+                    print(f"Could not add module: {exc}")
+                    continue
+                if input("Add an assessment now? [y/N] ").strip().lower() == "y":
+                    atitle = input("Assessment title: ").strip()
+                    deadline = input("Deadline (YYYY-MM-DD, optional): ").strip()
+                    weight = input("Weight % (optional): ").strip()
+                    requirements = []
+                    while True:
+                        line = input("Requirement (press Enter when finished): ").strip()
+                        if not line: break
+                        requirements.append(line)
+                    try:
+                        save_assessment(code, title=atitle, deadline=deadline, weight_percent=weight, requirements="\n".join(requirements))
+                    except StateError as exc:
+                        print(f"Assessment was not saved: {exc}")
+                if input("Add a course file now? [y/N] ").strip().lower() == "y":
+                    from .student_setup import import_material
+                    from pathlib import Path
+                    file_name = input("File path (PDF or PPTX): ").strip()
+                    week_text = input("Week number (optional): ").strip()
+                    try:
+                        imported = import_material(code, Path(file_name), week=int(week_text) if week_text else None)
+                        print(imported["capability"])
+                    except (StateError, ValueError) as exc:
+                        print(f"Material was not added: {exc}")
+                if input("Add another module? [y/N] ").strip().lower() != "y": break
+            print(f"Your private Serapis data is stored in: {personal_data_dir()}")
+            print("Next: run 'serapis hub' to inspect your modules and add course materials.")
+            if not args.no_open and input("Open the Hub now? [y/N] ").strip().lower() == "y":
+                import webbrowser
+                import threading
+                import uvicorn
+                from .hub_web import create_app
+                threading.Timer(1.0, webbrowser.open, args=("http://127.0.0.1:8765",)).start()
+                uvicorn.run(create_app(), host="127.0.0.1", port=8765)
+            return 0
+        except (StateError, OSError) as exc:
+            print(f"serapis setup: {exc}", file=sys.stderr)
+            return 2
     try:
         state = load_state()
         if args.command == "status":

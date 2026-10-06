@@ -74,11 +74,49 @@ def default_state_path() -> Path:
     if configured:
         return Path(configured)
 
+    personal = personal_data_dir() / "academic-state.json"
+    if personal.exists():
+        return personal
+
     cwd_candidate = Path.cwd() / "data" / "academic-state.json"
     if cwd_candidate.exists():
         return cwd_candidate
 
     return Path(__file__).resolve().parents[2] / "data" / "academic-state.json"
+
+
+def personal_data_dir() -> Path:
+    """Per-user local data directory; SERAPIS_HOME is an explicit override."""
+    override = os.environ.get("SERAPIS_HOME")
+    if override:
+        return Path(override).expanduser()
+    if os.name == "nt":
+        base = Path(os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local"))
+    elif sys_platform() == "darwin":
+        base = Path.home() / "Library" / "Application Support"
+    else:
+        base = Path(os.environ.get("XDG_DATA_HOME", Path.home() / ".local" / "share"))
+    return base / "serapis"
+
+
+def sys_platform() -> str:
+    import sys
+    return sys.platform
+
+
+def save_state(state: dict[str, Any], path: Path | None = None) -> None:
+    """Validate and atomically persist academic state."""
+    target = path or default_state_path()
+    normalized = normalize_academic_truth(state)
+    _validate_state(normalized)
+    target.parent.mkdir(parents=True, exist_ok=True)
+    temp = target.with_suffix(target.suffix + ".tmp")
+    try:
+        temp.write_text(json.dumps(normalized, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+        os.replace(temp, target)
+    finally:
+        if temp.exists():
+            temp.unlink()
 
 
 def load_state(path: Path | None = None) -> dict[str, Any]:

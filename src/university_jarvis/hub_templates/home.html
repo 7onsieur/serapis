@@ -3,10 +3,10 @@
 {% block content %}
 <div class="hero">
   <div>
-    <p class="eyebrow">Attention · Personal AI Command Centre</p>
+    <p class="eyebrow">Attention · academic overview · source-aware</p>
     <h1>Academic information currently recorded in Serapis.</h1>
     <div class="accent-line" style="max-width: 10rem;"></div>
-    <p class="lede">Nothing here is guessed. Deterministic, evidence-only — an absence of evidence is shown as <strong>UNKNOWN</strong>, never as "not done", and nothing is scored, ranked, or given a time-sensitivity label.</p>
+    <p class="lede">Nothing here is guessed. Facts without supporting information are marked <strong>Unknown</strong>, never treated as “not done”.</p>
     <div class="headline-stat">{{ modules|length }}<span class="unit">module{{ 's' if modules|length != 1 else '' }} listed</span></div>
   </div>
   <div class="hero-orb-wrap">
@@ -38,6 +38,8 @@
     <div class="label">Open unresolved items</div>
   </div>
 </div>
+<div class="feature-panel"><strong>Your setup</strong> — {{ setup_status }} <a href="/modules">Manage modules</a></div>
+{% if dataset_kind == "fictional_example" %}<div class="feature-panel"><strong>Fictional sample</strong> — This is demonstration data. Run <code>serapis setup</code> to create your separate personal workspace.</div>{% endif %}
 
 <div class="section">
   <div class="section-head">
@@ -66,7 +68,7 @@
   <div class="feature-panel">
     <span class="status-dot" aria-hidden="true"></span>
     <div>
-      <p class="empty" style="margin:0;">No material has been observed yet — nothing is recorded for any known week. Run Check University to sync Blackboard, or open a module/week page to build a workspace.</p>
+      <p class="empty" style="margin:0;">No material has been observed yet. No course materials have been added. Open a module to add a PDF or PowerPoint file. Adding files and browsing the Hub stays on this device.</p>
     </div>
   </div>
   {% elif material_state == "no_gaps" %}
@@ -93,10 +95,10 @@
     {% for module in modules %}
     <a class="card module-card-lg" href="/modules/{{ module.module_code }}">
       <div class="code"><span class="glow">{{ module.module_code }}</span></div>
-      <h3>{{ module.title if module.title else '' }}{% if not module.title %}<span class="unknown">UNKNOWN title</span>{% endif %}</h3>
+      <h3>{{ module.title if module.title else '' }}{% if not module.title %}<span class="unknown">Title unknown</span>{% endif %}</h3>
       <div class="meta">
-        {% if module.in_academic_state %}<span class="provenance-chip" title="Known via academic-state.json (curriculum, student-entered)"><span class="dot"></span>Curriculum</span>{% endif %}
-        {% if module.in_intake_ledger %}<span class="provenance-chip ledger" title="Known via intake-ledger.json (machine-observed on Blackboard)"><span class="dot"></span>Blackboard</span>{% endif %}
+        {% if module.in_academic_state %}<span class="provenance-chip" title="Entered in your course setup"><span class="dot"></span>Course</span>{% endif %}
+        {% if module.in_intake_ledger %}<span class="provenance-chip ledger" title="Observed from Blackboard when you requested a check"><span class="dot"></span>Blackboard</span>{% endif %}
         <span class="tag">{{ module.weeks|length }} week{{ 's' if module.weeks|length != 1 else '' }}</span>
       </div>
       <div class="enter">Enter workspace <span class="arrow">&rarr;</span></div>

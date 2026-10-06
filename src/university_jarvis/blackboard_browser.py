@@ -66,7 +66,10 @@ def run_interactive_authentication(
         raise BlackboardError(
             "Blackboard host is required. Set JARVIS_BLACKBOARD_BASE_URL or pass --base-url."
         )
-    from playwright.sync_api import sync_playwright
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError as exc:
+        raise BlackboardError("Blackboard sign-in needs the optional browser integration. Install `pip install -e '.[blackboard]'`.") from exc
 
     profile_dir.mkdir(parents=True, exist_ok=True)
     with sync_playwright() as playwright:
@@ -135,7 +138,10 @@ class _BrowserTransport:
             raise AuthRequiredError(
                 "No Serapis browser profile found. Run `serapis blackboard-auth` first."
             )
-        from playwright.sync_api import sync_playwright
+        try:
+            from playwright.sync_api import sync_playwright
+        except ImportError as exc:
+            raise BlackboardError("Blackboard sign-in needs the optional browser integration. Install `pip install -e '.[blackboard]'`.") from exc
 
         self._playwright = sync_playwright().start()
         try:

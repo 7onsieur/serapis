@@ -196,7 +196,7 @@ class HubWebTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         body = response.text
         self.assertIn("SYN109", body)
-        self.assertIn("UNKNOWN", body)  # assessments unknown: not in academic-state
+        self.assertIn("No assessments are recorded", body)
 
     def test_unknown_module_is_404(self) -> None:
         response = self.client.get("/modules/ZZFAKE")
@@ -207,8 +207,8 @@ class HubWebTests(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         body = response.text
         self.assertIn("Lecture slides", body)
-        self.assertIn("UNLINKED", body)
-        self.assertIn("UNKNOWN", body)
+        self.assertIn("No source match", body)
+        self.assertIn("No study record exists", body)
         self.assertNotIn("not studied", body.lower())
 
     def test_week_detail_with_neither_source_is_404(self) -> None:
@@ -281,7 +281,7 @@ class HubWebRealisticGapTests(unittest.TestCase):
         body = response.text
         self.assertIn("prepare_me", body)
         self.assertIn("completed", body)
-        self.assertNotIn("UNKNOWN — no academic-record.json", body)
+        self.assertNotIn("No study record exists", body)
 
 
 if __name__ == "__main__":
