@@ -1,5 +1,7 @@
 {
   "schema_version": 2,
+  "academic_truth_schema_version": 1,
+  "dataset_kind": "fictional_example",
   "mission": {
     "statement": "Serapis helps learners organise their academic materials, understand ideas, and plan their study while respecting their time, privacy, and academic integrity.",
     "primary_objective": {"statement": "Build understanding and make steady progress toward the learner's stated academic goals."},
@@ -21,15 +23,16 @@
       "code": "SYN101", "title": "Introduction to Example Studies", "semester": 1, "academic_year": "2025/26",
       "teaching": {"category": "REFERENCE", "lectures": {"count": 1, "duration_minutes": null, "schedule": null}},
       "assessments": [
-        {"id": "syn101-practice-outline", "title": "Practice outline", "category": "ASSESSMENT", "deadline": null, "deadline_status": "unknown", "weight_percent": null, "context": "A fictional planning exercise."},
-        {"id": "syn101-example-reflection", "title": "Example learning reflection", "category": "ASSESSMENT", "deadline": null, "deadline_status": "unknown", "weight_percent": null, "context": "A fictional practice reflection about learning strategies."}
+        {"id": "syn101-practice-outline", "title": "Practice outline", "category": "ASSESSMENT", "deadline": null, "deadline_status": "unknown", "weight_percent": null, "context": "A fictional planning exercise.", "fact_provenance": {"title": {"status": "NEEDS_VERIFICATION", "evidence": []}, "deadline": {"status": "UNKNOWN", "evidence": []}, "deadline_status": {"status": "UNKNOWN", "evidence": []}, "weight_percent": {"status": "UNKNOWN", "evidence": []}, "requirements": {"status": "UNKNOWN", "evidence": []}}},
+        {"id": "syn101-example-reflection", "title": "Example learning reflection", "category": "ASSESSMENT", "deadline": "2030-04-17", "deadline_status": "confirmed_date", "weight_percent": 25, "requirements": ["Submit a 1,000-word reflection.", "Cite two sources from the fictional module."], "context": "A fictional practice reflection about learning strategies.", "fact_provenance": {"title": {"status": "CONFIRMED", "evidence": [{"source_id": "syn101-fictional-assessment-brief", "location": "Assessment title"}]}, "deadline": {"status": "CONFIRMED", "evidence": [{"source_id": "syn101-fictional-assessment-brief", "location": "Deadline"}]}, "deadline_status": {"status": "CONFIRMED", "evidence": [{"source_id": "syn101-fictional-assessment-brief", "location": "Deadline"}]}, "weight_percent": {"status": "CONFIRMED", "evidence": [{"source_id": "syn101-fictional-assessment-brief", "location": "Assessment weighting"}]}, "requirements": {"status": "CONFIRMED", "evidence": [{"source_id": "syn101-fictional-assessment-brief", "location": "Submission requirements"}]}}}
       ],
       "progress": {"status": "unknown", "completed_week_numbers": [], "last_consolidated_week": null},
       "weeks": [{"week": 1, "date": null, "topic": "Asking clear questions about evidence", "progress": "unknown", "source_ids": ["syn101-w01-lecture-01-pdf", "syn101-w01-example-reading"], "items": [{"category": "DO", "text": "Identify one claim and the evidence that supports it in the fictional example source.", "source_ids": ["syn101-w01-example-reading"], "status": "unknown"}]}]
     }
   ],
   "sources": [
-    {"id": "syn101-w01-lecture-01-pdf", "module_code": "SYN101", "week": 1, "type": "lecture_pdf", "title": "Week 1: Questions and evidence (synthetic example)", "category": "KNOW", "availability": "content_available", "locator": "sources/SYN101/week-01/example-week-1.pdf"},
-    {"id": "syn101-w01-example-reading", "module_code": "SYN101", "week": 1, "type": "assigned_reading", "title": "Example reading: Claims and evidence", "pages": "1", "authors": "Serapis sample content", "category": "KNOW", "availability": "content_available", "locator": "sources/SYN101/week-01/example-week-1.pdf"}
+    {"id": "syn101-w01-lecture-01-pdf", "module_code": "SYN101", "week": 1, "type": "lecture_pdf", "source_class": "OTHER", "title": "Week 1: Questions and evidence (synthetic example)", "category": "KNOW", "availability": "content_available", "locator": "sources/SYN101/week-01/example-week-1.pdf"},
+    {"id": "syn101-w01-example-reading", "module_code": "SYN101", "week": 1, "type": "assigned_reading", "source_class": "OTHER", "title": "Example reading: Claims and evidence", "pages": "1", "authors": "Serapis sample content", "category": "KNOW", "availability": "content_available", "locator": "sources/SYN101/week-01/example-week-1.pdf"},
+    {"id": "syn101-fictional-assessment-brief", "module_code": "SYN101", "type": "fictional_assessment_brief", "source_class": "UNIVERSITY_MATERIAL", "title": "FICTIONAL — SYN101 example assessment brief", "availability": "content_available", "locator": "sources/SYN101/fictional-assessment-brief.md", "original_filename": "fictional-assessment-brief.md"}
   ]
 }

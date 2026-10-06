@@ -36,7 +36,7 @@ from pathlib import Path
 from typing import Any
 
 from .intake_ledger import default_ledger_path, load_ledger
-from .state import default_state_path, load_state
+from .state import default_state_path, load_state, normalize_academic_truth
 from .workspace import default_workspace_root
 
 MACHINE_OBSERVED = "MACHINE_OBSERVED"
@@ -81,7 +81,10 @@ class AssessmentView:
     deadline: str | None
     deadline_status: str | None
     weight_percent: float | None
+    requirements: list[str] | None = None
     provenance: str = STUDENT_ENTERED
+    fact_provenance: dict[str, Any] = field(default_factory=dict)
+    evidence_sources: dict[str, dict[str, Any]] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -117,11 +120,15 @@ class ModulePicture:
     title: str | None = None
     assessments: list[AssessmentView] = field(default_factory=list)
     weeks: list[WeekPicture] = field(default_factory=list)
+    fact_provenance: dict[str, Any] = field(default_factory=dict)
+    evidence_sources: dict[str, dict[str, Any]] = field(default_factory=dict)
+    dataset_kind: str | None = None
 
 
 @dataclass(frozen=True)
 class AcademicPicture:
     modules: list[ModulePicture] = field(default_factory=list)
+    dataset_kind: str | None = None
 
 
 def _state_modules_by_code(state: dict[str, Any]) -> dict[str, dict[str, Any]]:
@@ -132,7 +139,18 @@ def _ledger_modules_by_code(ledger: dict[str, Any]) -> dict[str, dict[str, Any]]
     return {code.upper(): entry for code, entry in ledger.get("modules", {}).items()}
 
 
-def _assessment_view(module_code: str, assessment: dict[str, Any]) -> AssessmentView:
+def _assessment_view(
+    module_code: str,
+    assessment: dict[str, Any],
+    sources_by_id: dict[str, dict[str, Any]],
+) -> AssessmentView:
+    fact_provenance = assessment.get("fact_provenance", {})
+    evidence_ids = {
+        ref["source_id"]
+        for fact in fact_provenance.values()
+        for ref in fact.get("evidence", [])
+        if ref.get("source_id") in sources_by_id
+    }
     return AssessmentView(
         module_code=module_code,
         assessment_id=assessment.get("id"),
@@ -141,7 +159,18 @@ def _assessment_view(module_code: str, assessment: dict[str, Any]) -> Assessment
         deadline=assessment.get("deadline"),
         deadline_status=assessment.get("deadline_status"),
         weight_percent=assessment.get("weight_percent"),
+        requirements=assessment.get("requirements"),
+        fact_provenance=fact_provenance,
+        evidence_sources={source_id: _source_summary(sources_by_id[source_id]) for source_id in evidence_ids},
     )
+
+
+def _source_summary(source: dict[str, Any]) -> dict[str, Any]:
+    return {
+        key: source[key]
+        for key in ("id", "title", "type", "source_class", "original_filename")
+        if source.get(key) is not None
+    }
 
 
 def _materials_for_week(
@@ -233,11 +262,13 @@ def build_academic_picture(
     """Build the read-only academic picture. Never mutates any input source."""
     if state is None:
         state = load_state(default_state_path())
+    state = normalize_academic_truth(state)
     if ledger is None:
         ledger = load_ledger(default_ledger_path())
     root = workspace_root if workspace_root is not None else default_workspace_root()
 
     state_modules = _state_modules_by_code(state)
+    sources_by_id = {source["id"]: source for source in state.get("sources", [])}
     ledger_modules = _ledger_modules_by_code(ledger)
     records = _discover_academic_records(root)
 
@@ -278,7 +309,7 @@ def build_academic_picture(
             )
 
         assessments = [
-            _assessment_view(module_code, assessment)
+            _assessment_view(module_code, assessment, sources_by_id)
             for assessment in (state_module or {}).get("assessments", [])
         ]
 
@@ -290,10 +321,18 @@ def build_academic_picture(
                 title=(state_module or {}).get("title"),
                 assessments=assessments,
                 weeks=weeks,
+                fact_provenance=(state_module or {}).get("fact_provenance", {}),
+                evidence_sources={
+                    ref["source_id"]: _source_summary(sources_by_id[ref["source_id"]])
+                    for fact in (state_module or {}).get("fact_provenance", {}).values()
+                    for ref in fact.get("evidence", [])
+                    if ref.get("source_id") in sources_by_id
+                },
+                dataset_kind=state.get("dataset_kind"),
             )
         )
 
-    return AcademicPicture(modules=modules)
+    return AcademicPicture(modules=modules, dataset_kind=state.get("dataset_kind"))
 
 
 def render_picture_text(picture: AcademicPicture) -> str:
@@ -315,7 +354,7 @@ def render_picture_text(picture: AcademicPicture) -> str:
         lines.append(f"{module.module_code}{title} [known to: {', '.join(presence)}]")
 
         if module.assessments:
-            lines.append("  Assessments (STUDENT_ENTERED, exactly as recorded):")
+            lines.append("  Assessments:")
             for assessment in module.assessments:
                 deadline = assessment.deadline if assessment.deadline is not None else "UNKNOWN"
                 if assessment.deadline_status:
@@ -325,7 +364,11 @@ def render_picture_text(picture: AcademicPicture) -> str:
                     if assessment.weight_percent is not None
                     else ""
                 )
-                lines.append(f"    - {assessment.title}: {deadline}{weight}")
+                deadline_status = assessment.fact_provenance.get("deadline", {}).get("status", "UNKNOWN")
+                weight_status = assessment.fact_provenance.get("weight_percent", {}).get("status", "UNKNOWN")
+                lines.append(
+                    f"    - {assessment.title}: {deadline} [{deadline_status}]{weight} [{weight_status}]"
+                )
         elif module.in_academic_state:
             lines.append("  Assessments: none recorded.")
 

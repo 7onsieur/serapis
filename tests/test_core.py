@@ -26,14 +26,14 @@ class AcademicStateTests(unittest.TestCase):
         module = get_module(self.state, "syn101")
         self.assertEqual(module["title"], "Introduction to Example Studies")
         self.assertEqual(module["teaching"]["lectures"]["count"], 1)
-        self.assertIsNone(module["assessments"][1]["weight_percent"])
-        self.assertEqual(module["assessments"][1]["deadline_status"], "unknown")
+        self.assertEqual(module["assessments"][1]["weight_percent"], 25)
+        self.assertEqual(module["assessments"][1]["deadline_status"], "confirmed_date")
 
     def test_prepare_retrieves_only_requested_week_sources(self) -> None:
         context = self.context
         self.assertEqual(context["module"]["code"], "SYN101")
         self.assertEqual(context["week"]["number"], 1)
-        self.assertIsNone(context["assessments"][1]["weight_percent"])
+        self.assertEqual(context["assessments"][1]["weight_percent"], 25)
         self.assertEqual(
             [source["id"] for source in context["sources"]],
             [

@@ -266,6 +266,7 @@ def create_app(
                 # Already-fetched real picture data, exposed for Home's
                 # module-count/entry-point display -- no new query, no new logic.
                 "modules": picture["modules"],
+                "dataset_kind": picture.get("dataset_kind"),
                 "active_nav": "home",
             },
         )
@@ -274,7 +275,7 @@ def create_app(
     def modules(request: Request) -> HTMLResponse:
         picture = _picture(request)
         return templates.TemplateResponse(
-            request, "modules.html", {"modules": picture["modules"], "active_nav": "modules"}
+            request, "modules.html", {"modules": picture["modules"], "dataset_kind": picture.get("dataset_kind"), "active_nav": "modules"}
         )
 
     @app.get("/modules/{module_code}", response_class=HTMLResponse)
@@ -284,7 +285,7 @@ def create_app(
         if module is None:
             return _not_found(request, f"No module known as {module_code.upper()}.")
         return templates.TemplateResponse(
-            request, "module.html", {"module": module, "active_nav": "modules"}
+            request, "module.html", {"module": module, "dataset_kind": picture.get("dataset_kind"), "active_nav": "modules"}
         )
 
     @app.get("/modules/{module_code}/weeks/{week_number}", response_class=HTMLResponse)
@@ -301,7 +302,7 @@ def create_app(
         return templates.TemplateResponse(
             request,
             "assessments.html",
-            {"modules": picture["modules"], "active_nav": "assessments"},
+            {"modules": picture["modules"], "dataset_kind": picture.get("dataset_kind"), "active_nav": "assessments"},
         )
 
     @app.get("/check", response_class=HTMLResponse)

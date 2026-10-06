@@ -28,7 +28,11 @@ OBJECTIVE_INSTRUCTIONS = """Use objective_context as shared decision guidance. G
 and academic integrity are hard constraints, not tradeable preferences. The cohort-position stretch
 objective is not evidence of cohort position: never claim or infer a position unless
 reliable_cohort_information_available is true. Do not invent missing academic or student-state
-information. Prefer the smallest useful response and avoid unnecessary AI work."""
+information. Prefer the smallest useful response and avoid unnecessary AI work.
+
+Academic facts are explicitly grouped as CONFIRMED, NEEDS_VERIFICATION, or UNKNOWN. Treat only
+CONFIRMED values as established academic facts. Describe NEEDS_VERIFICATION values as unverified
+claims and UNKNOWN values as unknown. Never promote, reconcile, or change a fact's trust status."""
 
 
 class ReasoningError(StateError):
@@ -796,6 +800,60 @@ def _parse_references(value: Any, field: str) -> list[SourceReference]:
     return references
 
 
+def _trusted_fact_groups(
+    owner: dict[str, Any], field_names: tuple[str, ...], source_by_id: dict[str, dict[str, Any]]
+) -> dict[str, list[dict[str, Any]]]:
+    groups: dict[str, list[dict[str, Any]]] = {
+        "confirmed": [],
+        "needs_verification": [],
+        "unknown": [],
+    }
+    metadata = owner.get("fact_provenance", {})
+    for field in field_names:
+        fact = metadata.get(field, {"status": "UNKNOWN", "evidence": []})
+        status = fact.get("status", "UNKNOWN")
+        group = {
+            "CONFIRMED": "confirmed",
+            "NEEDS_VERIFICATION": "needs_verification",
+            "UNKNOWN": "unknown",
+        }.get(status, "unknown")
+        item: dict[str, Any] = {"field": field, "status": status}
+        if group != "unknown" and field in owner:
+            item["value"] = owner[field]
+        evidence = []
+        for reference in fact.get("evidence", []):
+            source_id = reference.get("source_id")
+            source = source_by_id.get(source_id, {})
+            evidence_item = {"source_id": source_id}
+            if reference.get("location"):
+                evidence_item["location"] = reference["location"]
+            if source.get("source_class"):
+                evidence_item["source_class"] = source["source_class"]
+            if source.get("title"):
+                evidence_item["title"] = source["title"]
+            evidence.append(evidence_item)
+        item["evidence"] = evidence
+        groups[group].append(item)
+    return groups
+
+
+def _fact_evidence_ids(value: Any) -> set[str]:
+    found: set[str] = set()
+    if isinstance(value, dict):
+        if "status" in value and "evidence" in value and isinstance(value["evidence"], list):
+            found.update(
+                ref.get("source_id")
+                for ref in value["evidence"]
+                if isinstance(ref, dict) and isinstance(ref.get("source_id"), str)
+            )
+        for child in value.values():
+            found.update(_fact_evidence_ids(child))
+    elif isinstance(value, list):
+        for child in value:
+            found.update(_fact_evidence_ids(child))
+    return found
+
+
 def build_reasoning_context(context: dict[str, Any]) -> dict[str, Any]:
     """Expose only selected state and bounded academic context to a provider."""
     sources = []
@@ -803,16 +861,59 @@ def build_reasoning_context(context: dict[str, Any]) -> dict[str, Any]:
         sources.append(
             {
                 key: source.get(key)
-                for key in ("id", "type", "title", "authors", "pages", "extraction")
+                for key in ("id", "type", "title", "authors", "pages", "source_class", "extraction")
                 if source.get(key) is not None
             }
         )
+    source_by_id = {
+        source["id"]: source
+        for source in context.get("truth_sources", context.get("sources", []))
+        if source.get("id")
+    }
+    module = context["module"]
+    module_facts = _trusted_fact_groups(
+        module, ("code", "title", "semester", "academic_year"), source_by_id
+    )
+    assessment_facts = []
+    for assessment in context.get("assessments", []):
+        assessment_facts.append(
+            {
+                "assessment_id": assessment.get("id"),
+                "facts": _trusted_fact_groups(
+                    assessment,
+                    ("title", "deadline", "deadline_status", "weight_percent", "requirements"),
+                    source_by_id,
+                ),
+            }
+        )
+    referenced_fact_sources = _fact_evidence_ids({
+        "module_facts": module_facts,
+        "assessment_facts": assessment_facts,
+    })
+    supplied_source_ids = {source["id"] for source in context.get("sources", [])}
+    fact_evidence_sources = []
+    for source_id in sorted(referenced_fact_sources):
+        source = source_by_id.get(source_id)
+        if source is None:
+            continue
+        fact_evidence_sources.append({
+            key: source.get(key)
+            for key in ("id", "type", "title", "authors", "pages", "source_class")
+            if source.get(key) is not None
+        })
     reasoning_context = {
         "workflow": context["workflow"],
         "objective_context": context["objective_context"],
-        "module": context["module"],
-        "assessments": context["assessments"],
+        # This is a local selection key, not an assertion that the identifier
+        # has been institutionally verified. Consequential details are below.
+        "workflow_scope": {
+            "module_key": module["code"],
+            "week": context.get("week", {}).get("number"),
+        },
+        "module_facts": module_facts,
+        "assessment_facts": assessment_facts,
         "sources": sources,
+        "fact_evidence_sources": fact_evidence_sources,
         "source_contexts": context["source_contexts"],
     }
     for key in (
@@ -828,6 +929,25 @@ def build_reasoning_context(context: dict[str, Any]) -> dict[str, Any]:
     return reasoning_context
 
 
+def _validate_citation_ids(value: Any, allowed_source_ids: set[str]) -> None:
+    """Reject citations not present in the source metadata/context sent to the provider."""
+    if isinstance(value, dict):
+        provenance = value.get("provenance")
+        if isinstance(provenance, list):
+            for reference in provenance:
+                if isinstance(reference, dict):
+                    source_id = reference.get("source_id")
+                    if source_id not in allowed_source_ids:
+                        raise ReasoningError(
+                            f"Generated output cited a source not supplied to this workflow: {source_id!r}"
+                        )
+        for child in value.values():
+            _validate_citation_ids(child, allowed_source_ids)
+    elif isinstance(value, list):
+        for child in value:
+            _validate_citation_ids(child, allowed_source_ids)
+
+
 def _cache_key(
     reasoning_context: dict[str, Any],
     provider: ReasoningProvider,
@@ -835,7 +955,7 @@ def _cache_key(
     schema_version: int,
 ) -> str:
     identity = {
-        "module": reasoning_context["module"]["code"],
+        "module": reasoning_context["workflow_scope"]["module_key"],
         "workflow": reasoning_context["workflow"],
         "reasoning_context": reasoning_context,
         "prompt_version": prompt_version,
@@ -893,8 +1013,14 @@ def _generate_cached(
     target_dir = cache_dir or default_cache_dir(cache_name)
     cache_path = target_dir / f"{cache_key}.json"
 
+    allowed_source_ids = {source["id"] for source in reasoning_context.get("sources", [])}
+
+    def checked_parser(raw: dict[str, Any]) -> Any:
+        _validate_citation_ids(raw, allowed_source_ids)
+        return parser(raw)
+
     if cache_path.is_file():
-        return _load_cached_result(cache_path, cache_key, parser)
+        return _load_cached_result(cache_path, cache_key, checked_parser)
 
     raw_brief = provider.generate_structured_output(
         reasoning_context,
@@ -905,7 +1031,7 @@ def _generate_cached(
     if not isinstance(usage, TokenUsage):
         usage = None
     try:
-        brief = parser(raw_brief)
+        brief = checked_parser(raw_brief)
     except ReasoningError as exc:
         raise ReasoningError(str(exc), usage=usage) from exc
     target_dir.mkdir(parents=True, exist_ok=True)
@@ -972,7 +1098,12 @@ def load_cached_prepare_brief(
             "No matching cached PREPARE_ME result; run prepare explicitly before "
             "building the academic workspace"
         )
-    return _load_cached_result(cache_path, cache_key, PreparationBrief.from_dict)
+    allowed_source_ids = {source["id"] for source in reasoning_context.get("sources", [])}
+    return _load_cached_result(
+        cache_path,
+        cache_key,
+        lambda raw: _validate_citation_ids(raw, allowed_source_ids) or PreparationBrief.from_dict(raw),
+    )
 
 
 def generate_sectioned_brief(

@@ -374,7 +374,7 @@ class TeachTests(unittest.TestCase):
                 "university_jarvis.workspace.build_week_context",
                 return_value=week_context("TEACH"),
             ):
-                with self.assertRaisesRegex(ReasoningError, "outside the requested module/week"):
+                with self.assertRaisesRegex(ReasoningError, "not supplied to this workflow"):
                     teach_week(
                         {}, "SYN101", 1,
                         topic="question framing vs evidence checking",

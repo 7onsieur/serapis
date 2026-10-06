@@ -31,6 +31,7 @@ from .academic_picture import AcademicPicture
 STUDY_STATE_UNKNOWN = "STUDY_STATE_UNKNOWN"
 OPEN_UNRESOLVED_ITEM = "OPEN_UNRESOLVED_ITEM"
 KNOWN_ASSESSMENT = "KNOWN_ASSESSMENT"
+FACT_NEEDS_VERIFICATION = "FACT_NEEDS_VERIFICATION"
 
 
 @dataclass(frozen=True)
@@ -47,6 +48,7 @@ class AttentionPicture:
     study_state_unknown: list[AttentionItem] = field(default_factory=list)
     open_unresolved_items: list[AttentionItem] = field(default_factory=list)
     known_assessments: list[AttentionItem] = field(default_factory=list)
+    verification_needed: list[AttentionItem] = field(default_factory=list)
 
 
 def _study_state_unknown_items(picture: AcademicPicture) -> list[AttentionItem]:
@@ -128,10 +130,33 @@ def _known_assessment_items(picture: AcademicPicture) -> list[AttentionItem]:
 
 def build_attention_picture(picture: AcademicPicture) -> AttentionPicture:
     """Derive the attention view. Read-only: never mutates ``picture`` or its sources."""
+    verification_needed: list[AttentionItem] = []
+    for module in picture.modules:
+        for assessment in module.assessments:
+            for field_name in ("deadline", "deadline_status", "weight_percent", "requirements"):
+                fact = assessment.fact_provenance.get(field_name, {})
+                if fact.get("status") == "NEEDS_VERIFICATION":
+                    verification_needed.append(
+                        AttentionItem(
+                            kind=FACT_NEEDS_VERIFICATION,
+                            module_code=module.module_code,
+                            description=f"Verify {field_name.replace('_', ' ')} for {assessment.title}.",
+                            evidence={
+                                "assessment_id": assessment.assessment_id,
+                                "field": field_name,
+                                "status": "NEEDS_VERIFICATION",
+                                "sources": [
+                                    assessment.evidence_sources.get(ref.get("source_id"), {})
+                                    for ref in fact.get("evidence", [])
+                                ],
+                            },
+                        )
+                    )
     return AttentionPicture(
         study_state_unknown=_study_state_unknown_items(picture),
         open_unresolved_items=_open_unresolved_items(picture),
         known_assessments=_known_assessment_items(picture),
+        verification_needed=verification_needed,
     )
 
 
@@ -155,6 +180,14 @@ def render_attention_text(attention: AttentionPicture) -> str:
         for item in attention.open_unresolved_items:
             lines.append(f"  {item.module_code} Week {item.week}")
             lines.append(f"    {item.description}")
+    else:
+        lines.append("  None recorded.")
+
+    lines.append("")
+    lines.append("Facts to verify:")
+    if attention.verification_needed:
+        for item in attention.verification_needed:
+            lines.append(f"  {item.module_code}: {item.description}")
     else:
         lines.append("  None recorded.")
 

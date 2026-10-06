@@ -281,6 +281,12 @@
       white-space: nowrap;
     }
     .tag.tbc { color: var(--warn); border-color: rgba(242, 183, 63, 0.4); background: var(--warn-dim); font-weight: 650; }
+    .tag.trust-confirmed { color: var(--ok); }
+    .tag.trust-needs_verification { color: var(--warn); }
+    .tag.trust-unknown { color: var(--text-2); }
+    .fact-evidence { display: inline-block; margin-left: 0.3rem; font-size: 0.8rem; }
+    .fact-evidence summary { cursor: pointer; color: var(--accent); }
+    .fact-evidence small, .fact-evidence-note { display: block; color: var(--text-2); }
     .tag.status-new, .tag.status-changed { color: var(--ok); border-color: rgba(61, 220, 151, 0.4); background: var(--ok-dim); }
     .tag.status-new::before { content: ""; width: 0.4rem; height: 0.4rem; border-radius: 50%; background: currentColor; }
     .tag.status-unchanged { color: var(--text-2); }

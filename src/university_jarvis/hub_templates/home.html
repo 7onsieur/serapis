@@ -131,6 +131,20 @@
 
 <div class="section">
   <div class="section-head">
+    <h2>Facts to verify</h2>
+    <span class="kicker">No urgency inferred</span>
+  </div>
+  {% if attention.verification_needed %}
+  <ul>
+    {% for item in attention.verification_needed %}
+    <li><a href="/modules/{{ item.module_code }}">{{ item.module_code }}</a> — {{ item.description }}</li>
+    {% endfor %}
+  </ul>
+  {% else %}<p class="empty">No recorded claims need verification.</p>{% endif %}
+</div>
+
+<div class="section">
+  <div class="section-head">
     <h2>Assessments Serapis knows about</h2>
     <span class="kicker">Known assessments</span>
   </div>

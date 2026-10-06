@@ -6,7 +6,7 @@ from typing import Any
 
 from .mission import build_objective_context
 from .sources import load_source_context
-from .state import get_module, get_sources, get_week
+from .state import get_module, get_sources, get_week, normalize_academic_truth
 
 
 def _load_sources(
@@ -25,6 +25,7 @@ def build_week_context(
     state: dict[str, Any], module_code: str, week_number: int, workflow: str
 ) -> dict[str, Any]:
     """Build bounded context for exactly one requested module week."""
+    state = normalize_academic_truth(state)
     module = get_module(state, module_code)
     week = get_week(module, week_number)
     prepared_sources, source_contexts = _load_sources(
@@ -50,6 +51,7 @@ def build_week_context(
         "items": week.get("items", []),
         "sources": prepared_sources,
         "source_contexts": source_contexts,
+        "truth_sources": state.get("sources", []),
     }
 
 
@@ -84,6 +86,7 @@ def build_assignment_context(
     state: dict[str, Any], module_code: str
 ) -> dict[str, Any]:
     """Build module assessment context and its currently available sources."""
+    state = normalize_academic_truth(state)
     module = get_module(state, module_code)
     source_ids = list(
         dict.fromkeys(
@@ -114,4 +117,5 @@ def build_assignment_context(
         ],
         "sources": prepared_sources,
         "source_contexts": source_contexts,
+        "truth_sources": state.get("sources", []),
     }

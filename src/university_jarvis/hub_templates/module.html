@@ -1,10 +1,24 @@
 {% extends "base.html" %}
 {% block title %}{{ module.module_code }} — Serapis by Limitless Hub{% endblock %}
+{% macro fact_status(assessment, field) -%}
+  {% set fact = assessment.fact_provenance.get(field, {}) %}
+  {% set status = fact.get("status", "UNKNOWN") %}
+  {% if status == "CONFIRMED" %}<span class="tag trust-confirmed">Confirmed</span>
+  {% elif status == "NEEDS_VERIFICATION" %}<span class="tag trust-verify">Verify</span>
+  {% else %}<span class="unknown trust-unknown">Unknown</span>{% endif %}
+  {% if fact.get("evidence") %}<details class="fact-evidence"><summary>Source</summary>
+    {% for ref in fact.get("evidence", []) %}{% set source = assessment.evidence_sources.get(ref.source_id, {}) %}
+      <div>{{ source.get("title", ref.source_id) }}{% if ref.get("location") %} — {{ ref.location }}{% endif %}<small>{{ source.get("source_class", "OTHER") }}</small></div>
+    {% endfor %}
+  </details>{% elif status == "NEEDS_VERIFICATION" %}<small class="fact-evidence-note">No source linked</small>{% endif %}
+{%- endmacro %}
 {% block content %}
+{% if dataset_kind == "fictional_example" or module.dataset_kind == "fictional_example" %}<div class="feature-panel"><strong>FICTIONAL SAMPLE DATA</strong> — All institutions, modules and assessment facts shown here are invented examples.</div>{% endif %}
 <p class="breadcrumb"><a href="/modules">&larr; Modules</a></p>
 <div class="page-head">
   <p class="eyebrow">{{ module.module_code }}</p>
-  <h1>{{ module.module_code }}{% if module.title %} — {{ module.title }}{% endif %}</h1>
+  <h1>{{ module.module_code }}{% if module.title %} — {{ module.title }}{% endif %} <span class="tag trust-{{ module.fact_provenance.get('title', {}).get('status', 'UNKNOWN')|lower }}">{{ {'CONFIRMED':'Confirmed','NEEDS_VERIFICATION':'Verify','UNKNOWN':'Unknown'}.get(module.fact_provenance.get('title', {}).get('status', 'UNKNOWN'), 'Unknown') }}</span></h1>
+  {% if module.fact_provenance.get("title", {}).get("evidence") %}<details class="fact-evidence"><summary>Module title source</summary>{% for ref in module.fact_provenance.title.evidence %}{% set source = module.evidence_sources.get(ref.source_id, {}) %}<div>{{ source.get("title", ref.source_id) }}{% if ref.get("location") %} — {{ ref.location }}{% endif %}</div>{% endfor %}</details>{% endif %}
   <p class="lede">
     {% if module.in_academic_state %}<span class="provenance-chip" title="Known via academic-state.json (curriculum, student-entered)"><span class="dot"></span>Curriculum</span>{% endif %}
     {% if module.in_intake_ledger %}<span class="provenance-chip ledger" title="Known via intake-ledger.json (machine-observed on Blackboard)"><span class="dot"></span>Blackboard</span>{% endif %}
@@ -52,15 +66,16 @@
   {% if module.assessments %}
   <div class="table-scroll">
   <table>
-    <tr><th>Title</th><th>Deadline</th><th>Weight</th></tr>
+    <tr><th>Title</th><th>Deadline</th><th>Weight</th><th>Requirements</th></tr>
     {% for assessment in module.assessments %}
     <tr>
-      <td>{{ assessment.title }}</td>
+      <td>{{ assessment.title }} {{ fact_status(assessment, "title") }}</td>
       <td>
-        {{ assessment.deadline if assessment.deadline else '' }}{% if not assessment.deadline %}<span class="unknown">UNKNOWN</span>{% endif %}
+        {{ assessment.deadline if assessment.deadline else '' }} {{ fact_status(assessment, "deadline") }}
         {% if assessment.deadline_status == "TBC" %}<span class="tag tbc">TBC</span>{% endif %}
       </td>
-      <td>{{ (assessment.weight_percent ~ '%') if assessment.weight_percent is not none else '' }}</td>
+      <td>{{ (assessment.weight_percent ~ '%') if assessment.weight_percent is not none else '' }} {{ fact_status(assessment, "weight_percent") }}</td>
+      <td>{% if assessment.requirements %}{{ assessment.requirements|join("; ") }}{% else %}<span class="unknown">No details</span>{% endif %} {{ fact_status(assessment, "requirements") }}</td>
     </tr>
     {% endfor %}
   </table>

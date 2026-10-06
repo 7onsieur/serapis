@@ -2,11 +2,12 @@
 
 Serapis is a local-first academic workflow assistant developed by Selom Topanou. Development is AI-assisted using Claude and ChatGPT/Codex.
 
-It helps learners organise supplied course information, prepare bounded source-based context, capture their own lecture notes, and create study artefacts. The sample state is fictional and uses Avery Example at Example University.
+It helps learners organise supplied course information, prepare bounded source-based context, capture their own lecture notes, and create study artefacts. The included dataset is explicitly fictional and uses Avery Example at Example University. Its sample assessment facts are invented and supported only by a clearly labelled synthetic brief.
 
 ## Current capabilities
 
 - Loads and validates editable version 2 academic state.
+- Tracks `CONFIRMED`, `NEEDS_VERIFICATION`, or `UNKNOWN` for consequential module and assessment facts, with source IDs for evidence. Legacy values without evidence are never auto-confirmed.
 - Selects a requested module/week and its directly referenced sources.
 - Extracts local PDF text on macOS and builds bounded, source-labelled preparation context.
 - Uses a reasoning-provider boundary for preparation, teaching, quiz, revision, and assignment-planning workflows. OpenAI requests require configuration and may send the selected context externally.
@@ -19,7 +20,7 @@ These are bounded user-invoked workflows. Serapis does not monitor courses auton
 
 ## Architecture
 
-Editable state lives in `data/academic-state.json`. The candidate includes one tiny, original fictional SYN101 PDF so the example source workflow has input; it contains no real course material. Other source files are referenced by project-relative locators and are not bundled. The `university_jarvis` Python package validates state, selects relevant sources, creates bounded workflow contexts, and stores generated workflow cache separately from the canonical study record. The internal Python package name remains `university_jarvis` to avoid unnecessary churn in the existing implementation; the product, package metadata, and command are Serapis.
+Editable state lives in `data/academic-state.json`. The sample dataset is marked `fictional_example`; its assessment brief, facts, institutions and source materials are synthetic and contain no real university material. Other source files are referenced by project-relative locators and are not bundled. The `university_jarvis` Python package validates state, selects relevant sources, creates bounded workflow contexts, and stores generated workflow cache separately from the canonical study record. The internal Python package name remains `university_jarvis`; the product, package metadata, and command are Serapis.
 
 ## Installation
 

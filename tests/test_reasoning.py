@@ -24,6 +24,7 @@ from university_jarvis.reasoning import (
     PreparationBrief,
     ReasoningError,
     TokenUsage,
+    build_reasoning_context,
     generate_prepare_brief,
     render_prepare_brief,
 )
@@ -140,7 +141,9 @@ class ReasoningTests(unittest.TestCase):
             self.assertEqual(result.cache_status, "generated")
             self.assertEqual(len(provider.calls), 1)
             supplied = provider.calls[0]
-            self.assertEqual(supplied["module"]["code"], "SYN101")
+            self.assertEqual(supplied["workflow_scope"]["module_key"], "SYN101")
+            self.assertIn("needs_verification", supplied["module_facts"])
+            self.assertNotIn("module", supplied)
             self.assertEqual(supplied["week"]["number"], 1)
             self.assertEqual(
                 [source["id"] for source in supplied["sources"]],
@@ -155,6 +158,53 @@ class ReasoningTests(unittest.TestCase):
                 sum(source["character_count"] for source in supplied["source_contexts"]),
                 16_000,
             )
+
+    def test_out_of_context_citation_is_rejected_before_cache_write(self) -> None:
+        class InvalidCitationProvider(FakeReasoningProvider):
+            def generate_structured_output(self, context, instructions, output_format):
+                self.calls.append(context)
+                invalid = sample_brief().to_dict()
+                invalid["core_concepts"][0]["provenance"][0]["source_id"] = "not-supplied"
+                return invalid
+
+        provider = InvalidCitationProvider()
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            cache_dir = Path(temporary_directory)
+            with self.assertRaisesRegex(ReasoningError, "source not supplied"):
+                generate_prepare_brief(bounded_context(), provider, cache_dir)
+            self.assertEqual(list(cache_dir.iterdir()), [])
+
+    def test_provider_context_groups_fact_values_by_trust_status(self) -> None:
+        context = bounded_context()
+        context["module"]["fact_provenance"] = {
+            "title": {"status": "NEEDS_VERIFICATION", "evidence": []},
+            "code": {"status": "UNKNOWN", "evidence": []},
+        }
+        context["assessments"] = [{
+            "id": "a1",
+            "title": "Synthetic essay",
+            "deadline": "2030-01-02",
+            "weight_percent": 40,
+            "requirements": None,
+            "fact_provenance": {
+                "title": {"status": "CONFIRMED", "evidence": [{"source_id": "brief-1", "location": "Title"}]},
+                "deadline": {"status": "NEEDS_VERIFICATION", "evidence": []},
+                "weight_percent": {"status": "UNKNOWN", "evidence": []},
+                "requirements": {"status": "UNKNOWN", "evidence": []},
+            },
+        }]
+        context["truth_sources"] = [
+            *context["sources"],
+            {"id": "brief-1", "title": "Synthetic brief", "source_class": "UNIVERSITY_MATERIAL"},
+        ]
+
+        supplied = build_reasoning_context(context)
+
+        self.assertNotIn("assessments", supplied)
+        self.assertEqual(supplied["assessment_facts"][0]["facts"]["confirmed"][0]["value"], "Synthetic essay")
+        self.assertEqual(supplied["assessment_facts"][0]["facts"]["needs_verification"][0]["value"], "2030-01-02")
+        self.assertNotIn("value", supplied["assessment_facts"][0]["facts"]["unknown"][0])
+        self.assertEqual(supplied["assessment_facts"][0]["facts"]["confirmed"][0]["evidence"][0]["source_class"], "UNIVERSITY_MATERIAL")
 
     def test_identical_input_uses_cache_and_fingerprint_change_regenerates(self) -> None:
         provider = FakeReasoningProvider()

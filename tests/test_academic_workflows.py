@@ -224,7 +224,7 @@ class AcademicWorkflowTests(unittest.TestCase):
             [assessment["title"] for assessment in context["assessments"]],
             ["Practice outline", "Example learning reflection"],
         )
-        self.assertIsNone(context["assessments"][1]["weight_percent"])
+        self.assertEqual(context["assessments"][1]["weight_percent"], 25)
         self.assertEqual([source["id"] for source in context["sources"]], SOURCE_IDS)
         self.assertEqual(context["sources"][1]["pages"], "1")
 
