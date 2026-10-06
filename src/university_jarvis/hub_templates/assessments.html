@@ -1,0 +1,32 @@
+{% extends "base.html" %}
+{% block title %}Assessments — Serapis by Limitless Hub{% endblock %}
+{% block content %}
+<div class="page-head">
+  <p class="eyebrow">Your Record</p>
+  <h1>Assessments</h1>
+  <p class="lede">Exactly as recorded in academic-state.json. No date arithmetic, urgency, or due-soon logic — <span class="tag tbc">TBC</span> means the deadline itself is genuinely to-be-confirmed.</p>
+</div>
+{% set any_assessment = modules|selectattr("assessments")|list %}
+{% if any_assessment %}
+<div class="table-scroll">
+<table class="table-roomy">
+  <tr><th>Module</th><th>Title</th><th>Deadline</th><th>Weight</th></tr>
+  {% for module in modules %}
+    {% for assessment in module.assessments %}
+    <tr>
+      <td><a class="module-pill" href="/modules/{{ module.module_code }}">{{ module.module_code }}</a></td>
+      <td class="title-cell">{{ assessment.title }}</td>
+      <td>
+        {{ assessment.deadline if assessment.deadline else '' }}{% if not assessment.deadline %}<span class="unknown">UNKNOWN</span>{% endif %}
+        {% if assessment.deadline_status == "TBC" %}<span class="tag tbc">TBC</span>{% endif %}
+      </td>
+      <td>{{ (assessment.weight_percent ~ '%') if assessment.weight_percent is not none else '' }}</td>
+    </tr>
+    {% endfor %}
+  {% endfor %}
+</table>
+</div>
+{% else %}
+<div class="card"><p class="empty">No assessments recorded.</p></div>
+{% endif %}
+{% endblock %}

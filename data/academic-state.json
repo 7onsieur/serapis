@@ -1,0 +1,35 @@
+{
+  "schema_version": 2,
+  "mission": {
+    "statement": "Serapis helps learners organise their academic materials, understand ideas, and plan their study while respecting their time, privacy, and academic integrity.",
+    "primary_objective": {"statement": "Build understanding and make steady progress toward the learner's stated academic goals."},
+    "stretch_objective": {"statement": "Use reliable evidence and available time to make thoughtful learning choices."},
+    "operating_principles": [
+      {"id": "genuine-learning", "statement": "Support learning rather than outsourcing the learner's thinking."},
+      {"id": "available-evidence", "statement": "Use only information that is available and clearly sourced."},
+      {"id": "minimise-unnecessary-ai", "statement": "Avoid unnecessary external AI requests."}
+    ],
+    "constraints": [
+      {"id": "academic-integrity", "statement": "Respect academic integrity and the learner's institution rules."},
+      {"id": "no-invented-information", "statement": "Do not invent academic facts, deadlines, or requirements."}
+    ]
+  },
+  "student": {"name": "Avery Example", "university": "Example University", "programme": "BA Example Studies", "year_of_study": 1, "level": 4, "academic_year": "2025/26"},
+  "progress": {"overall_status": "unknown", "last_updated": null},
+  "modules": [
+    {
+      "code": "SYN101", "title": "Introduction to Example Studies", "semester": 1, "academic_year": "2025/26",
+      "teaching": {"category": "REFERENCE", "lectures": {"count": 1, "duration_minutes": null, "schedule": null}},
+      "assessments": [
+        {"id": "syn101-practice-outline", "title": "Practice outline", "category": "ASSESSMENT", "deadline": null, "deadline_status": "unknown", "weight_percent": null, "context": "A fictional planning exercise."},
+        {"id": "syn101-example-reflection", "title": "Example learning reflection", "category": "ASSESSMENT", "deadline": null, "deadline_status": "unknown", "weight_percent": null, "context": "A fictional practice reflection about learning strategies."}
+      ],
+      "progress": {"status": "unknown", "completed_week_numbers": [], "last_consolidated_week": null},
+      "weeks": [{"week": 1, "date": null, "topic": "Asking clear questions about evidence", "progress": "unknown", "source_ids": ["syn101-w01-lecture-01-pdf", "syn101-w01-example-reading"], "items": [{"category": "DO", "text": "Identify one claim and the evidence that supports it in the fictional example source.", "source_ids": ["syn101-w01-example-reading"], "status": "unknown"}]}]
+    }
+  ],
+  "sources": [
+    {"id": "syn101-w01-lecture-01-pdf", "module_code": "SYN101", "week": 1, "type": "lecture_pdf", "title": "Week 1: Questions and evidence (synthetic example)", "category": "KNOW", "availability": "content_available", "locator": "sources/SYN101/week-01/example-week-1.pdf"},
+    {"id": "syn101-w01-example-reading", "module_code": "SYN101", "week": 1, "type": "assigned_reading", "title": "Example reading: Claims and evidence", "pages": "1", "authors": "Serapis sample content", "category": "KNOW", "availability": "content_available", "locator": "sources/SYN101/week-01/example-week-1.pdf"}
+  ]
+}

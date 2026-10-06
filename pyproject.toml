@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "serapis"
+version = "0.1.0"
+description = "A local-first academic workflow assistant"
+license = { text = "Apache-2.0" }
+authors = [{ name = "Selom Topanou" }]
+requires-python = ">=3.11"
+dependencies = [
+    "openai>=2,<3",
+    "google-api-python-client>=2,<3",
+    "google-auth-oauthlib>=1,<2",
+    "google-auth-httplib2>=0.4,<1",
+    "playwright>=1.40,<2",
+    "fastapi>=0.110,<1",
+    "uvicorn>=0.29,<1",
+    "jinja2>=3,<4",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=8,<9"]
+
+[project.scripts]
+serapis = "university_jarvis.cli:main"
+
+[tool.setuptools]
+package-dir = {"" = "src"}
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+university_jarvis = ["hub_templates/*.html"]

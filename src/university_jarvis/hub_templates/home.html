@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% block title %}Home — Serapis by Limitless Hub{% endblock %}
+{% block content %}
+<div class="hero">
+  <div>
+    <p class="eyebrow">Attention · Personal AI Command Centre</p>
+    <h1>Academic information currently recorded in Serapis.</h1>
+    <div class="accent-line" style="max-width: 10rem;"></div>
+    <p class="lede">Nothing here is guessed. Deterministic, evidence-only — an absence of evidence is shown as <strong>UNKNOWN</strong>, never as "not done", and nothing is scored, ranked, or given a time-sensitivity label.</p>
+    <div class="headline-stat">{{ modules|length }}<span class="unit">module{{ 's' if modules|length != 1 else '' }} listed</span></div>
+  </div>
+  <div class="hero-orb-wrap">
+    <div class="jarvis-orb lg" aria-hidden="true">
+      <span class="ring r2"></span>
+      <span class="ring"></span>
+      <span class="sweep"></span>
+      <span class="core"></span>
+    </div>
+    <span class="caption">Serapis</span>
+  </div>
+</div>
+
+<div class="stat-grid">
+  <div class="card stat-tile">
+    <div class="n">{{ modules|map(attribute="weeks")|map("length")|sum }}</div>
+    <div class="label">Weeks known</div>
+  </div>
+  <div class="card stat-tile">
+    <div class="n{{ ' accent' if attention.known_assessments }}">{{ attention.known_assessments|length }}</div>
+    <div class="label">Known assessments</div>
+  </div>
+  <div class="card stat-tile">
+    <div class="n{{ ' accent' if attention.study_state_unknown }}">{{ attention.study_state_unknown|length }}</div>
+    <div class="label">Study-state gaps</div>
+  </div>
+  <div class="card stat-tile">
+    <div class="n{{ ' accent' if attention.open_unresolved_items }}">{{ attention.open_unresolved_items|length }}</div>
+    <div class="label">Open unresolved items</div>
+  </div>
+</div>
+
+<div class="section">
+  <div class="section-head">
+    <h2>Material without a study record</h2>
+    <span class="kicker">Study state unknown</span>
+  </div>
+  <p class="section-note">A week has observed university material but no study record yet. This is an evidence gap, not a judgement.</p>
+  {% if attention.study_state_unknown %}
+  <div class="table-scroll">
+  <table>
+    <tr><th>Module</th><th>Week</th><th>Observed material</th></tr>
+    {% for item in attention.study_state_unknown %}
+    <tr>
+      <td><a href="/modules/{{ item.module_code }}">{{ item.module_code }}</a></td>
+      <td><a href="/modules/{{ item.module_code }}/weeks/{{ item.week }}">Week {{ item.week }}</a></td>
+      <td>
+        {% for filename in item.evidence.observed_material %}
+        <span class="tag">{{ filename }}</span>
+        {% endfor %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% elif material_state == "none_observed" %}
+  <div class="feature-panel">
+    <span class="status-dot" aria-hidden="true"></span>
+    <div>
+      <p class="empty" style="margin:0;">No material has been observed yet — nothing is recorded for any known week. Run Check University to sync Blackboard, or open a module/week page to build a workspace.</p>
+    </div>
+  </div>
+  {% elif material_state == "no_gaps" %}
+  <div class="feature-panel">
+    <span class="status-dot clear" aria-hidden="true"></span>
+    <div>
+      <p class="empty" style="margin:0;">Observed material exists, and no study-state gaps are currently identified against it.</p>
+    </div>
+  </div>
+  {% else %}
+  <div class="feature-panel">
+    <span class="status-dot clear" aria-hidden="true"></span>
+    <div><p class="empty" style="margin:0;">None — every week with observed material has an academic-record.</p></div>
+  </div>
+  {% endif %}
+</div>
+
+{% if modules %}
+<div class="section">
+  <div class="section-head">
+    <h2>Your modules</h2>
+  </div>
+  <div class="module-grid-lg">
+    {% for module in modules %}
+    <a class="card module-card-lg" href="/modules/{{ module.module_code }}">
+      <div class="code"><span class="glow">{{ module.module_code }}</span></div>
+      <h3>{{ module.title if module.title else '' }}{% if not module.title %}<span class="unknown">UNKNOWN title</span>{% endif %}</h3>
+      <div class="meta">
+        {% if module.in_academic_state %}<span class="provenance-chip" title="Known via academic-state.json (curriculum, student-entered)"><span class="dot"></span>Curriculum</span>{% endif %}
+        {% if module.in_intake_ledger %}<span class="provenance-chip ledger" title="Known via intake-ledger.json (machine-observed on Blackboard)"><span class="dot"></span>Blackboard</span>{% endif %}
+        <span class="tag">{{ module.weeks|length }} week{{ 's' if module.weeks|length != 1 else '' }}</span>
+      </div>
+      <div class="enter">Enter workspace <span class="arrow">&rarr;</span></div>
+    </a>
+    {% endfor %}
+  </div>
+</div>
+{% endif %}
+
+<div class="section">
+  <div class="section-head">
+    <h2>Open questions and uncertainties</h2>
+    <span class="kicker">Open unresolved items</span>
+  </div>
+  {% if attention.open_unresolved_items %}
+  <div class="table-scroll">
+  <table>
+    <tr><th>Module</th><th>Week</th><th>Item</th></tr>
+    {% for item in attention.open_unresolved_items %}
+    <tr>
+      <td><a href="/modules/{{ item.module_code }}">{{ item.module_code }}</a></td>
+      <td><a href="/modules/{{ item.module_code }}/weeks/{{ item.week }}">Week {{ item.week }}</a></td>
+      <td>{{ item.description }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <div class="card"><p class="empty">None recorded.</p></div>
+  {% endif %}
+</div>
+
+<div class="section">
+  <div class="section-head">
+    <h2>Assessments Serapis knows about</h2>
+    <span class="kicker">Known assessments</span>
+  </div>
+  {% if attention.known_assessments %}
+  <div class="table-scroll">
+  <table>
+    <tr><th>Module</th><th>Assessment</th></tr>
+    {% for item in attention.known_assessments %}
+    <tr>
+      <td><a href="/modules/{{ item.module_code }}">{{ item.module_code }}</a></td>
+      <td>
+        {{ item.description }}
+        {% if item.evidence.deadline_status == "TBC" %}<span class="tag tbc">TBC</span>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <div class="card"><p class="empty">None recorded.</p></div>
+  {% endif %}
+</div>
+{% endblock %}

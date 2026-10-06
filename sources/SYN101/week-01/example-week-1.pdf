@@ -1,0 +1,33 @@
+%PDF-1.4
+%Synthetic example
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>
+endobj
+4 0 obj
+<< /Length 346 >>
+stream
+BT /F1 16 Tf 72 740 Td (Questions and Evidence) Tj /F1 11 Tf 0 -32 Td (Synthetic teaching example for SYN101, Week 1.) Tj 0 -20 Td (A claim is a statement that may be checked.) Tj 0 -18 Td (Evidence is information used to support or question a claim.) Tj 0 -28 Td (Practice: identify the claim, then ask what evidence would help assess it.) Tj ET
+endstream
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+xref
+0 6
+0000000000 65535 f 
+0000000028 00000 n 
+0000000077 00000 n 
+0000000134 00000 n 
+0000000260 00000 n 
+0000000657 00000 n 
+trailer
+<< /Size 6 /Root 1 0 R >>
+startxref
+727
+%%EOF

@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block title %}{{ module.module_code }} — Serapis by Limitless Hub{% endblock %}
+{% block content %}
+<p class="breadcrumb"><a href="/modules">&larr; Modules</a></p>
+<div class="page-head">
+  <p class="eyebrow">{{ module.module_code }}</p>
+  <h1>{{ module.module_code }}{% if module.title %} — {{ module.title }}{% endif %}</h1>
+  <p class="lede">
+    {% if module.in_academic_state %}<span class="provenance-chip" title="Known via academic-state.json (curriculum, student-entered)"><span class="dot"></span>Curriculum</span>{% endif %}
+    {% if module.in_intake_ledger %}<span class="provenance-chip ledger" title="Known via intake-ledger.json (machine-observed on Blackboard)"><span class="dot"></span>Blackboard</span>{% endif %}
+  </p>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>Weeks</h2></div>
+  {% if module.weeks %}
+  <div class="table-scroll">
+  <table>
+    <tr><th>Week</th><th>Topic</th><th>Known through</th><th>Materials</th><th>Study/workflow state</th></tr>
+    {% for week in module.weeks %}
+    <tr>
+      <td><a href="/modules/{{ module.module_code }}/weeks/{{ week.week }}">Week {{ week.week }}</a></td>
+      <td>{{ week.topic if week.topic else '' }}{% if not week.topic %}<span class="unknown">UNKNOWN</span>{% endif %}</td>
+      <td>
+        {% if week.in_academic_state %}<span class="tag">academic-state</span>{% endif %}
+        {% if week.in_intake_ledger %}<span class="tag">intake-ledger</span>{% endif %}
+      </td>
+      <td>{{ week.materials|length }}</td>
+      <td>
+        {% if week.study_state and week.study_state.record_found %}
+          {% for name, status in week.study_state.workflow_statuses.items() %}
+          <span class="tag">{{ name }}: {{ status }}</span>
+          {% endfor %}
+        {% else %}
+          <span class="unknown">UNKNOWN — no academic-record.json</span>
+        {% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <div class="card"><p class="empty">Weeks: none known from either source.</p></div>
+  {% endif %}
+</div>
+
+<div class="section">
+  <div class="section-head">
+    <h2>Assessments</h2>
+    <span class="kicker">As recorded in academic-state.json</span>
+  </div>
+  {% if module.assessments %}
+  <div class="table-scroll">
+  <table>
+    <tr><th>Title</th><th>Deadline</th><th>Weight</th></tr>
+    {% for assessment in module.assessments %}
+    <tr>
+      <td>{{ assessment.title }}</td>
+      <td>
+        {{ assessment.deadline if assessment.deadline else '' }}{% if not assessment.deadline %}<span class="unknown">UNKNOWN</span>{% endif %}
+        {% if assessment.deadline_status == "TBC" %}<span class="tag tbc">TBC</span>{% endif %}
+      </td>
+      <td>{{ (assessment.weight_percent ~ '%') if assessment.weight_percent is not none else '' }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% elif module.in_academic_state %}
+  <div class="card"><p class="empty">Assessments: none recorded.</p></div>
+  {% else %}
+  <div class="card"><p class="empty">Module not known to academic-state.json — assessments UNKNOWN.</p></div>
+  {% endif %}
+</div>
+
+{% if action_error %}
+<div class="action-error">
+  <strong>Action failed:</strong> {{ action_error }}
+</div>
+{% endif %}
+{% if action_rows or action_rendered %}
+<div class="action-result">
+  <strong>Action succeeded.</strong>
+  {% if action_rows %}
+  <ul>
+  {% for label, value in action_rows %}
+    <li>{{ label }}: {{ value }}</li>
+  {% endfor %}
+  </ul>
+  {% endif %}
+  {% if action_rendered %}
+  <div class="response-card">
+    <div class="response-label"><span class="dot"></span>Serapis' answer</div>
+    <pre class="rendered-output">{{ action_rendered }}</pre>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="section">
+  <div class="section-head"><h2>Actions</h2></div>
+  <div class="action-form">
+    <h3><span aria-hidden="true">✦</span> Assignment coach <span class="badge ephemeral">Ephemeral · doesn't write</span></h3>
+    <p class="note">
+      Cache-first model call, generated fresh for this view only. Coaches planning and understanding
+      only: it will not produce a finished, submittable assignment response.
+    </p>
+    <form method="post" action="/modules/{{ module.module_code }}/assignment">
+      <button type="submit">Get assignment coaching</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

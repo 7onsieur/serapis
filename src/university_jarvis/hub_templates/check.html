@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+{% block title %}Check — Serapis by Limitless Hub{% endblock %}
+{% block content %}
+<div class="page-head">
+  <p class="eyebrow">University Sync</p>
+  <h1>Check University</h1>
+  <p class="lede">
+    Human-triggered only — never runs on page load. When you run it, Serapis reads your Blackboard
+    account and reconciles what it finds against what it already knows, reporting NEW/CHANGED/UNCHANGED/etc
+    exactly as found. Google Drive sync stays off.
+  </p>
+</div>
+
+<div class="sync-pipeline" aria-hidden="true">
+  <div class="node you">
+    <div class="glyph">🎓</div>
+    <div class="label">Blackboard</div>
+  </div>
+  <div class="connector"></div>
+  <div class="node jarvis">
+    <div class="glyph">
+      <span class="jarvis-orb" style="--orb-size: 1.6rem;"><span class="core"></span><span class="ring"></span></span>
+    </div>
+    <div class="label">Read when you run a check</div>
+  </div>
+  <div class="connector"></div>
+  <div class="node you">
+    <div class="glyph">✓</div>
+    <div class="label">Reconciled with what you know</div>
+  </div>
+</div>
+
+<div class="action-form">
+  <h3><span aria-hidden="true">⇄</span> Run a real Blackboard check <span class="badge writes">Reads your Blackboard account</span></h3>
+  <p class="note">Nothing runs until you press this. Drive sync is not toggleable here — it stays off.</p>
+  <form method="post" action="/check" id="check-form">
+    <button type="submit">Run check now</button>
+  </form>
+</div>
+
+{% if error %}
+<div class="action-error">
+  <strong>Check failed:</strong> {{ error }}
+</div>
+{% endif %}
+
+{% if result %}
+<div class="section">
+  <div class="section-head"><h2>Result</h2></div>
+  <p class="section-note">
+    "Week status" is Blackboard's discovery-container state (e.g. DISCOVERED means the week's content
+    container was found — it is not a reconciliation outcome). Each item's own row shows the real
+    NEW/CHANGED/UNCHANGED/etc reconciliation status against the intake ledger.
+  </p>
+
+  {% if summary %}
+  {% set summary_labels = {
+    "new": "New", "changed": "Changed",
+    "metadata_changed": "Metadata changed (content identical)",
+    "unchanged": "Unchanged", "missing": "Missing since last check",
+    "ambiguous": "Ambiguous", "failed": "Failed",
+    "not_yet_published": "Not yet published",
+  } %}
+  {% set summary_classes = {
+    "new": "status-new", "changed": "status-changed", "unchanged": "status-unchanged",
+    "metadata_changed": "status-unchanged", "missing": "status-ambiguous",
+    "ambiguous": "status-ambiguous", "failed": "status-failed", "not_yet_published": "status-not_yet_published",
+  } %}
+  <div class="stat-grid">
+    {% for key, count in summary.items() %}
+    <div class="card stat-tile">
+      <div class="n"><span class="tag {{ summary_classes.get(key, '') }}">{{ summary_labels.get(key, key) }}</span></div>
+      <div class="label">{{ count }} item{{ 's' if count != 1 else '' }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if result.modules %}
+    {% for module in result.modules %}
+    <div class="section">
+      <h3>{{ module.module_code }}</h3>
+      {% for week in module.weeks %}
+      <div class="section-head">
+        <h4 style="margin:0;">Week {{ week.week }}</h4>
+        <span class="tag week-status">week status: {{ week.status }}</span>
+      </div>
+      {% if week.status in ("WEEK_NOT_YET_PUBLISHED", "AMBIGUOUS_DUPLICATE_WEEK") %}
+      <div class="card"><p class="unknown">{{ week.status }} -- not reconciled; no item statuses to show.</p></div>
+      {% elif week['items'] %}
+      {% set status_class = {
+        "NEW": "status-new", "CHANGED": "status-changed", "UNCHANGED": "status-unchanged",
+        "METADATA_CHANGED_CONTENT_IDENTICAL": "status-unchanged",
+        "MISSING_SINCE_LAST_CHECK": "status-ambiguous", "AMBIGUOUS": "status-ambiguous",
+        "FAILED": "status-failed", "DOWNLOAD_FAILED": "status-failed", "DRIVE_SYNC_FAILED": "status-failed",
+      } %}
+      <div class="table-scroll">
+      <table>
+        <tr><th>Item</th><th>Reconciliation status</th><th>Detail</th></tr>
+        {% for item in week['items'] %}
+        {% set item_name = item.file_name if item.file_name else (item.source_path[-1].title if item.source_path else "?") %}
+        <tr>
+          <td>{{ item_name }}</td>
+          <td><span class="tag {{ status_class.get(item.status, '') }}">{{ item.status }}</span></td>
+          <td>
+            {% if item.reason %}{{ item.reason }}{% endif %}
+            {% if item.error %}{{ item.error }}{% endif %}
+            {% if not item.reason and not item.error %}<span class="unknown">&mdash;</span>{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+      </div>
+      {% else %}
+      <div class="card"><p class="empty">No content items discovered.</p></div>
+      {% endif %}
+      {% endfor %}
+    </div>
+    {% endfor %}
+  {% else %}
+  <div class="card"><p class="empty">No teaching modules discovered.</p></div>
+  {% endif %}
+
+  {% if result.scope_issues %}
+  <div class="section">
+    <h3>Scope issues</h3>
+    <ul>
+    {% for issue in result.scope_issues %}
+      <li>{{ issue.reason }} -- course {{ issue.course_system_id }}: {{ issue.detail or '' }}</li>
+    {% endfor %}
+    </ul>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+{% endblock %}

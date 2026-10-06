@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}{{ module.module_code }} Week {{ week.week }} — Serapis by Limitless Hub{% endblock %}
+{% block content %}
+<p class="breadcrumb"><a href="/modules">Modules</a> &rarr; <a href="/modules/{{ module.module_code }}">{{ module.module_code }}</a> &rarr; Week {{ week.week }}</p>
+<div class="page-head">
+  <p class="eyebrow">{{ module.module_code }} · Week {{ week.week }}</p>
+  <h1>{{ module.module_code }} — Week {{ week.week }}</h1>
+  <p class="lede">
+    {{ week.topic if week.topic else '' }}{% if not week.topic %}<span class="unknown">Topic UNKNOWN</span>{% endif %}
+  </p>
+  <p class="lede">
+    {% if week.in_academic_state %}<span class="provenance-chip" title="Known via academic-state.json (curriculum, student-entered)"><span class="dot"></span>Curriculum</span>{% endif %}
+    {% if week.in_intake_ledger %}<span class="provenance-chip ledger" title="Known via intake-ledger.json (machine-observed on Blackboard)"><span class="dot"></span>Blackboard</span>{% endif %}
+    {% if not week.in_academic_state and not week.in_intake_ledger %}<span class="unknown">neither source</span>{% endif %}
+  </p>
+</div>
+
+<div class="section">
+  <div class="section-head">
+    <h2>Observed material</h2>
+    <span class="kicker">Machine-observed</span>
+  </div>
+  {% if week.materials %}
+  <div class="table-scroll">
+  <table>
+    <tr><th>File</th><th>Last seen</th><th>Linkage</th></tr>
+    {% for material in week.materials %}
+    <tr>
+      <td>{{ material.filename }}</td>
+      <td>{{ material.last_seen_at if material.last_seen_at else '' }}{% if not material.last_seen_at %}<span class="unknown">UNKNOWN</span>{% endif %}</td>
+      <td><span class="unknown">{{ material.linkage_status }}</span></td>
+    </tr>
+    {% endfor %}
+  </table>
+  </div>
+  {% else %}
+  <div class="card"><p class="empty">No material observed in the intake ledger for this week.</p></div>
+  {% endif %}
+</div>
+
+<div class="section">
+  <div class="section-head">
+    <h2>Study / workflow state</h2>
+    <span class="kicker">Derived from your workspace</span>
+  </div>
+  {% if week.study_state and week.study_state.record_found %}
+    {% if week.study_state.workflow_statuses %}
+    <div class="table-scroll">
+    <table>
+      <tr><th>Workflow</th><th>Status</th></tr>
+      {% for name, status in week.study_state.workflow_statuses.items() %}
+      <tr><td>{{ name }}</td><td>{{ status }}</td></tr>
+      {% endfor %}
+    </table>
+    </div>
+    {% endif %}
+    <h3>Unresolved items</h3>
+    {% if week.study_state.unresolved_items %}
+    <div class="table-scroll">
+    <table>
+      <tr><th>Kind</th><th>Text</th><th>Status</th></tr>
+      {% for item in week.study_state.unresolved_items %}
+      <tr><td>{{ item.kind }}</td><td>{{ item.text }}</td><td>{{ item.status }}</td></tr>
+      {% endfor %}
+    </table>
+    </div>
+    {% else %}
+    <div class="card"><p class="empty">None recorded.</p></div>
+    {% endif %}
+  {% else %}
+    <div class="card">
+      <p class="unknown">UNKNOWN — no academic-record.json exists for this week yet. This is an evidence gap, not a verdict either way about whether this material has been engaged with.</p>
+    </div>
+  {% endif %}
+</div>
+
+{% if action_error %}
+<div class="action-error">
+  <strong>Action failed:</strong> {{ action_error }}
+</div>
+{% endif %}
+{% if action_rows or action_rendered %}
+<div class="action-result">
+  <strong>Action succeeded.</strong>
+  {% if action_rows %}
+  <ul>
+  {% for label, value in action_rows %}
+    <li>{{ label }}: {{ value }}</li>
+  {% endfor %}
+  </ul>
+  {% endif %}
+  {% if action_rendered %}
+  <div class="response-card">
+    <div class="response-label"><span class="dot"></span>Serapis' answer</div>
+    <pre class="rendered-output">{{ action_rendered }}</pre>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+<div class="section">
+  <div class="section-head"><h2>Actions</h2></div>
+
+  <div class="action-grid">
+    <div class="action-form">
+      <h3><span aria-hidden="true">▣</span> Build / prepare workspace <span class="badge writes">Writes to your record</span></h3>
+      <p class="note">Cache-first: only calls the AI model on a local cache miss. Never runs on page load.</p>
+      <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/build">
+        <button type="submit">Build workspace</button>
+      </form>
+    </div>
+
+    <div class="action-form">
+      <h3><span aria-hidden="true">✦</span> Teach <span class="badge writes">Writes to your record</span></h3>
+      <p class="note">Always calls the model. Source-grounded; if no topic is given, targets your first open question or uncertainty.</p>
+      <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/teach">
+        <label>Topic (optional)
+          <input type="text" name="topic" placeholder="leave blank to use an open captured item">
+        </label>
+        <button type="submit">Teach</button>
+      </form>
+    </div>
+
+    <div class="action-form">
+      <h3><span aria-hidden="true">?</span> Quiz <span class="badge ephemeral">Ephemeral · doesn't write</span></h3>
+      <p class="note">Cache-first model call, generated fresh for this view only.</p>
+      <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/quiz">
+        <button type="submit">Generate quiz</button>
+      </form>
+    </div>
+
+    <div class="action-form">
+      <h3><span aria-hidden="true">↻</span> Revise <span class="badge ephemeral">Ephemeral · doesn't write</span></h3>
+      <p class="note">Cache-first model call, generated fresh for this view only.</p>
+      <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/revise">
+        <button type="submit">Generate revision brief</button>
+      </form>
+    </div>
+
+    <div class="action-form wide">
+      <h3><span aria-hidden="true">✎</span> After-lecture note <span class="badge writes">Writes to your record</span></h3>
+      <p class="note">Local write only -- no network or model call. Requires an existing workspace for this week; label a line "Uncertainty: ..." or "Question: ..." to record it as open, or use the fields below.</p>
+      <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/after-lecture">
+        <label>Notes
+          <textarea name="notes" rows="4" placeholder="Free-form lecture notes"></textarea>
+        </label>
+        <label>Uncertainty
+          <input type="text" name="uncertainty" placeholder="Something you did not understand">
+        </label>
+        <label>Question
+          <input type="text" name="question" placeholder="An unresolved question">
+        </label>
+        <button type="submit">Save note</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

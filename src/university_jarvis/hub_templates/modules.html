@@ -1,0 +1,27 @@
+{% extends "base.html" %}
+{% block title %}Modules — Serapis by Limitless Hub{% endblock %}
+{% block content %}
+<div class="page-head">
+  <p class="eyebrow">Workspace Index</p>
+  <h1>Modules</h1>
+  <p class="lede">Every module Serapis currently knows about. Open one to enter its workspace — materials, study state, and the actions Serapis can take there.</p>
+</div>
+{% if modules %}
+<div class="module-grid-lg">
+  {% for module in modules %}
+  <a class="card module-card-lg" href="/modules/{{ module.module_code }}">
+    <div class="code"><span class="glow">{{ module.module_code }}</span></div>
+    <h3>{{ module.title if module.title else '' }}{% if not module.title %}<span class="unknown">UNKNOWN</span>{% endif %}</h3>
+    <div class="meta">
+      {% if module.in_academic_state %}<span class="provenance-chip" title="Known via academic-state.json (curriculum, student-entered)"><span class="dot"></span>Curriculum</span>{% endif %}
+      {% if module.in_intake_ledger %}<span class="provenance-chip ledger" title="Known via intake-ledger.json (machine-observed on Blackboard)"><span class="dot"></span>Blackboard</span>{% endif %}
+      <span class="tag">{{ module.weeks|length }} week{{ 's' if module.weeks|length != 1 else '' }} known</span>
+    </div>
+    <div class="enter">Enter workspace <span class="arrow">&rarr;</span></div>
+  </a>
+  {% endfor %}
+</div>
+{% else %}
+<div class="card"><p class="empty">No modules known from academic-state.json or intake-ledger.json.</p></div>
+{% endif %}
+{% endblock %}
