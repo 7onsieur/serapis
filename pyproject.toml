@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "serapis"
 version = "0.1.0"
-description = "A local-first academic workflow assistant"
+description = "A local-first academic AI assistant for university students"
 license = { text = "Apache-2.0" }
 authors = [{ name = "Selom Topanou" }]
 requires-python = ">=3.11"
