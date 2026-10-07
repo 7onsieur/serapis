@@ -21,11 +21,9 @@ Slice 3 adds four explicit actions, each POST-only, each a thin call into
   only. Delegates to ``hub_service.capture_after_lecture_note``.
 
 Slice 4 adds three more POST-only, MODEL CALL (cache-first) actions -- each
-ephemeral: they only ever read/write the local reasoning cache
-(``.jarvis-cache/``), never ``academic-record.json``/the study-pack
-docx/the NotebookLM markdown. ``learning.quiz_history``/
-``learning.revision_priorities`` in the workspace record are never updated
-by these or any existing backend function -- the Hub does not claim they are:
+explicitly invoked by the student. Quiz generation persists its private
+question/answer set in an existing workspace, while student responses are
+saved by separate POST actions. Revision remains cache-backed:
 
 - ``POST /modules/{code}/weeks/{n}/quiz``   -- delegates to
   ``hub_service.generate_quiz``.
@@ -236,7 +234,18 @@ def create_app(
         *,
         action_result: dict[str, Any] | None = None,
         action_error: str | None = None,
+        active_task: dict[str, Any] | None = None,
+        learning_recommendation: dict[str, Any] | None = None,
     ) -> HTMLResponse:
+        learning = None
+        quiz_questions = []
+        if week.get("study_state", {}).get("record_found"):
+            learning = hub_service.learning_view(module["module_code"], week["week"], workspace_root=request.app.state.hub_workspace_root)
+            from .workspace import _learning_record
+            record, *_ = _learning_record(module["module_code"], week["week"], request.app.state.hub_workspace_root)
+            quizzes = record.get("learning", {}).get("quiz_history", {}).get("attempts", [])
+            if quizzes:
+                quiz_questions = [{"quiz_id": quizzes[-1]["quiz_id"], **q} for q in quizzes[-1].get("questions", [])]
         return templates.TemplateResponse(
             request,
             "week.html",
@@ -247,6 +256,10 @@ def create_app(
                 "action_rows": _present_action_result(action_result),
                 "action_rendered": _action_rendered_text(action_result),
                 "action_error": action_error,
+                "learning": learning,
+                "quiz_questions": quiz_questions,
+                "active_task": active_task,
+                "learning_recommendation": learning_recommendation,
             },
         )
 
@@ -531,10 +544,89 @@ def create_app(
                 state=request.app.state.hub_state,
                 provider=request.app.state.hub_reasoning_provider,
                 cache_dir=request.app.state.hub_cache_dir,
+                workspace_root=request.app.state.hub_workspace_root,
             )
         except StateError as exc:
             action_error = str(exc)
         return _render_week(request, module, week, action_result=action_result, action_error=action_error)
+
+    @app.post("/modules/{module_code}/weeks/{week_number}/learning/response", response_class=HTMLResponse)
+    async def learning_response(request: Request, module_code: str, week_number: int) -> HTMLResponse:
+        found = _week_or_404(request, module_code, week_number)
+        if isinstance(found, HTMLResponse): return found
+        module, week = found
+        form = await _form_fields(request)
+        try:
+            references = []
+            if form.get("source_id"):
+                references = [{"source_id": form["source_id"], "location": form.get("location", "") }]
+            action_result = hub_service.submit_learning_response(
+                module["module_code"], week_number, task=form.get("task", ""),
+                capability=form.get("capability", "EXPLANATION"), origin=form.get("origin", "TEACH"),
+                response=form.get("response", ""), expected_answer=form.get("expected_answer") or None,
+                source_references=references, assistance_status="PROMPTED" if form.get("prompted") == "yes" else "UNAIDED",
+                prompt_help=[form["prompt_help"]] if form.get("prompt_help") else [],
+                workspace_root=request.app.state.hub_workspace_root)
+            return _render_week(request, module, week, action_result={"attempted_at": action_result["attempted_at"]})
+        except StateError as exc:
+            return _render_week(request, module, week, action_error=str(exc))
+
+    @app.post("/modules/{module_code}/weeks/{week_number}/learning/continue", response_class=HTMLResponse)
+    def learning_continue(request: Request, module_code: str, week_number: int) -> HTMLResponse:
+        found = _week_or_404(request, module_code, week_number)
+        if isinstance(found, HTMLResponse): return found
+        module, week = found
+        try:
+            result = hub_service.continue_learning_task(module["module_code"], week_number,
+                state=request.app.state.hub_state, provider=request.app.state.hub_reasoning_provider,
+                workspace_root=request.app.state.hub_workspace_root)
+            return _render_week(request, module, week, active_task=result["task"],
+                                learning_recommendation=result["recommendation"])
+        except StateError as exc:
+            return _render_week(request, module, week, action_error=str(exc))
+
+    @app.post("/modules/{module_code}/weeks/{week_number}/learning/recommended-response", response_class=HTMLResponse)
+    async def recommended_response(request: Request, module_code: str, week_number: int) -> HTMLResponse:
+        found = _week_or_404(request, module_code, week_number)
+        if isinstance(found, HTMLResponse): return found
+        module, week = found
+        form = await _form_fields(request)
+        try:
+            result = hub_service.submit_recommended_response(module["module_code"], week_number,
+                form.get("task_id", ""), form.get("response", ""), prompted=form.get("prompted") == "yes",
+                prompt_help=[form["prompt_help"]] if form.get("prompt_help") else [],
+                workspace_root=request.app.state.hub_workspace_root)
+            return _render_week(request, module, week, action_result={"attempted_at": result["attempted_at"]})
+        except StateError as exc:
+            return _render_week(request, module, week, action_error=str(exc))
+
+    @app.post("/modules/{module_code}/weeks/{week_number}/learning/quiz-answer", response_class=HTMLResponse)
+    async def quiz_answer(request: Request, module_code: str, week_number: int) -> HTMLResponse:
+        found = _week_or_404(request, module_code, week_number)
+        if isinstance(found, HTMLResponse): return found
+        module, week = found
+        form = await _form_fields(request)
+        try:
+            hub_service.answer_quiz_question(module["module_code"], week_number, form.get("quiz_id", ""),
+                form.get("question_id", ""), form.get("response", ""), workspace_root=request.app.state.hub_workspace_root)
+            return _render_week(request, module, week, action_result={"message": "Quiz response saved before evaluation."})
+        except StateError as exc:
+            return _render_week(request, module, week, action_error=str(exc))
+
+    @app.post("/modules/{module_code}/weeks/{week_number}/learning/evaluate", response_class=HTMLResponse)
+    async def learning_evaluate(request: Request, module_code: str, week_number: int) -> HTMLResponse:
+        found = _week_or_404(request, module_code, week_number)
+        if isinstance(found, HTMLResponse): return found
+        module, week = found
+        form = await _form_fields(request)
+        try:
+            result = hub_service.evaluate_learning_attempt(module["module_code"], week_number,
+                form.get("attempt_id", ""), state=request.app.state.hub_state,
+                provider=request.app.state.hub_reasoning_provider,
+                workspace_root=request.app.state.hub_workspace_root)
+            return _render_week(request, module, week, action_result={"evaluation_outcome": result["evaluation"]["outcome"]})
+        except StateError as exc:
+            return _render_week(request, module, week, action_error=str(exc))
 
     @app.post("/modules/{module_code}/weeks/{week_number}/revise", response_class=HTMLResponse)
     def revise(request: Request, module_code: str, week_number: int) -> HTMLResponse:

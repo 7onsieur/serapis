@@ -188,6 +188,7 @@ class QuizReviseActionTests(unittest.TestCase):
             client = self._app(provider=NoCallProvider(), cache_dir=Path(tmp))
             self.assertEqual(client.get("/modules/SYN101/weeks/1/quiz").status_code, 405)
             self.assertEqual(client.get("/modules/SYN101/weeks/1/revise").status_code, 405)
+            self.assertEqual(client.get("/modules/SYN101/weeks/1/learning/continue").status_code, 405)
 
     def test_get_week_page_never_generates_a_quiz_or_revision_brief(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
@@ -206,7 +207,7 @@ class QuizReviseActionTests(unittest.TestCase):
         body = response.text
         self.assertEqual(len(provider.requests), 1)
         self.assertIn("Questions", body)
-        self.assertIn("Answers", body)
+        self.assertNotIn("Answers", body)  # answer key must stay hidden until the response is saved
         self.assertIn("Grounded recall question", body)
         self.assertIn("PDF p. 3", body)
         self.assertIn("Slide 5", body)

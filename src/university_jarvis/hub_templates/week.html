@@ -79,6 +79,50 @@
   <strong>Action failed:</strong> {{ action_error }}
 </div>
 {% endif %}
+{% if learning %}
+<section class="section">
+  <h2>Learning evidence</h2>
+  <p>Responses are saved locally before any optional evaluation. Evaluation is a provisional model judgement.</p>
+  <ul>{% for capability, item in learning.summary.items() %}<li><strong>{{ capability.title() }}:</strong> {{ item.status }}</li>{% endfor %}</ul>
+  <h3>Next study action: {{ learning.recommendation.action }}</h3><p>{{ learning.recommendation.reason }}</p>
+  {% if learning.recommendation.capability %}<form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/learning/continue"><button type="submit">Continue with {{ learning.recommendation.capability|lower }}</button></form>{% else %}<p>No specific next task can be selected from the current evidence.</p>{% endif %}
+  {% if active_task %}<h3>{{ active_task.capability.title() }} task</h3><p>{{ active_task.task }}</p>
+  <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/learning/recommended-response">
+    <input type="hidden" name="task_id" value="{{ active_task.task_id }}">
+    {% if active_task.assistance_status == 'PROMPTED' %}<p>Prompted task: the TEACH explanation was shown before this question.</p>{% else %}<p>Unaided task: no answer or help has been shown for this question.</p>{% endif %}
+    <label><input type="checkbox" name="prompted" value="yes"> I received other substantive help before answering</label>
+    <label>Help shown <input name="prompt_help"></label>
+    <textarea name="response" required rows="3" placeholder="Your answer"></textarea><button type="submit">Save response</button>
+  </form>{% endif %}
+  {% for question in quiz_questions %}
+  <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/learning/quiz-answer">
+    <p>{{ question.question }}</p><input type="hidden" name="quiz_id" value="{{ question.quiz_id }}"><input type="hidden" name="question_id" value="{{ question.question_id }}">
+    <textarea name="response" required rows="3" placeholder="Your answer"></textarea><button type="submit">Save quiz response</button>
+  </form>{% endfor %}
+  <h3>Answer a TEACH check question</h3>
+  {% for teach_question in learning.teach_questions %}
+  <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/learning/response">
+    <p>{{ teach_question.task }}</p><input type="hidden" name="task" value="{{ teach_question.task }}">
+    <input type="hidden" name="source_id" value="{{ teach_question.source_references[0].source_id if teach_question.source_references else '' }}">
+    <input type="hidden" name="location" value="{{ teach_question.source_references[0].pdf_page if teach_question.source_references else '' }}">
+    <input type="hidden" name="capability" value="EXPLANATION"><input type="hidden" name="origin" value="TEACH">
+    <label><input type="checkbox" name="prompted" value="yes"> I received substantive help before answering</label>
+    <label>Help shown <input name="prompt_help"></label>
+    <textarea name="response" required rows="3" placeholder="Your answer"></textarea><button type="submit">Save response</button>
+  </form>{% endfor %}
+  {% if not learning.teach_questions %}
+  <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/learning/response">
+    <label>Question <input name="task" required></label>
+    <label>Capability <select name="capability"><option>RECALL</option><option selected>EXPLANATION</option><option>APPLICATION</option></select></label>
+    <input type="hidden" name="origin" value="TEACH">
+    <label><input type="checkbox" name="prompted" value="yes"> I received substantive help before answering</label>
+    <label>Help shown <input name="prompt_help"></label>
+    <textarea name="response" required rows="3" placeholder="Your answer"></textarea><button type="submit">Save response</button>
+  </form>
+  {% endif %}
+  {% if learning.latest_unevaluated %}<form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/learning/evaluate"><input type="hidden" name="attempt_id" value="{{ learning.latest_unevaluated }}"><button type="submit">Evaluate with AI</button></form>{% endif %}
+</section>
+{% endif %}
 {% if action_rows or action_rendered %}
 <div class="action-result">
   <strong>Action succeeded.</strong>

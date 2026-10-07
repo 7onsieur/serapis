@@ -20,7 +20,7 @@ from university_jarvis.reasoning import (
     TokenUsage,
     generate_prepare_brief,
 )
-from university_jarvis.workspace import capture_after_lecture, materialize_week_workspace
+from university_jarvis.workspace import capture_after_lecture, materialize_week_workspace, record_learning_attempt, save_learning_evaluation
 
 
 SOURCE_ID = "syn101-w01-lecture-01-pdf"
@@ -203,7 +203,6 @@ class AcademicWorkspaceTests(unittest.TestCase):
                 record["workflows"]["prepare_me"]["generation"]["usage"],
                 {"input_tokens": 1_000, "output_tokens": 500, "total_tokens": 1_500},
             )
-
             self.assertTrue(is_zipfile(first.study_pack_path))
             self.assertGreater(first.study_pack_path.stat().st_size, 1_000)
             with ZipFile(first.study_pack_path) as document:
@@ -223,6 +222,29 @@ class AcademicWorkspaceTests(unittest.TestCase):
             self.assertIn(SOURCE_ID, notebooklm)
             self.assertNotIn("# Flashcards", notebooklm)
             self.assertNotIn("# Mastery", notebooklm)
+
+    def test_rebuild_preserves_captures_teach_and_evaluated_learning_evidence(self) -> None:
+        with tempfile.TemporaryDirectory() as temporary_directory:
+            root = Path(temporary_directory)
+            cache_dir, workspace_root = root / "cache", root / "workspace"
+            self._seed_cache(cache_dir)
+            with patch("university_jarvis.workspace.build_prepare_context", return_value=prepare_context()):
+                materialize_week_workspace({}, "SYN101", 1, provider=NoCallProvider(), cache_dir=cache_dir, workspace_root=workspace_root)
+            capture_after_lecture("SYN101", 1, notes=["existing student note"], workspace_root=workspace_root)
+            record_path = workspace_root / "SYN101" / "week-01" / "academic-record.json"
+            record = json.loads(record_path.read_text())
+            record["workflows"]["teach"] = {"status":"recorded", "interactions":[{"teach_id":"teach-1"}]}
+            record_path.write_text(json.dumps(record))
+            attempt = record_learning_attempt("SYN101", 1, capability="RECALL", task="Define", origin="QUIZ", response="Raw response", root=workspace_root)
+            save_learning_evaluation("SYN101", 1, attempt["attempt_id"], {"outcome":"SUPPORTED", "reason":"specific", "basis":"MODEL_JUDGEMENT"}, root=workspace_root)
+            with patch("university_jarvis.workspace.build_prepare_context", return_value=prepare_context()):
+                materialize_week_workspace({}, "SYN101", 1, provider=NoCallProvider(), cache_dir=cache_dir, workspace_root=workspace_root)
+            final = json.loads(record_path.read_text())
+            self.assertEqual(final["workflows"]["after_lecture"]["captures"][0]["entries"]["lecture_notes"], ["existing student note"])
+            self.assertEqual(final["workflows"]["teach"]["interactions"][0]["teach_id"], "teach-1")
+            self.assertEqual(final["learning"]["evidence"][0]["student_response"], "Raw response")
+            self.assertEqual(final["learning"]["evidence"][0]["evaluation"]["outcome"], "SUPPORTED")
+
 
     def test_missing_cache_fails_without_provider_or_workspace(self) -> None:
         with tempfile.TemporaryDirectory() as temporary_directory:
