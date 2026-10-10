@@ -2,16 +2,27 @@
 
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, Iterable
 
 from .mission import build_objective_context
-from .sources import load_source_context
+from .sources import build_retrieved_contexts, load_source_context, load_source_units
 from .state import get_module, get_sources, get_week, normalize_academic_truth
 
 
 def _load_sources(
-    state: dict[str, Any], source_ids: list[str]
+    state: dict[str, Any],
+    source_ids: list[str],
+    query: str | None = None,
+    pinned: Iterable[tuple[str, int]] = (),
 ) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Load sources; with a ``query``, select relevant passages instead of leading excerpts."""
+    if query is not None:
+        loaded = []
+        for source in get_sources(state, source_ids):
+            extraction, units, titles = load_source_units(source)
+            loaded.append((source, extraction, units, titles))
+        prepared = [{**source, "extraction": extraction} for source, extraction, _u, _t in loaded]
+        return prepared, build_retrieved_contexts(loaded, query, pinned=pinned)
     source_contexts = []
     prepared_sources = []
     for source in get_sources(state, source_ids):
@@ -22,14 +33,29 @@ def _load_sources(
 
 
 def build_week_context(
-    state: dict[str, Any], module_code: str, week_number: int, workflow: str
+    state: dict[str, Any],
+    module_code: str,
+    week_number: int,
+    workflow: str,
+    *,
+    query: str | None = None,
+    source_ids: list[str] | None = None,
+    pinned: Iterable[tuple[str, int]] = (),
 ) -> dict[str, Any]:
-    """Build bounded context for exactly one requested module week."""
+    """Build bounded context for exactly one requested module week.
+
+    With ``query`` the context holds passages retrieved for that topic or
+    question (see ``retrieval.py``) rather than leading excerpts. ``source_ids``
+    narrows the week's sources; it can never add sources outside the week.
+    """
     state = normalize_academic_truth(state)
     module = get_module(state, module_code)
     week = get_week(module, week_number)
+    week_source_ids = week.get("source_ids", [])
+    if source_ids is not None:
+        week_source_ids = [sid for sid in week_source_ids if sid in set(source_ids)]
     prepared_sources, source_contexts = _load_sources(
-        state, week.get("source_ids", [])
+        state, week_source_ids, query, pinned
     )
 
     return {

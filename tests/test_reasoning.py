@@ -567,7 +567,18 @@ class ReasoningTests(unittest.TestCase):
                     provider.generate_prepare_brief({})
 
     def test_prepare_cli_uses_fake_provider_without_live_api(self) -> None:
-        provider = FakeReasoningProvider()
+        class SuppliedPageProvider(FakeReasoningProvider):
+            # The real sample PDF has one page; citing a page that was never
+            # supplied is now rejected.
+            def generate_structured_output(self, context, instructions, output_format):
+                raw = super().generate_structured_output(context, instructions, output_format)
+                for items in raw.values():
+                    for item in items:
+                        for reference in item["provenance"]:
+                            reference["pdf_page"] = 1
+                return raw
+
+        provider = SuppliedPageProvider()
         with tempfile.TemporaryDirectory() as temporary_directory:
             output = io.StringIO()
             with redirect_stdout(output):

@@ -9,8 +9,16 @@ import subprocess
 import zipfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterable
 
+from .retrieval import (
+    RETRIEVAL_CHARACTER_LIMIT,
+    STATUS_MATCHED,
+    Passage,
+    build_passages,
+    retrieval_note,
+    select_passages,
+)
 from .state import StateError
 
 
@@ -272,8 +280,10 @@ def _bounded_page_excerpts(
     ]
 
 
-def load_source_context(source: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
-    """Load one configured source and return extraction metadata plus bounded text."""
+def load_source_units(
+    source: dict[str, Any],
+) -> tuple[dict[str, Any], list[str], dict[int, str | None]]:
+    """Extract one configured source: metadata, full per-unit text, and unit titles."""
     source_id = source.get("id", "unknown")
     if source.get("availability") != "content_available":
         raise SourceError(f"Source content is not available: {source_id}")
@@ -283,19 +293,16 @@ def load_source_context(source: dict[str, Any]) -> tuple[dict[str, Any], dict[st
 
     path = resolve_source_path(locator)
     suffix = path.suffix.lower()
+    titles: dict[int, str | None] = {}
 
     if suffix == ".pdf":
         extracted = extract_pdf_text(path)
         units = extracted.pop("pages")
-        excerpts = _bounded_page_excerpts(units)
     elif suffix == ".pptx":
         extracted = extract_pptx_text(path)
         slides = extracted.pop("slides")
         units = [slide["text"] for slide in slides]
-        excerpts = _bounded_page_excerpts(units)
-        titles_by_slide = {slide["slide_number"]: slide["title"] for slide in slides}
-        for excerpt in excerpts:
-            excerpt["title"] = titles_by_slide.get(excerpt["pdf_page"])
+        titles = {slide["slide_number"]: slide["title"] for slide in slides}
     else:
         raise SourceError(f"Unsupported source format for {source_id}: {path.suffix}")
 
@@ -308,8 +315,18 @@ def load_source_context(source: dict[str, Any]) -> tuple[dict[str, Any], dict[st
             "value": _source_fingerprint(path),
         },
     }
-    bounded_context = {
-        "source_id": source_id,
+    return extraction, units, titles
+
+
+def _coverage_context(
+    source: dict[str, Any], units: list[str], titles: dict[int, str | None]
+) -> dict[str, Any]:
+    excerpts = _bounded_page_excerpts(units)
+    if titles:
+        for excerpt in excerpts:
+            excerpt["title"] = titles.get(excerpt["pdf_page"])
+    return {
+        "source_id": source.get("id", "unknown"),
         "source_type": source["type"],
         "title": source["title"],
         "academic_page_range": source.get("pages"),
@@ -318,4 +335,64 @@ def load_source_context(source: dict[str, Any]) -> tuple[dict[str, Any], dict[st
         "character_count": sum(len(excerpt["text"]) for excerpt in excerpts),
         "excerpts": excerpts,
     }
-    return extraction, bounded_context
+
+
+def load_source_context(source: dict[str, Any]) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Load one configured source and return extraction metadata plus bounded text."""
+    extraction, units, titles = load_source_units(source)
+    return extraction, _coverage_context(source, units, titles)
+
+
+def build_retrieved_contexts(
+    loaded: list[tuple[dict[str, Any], dict[str, Any], list[str], dict[int, str | None]]],
+    query: str,
+    *,
+    pinned: Iterable[tuple[str, int]] = (),
+) -> list[dict[str, Any]]:
+    """Select query-relevant passages across all loaded sources into per-source contexts.
+
+    ``loaded`` holds ``(source, extraction, units, titles)``. Excerpts keep the
+    legacy shape (``pdf_page`` is the page or slide number) plus ``passage_id``.
+    When nothing matches, each source falls back to its leading coverage
+    excerpts and the ``retrieval`` block says so explicitly.
+    """
+    passages: list[Passage] = []
+    for order, (source, _extraction, units, titles) in enumerate(loaded):
+        passages.extend(build_passages(source.get("id", "unknown"), order, units, titles))
+    selected, report = select_passages(passages, query, pinned=pinned)
+    retrieval = {**report, "note": retrieval_note(report)}
+
+    contexts: list[dict[str, Any]] = []
+    for source, extraction, units, titles in loaded:
+        source_id = source.get("id", "unknown")
+        if report["status"] != STATUS_MATCHED:
+            context = _coverage_context(source, units, titles)
+            context["selection"] = "coverage_fallback_no_retrieval_match"
+        else:
+            excerpts = []
+            for passage in selected:
+                if passage.source_id != source_id:
+                    continue
+                excerpt = {
+                    "pdf_page": passage.unit,
+                    "passage_id": passage.passage_id,
+                    "text": passage.text,
+                    "truncated": False,
+                }
+                if passage.title:
+                    excerpt["title"] = passage.title
+                excerpts.append(excerpt)
+            context = {
+                "source_id": source_id,
+                "source_type": source["type"],
+                "title": source["title"],
+                "academic_page_range": source.get("pages"),
+                "selection": "bm25 passage retrieval",
+                "character_limit": RETRIEVAL_CHARACTER_LIMIT,
+                "character_count": sum(len(e["text"]) for e in excerpts),
+                "excerpts": excerpts,
+            }
+        context["source_fingerprint"] = extraction["fingerprint"]["value"]
+        context["retrieval"] = retrieval
+        contexts.append(context)
+    return contexts

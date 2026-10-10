@@ -947,6 +947,38 @@ def _validate_citation_ids(value: Any, allowed_source_ids: set[str]) -> None:
             _validate_citation_ids(child, allowed_source_ids)
 
 
+def supplied_units(source_contexts: list[dict[str, Any]]) -> dict[str, set[int]]:
+    """Map source_id to the page/slide numbers whose text was actually supplied."""
+    units: dict[str, set[int]] = {}
+    for source_context in source_contexts or []:
+        found = units.setdefault(source_context.get("source_id"), set())
+        for excerpt in source_context.get("excerpts", []) or []:
+            if isinstance(excerpt.get("pdf_page"), int):
+                found.add(excerpt["pdf_page"])
+    return units
+
+
+def _validate_citation_pages(value: Any, units: dict[str, set[int]]) -> None:
+    """Reject a cited page/slide whose text was not supplied. ``pdf_page`` None stays valid."""
+    if isinstance(value, dict):
+        provenance = value.get("provenance")
+        if isinstance(provenance, list):
+            for reference in provenance:
+                if not isinstance(reference, dict):
+                    continue
+                page = reference.get("pdf_page")
+                if isinstance(page, int) and page not in units.get(reference.get("source_id"), set()):
+                    raise ReasoningError(
+                        "Generated output cited a page or slide that was not supplied to this "
+                        f"workflow: {reference.get('source_id')!r} {page}"
+                    )
+        for child in value.values():
+            _validate_citation_pages(child, units)
+    elif isinstance(value, list):
+        for child in value:
+            _validate_citation_pages(child, units)
+
+
 def _cache_key(
     reasoning_context: dict[str, Any],
     provider: ReasoningProvider,
@@ -1015,8 +1047,11 @@ def _generate_cached(
 
     allowed_source_ids = {source["id"] for source in reasoning_context.get("sources", [])}
 
+    units = supplied_units(reasoning_context.get("source_contexts", []))
+
     def checked_parser(raw: dict[str, Any]) -> Any:
         _validate_citation_ids(raw, allowed_source_ids)
+        _validate_citation_pages(raw, units)
         return parser(raw)
 
     if cache_path.is_file():

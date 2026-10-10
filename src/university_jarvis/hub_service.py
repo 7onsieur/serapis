@@ -64,7 +64,8 @@ from .workflows import build_assignment_context, build_week_context
 from .workspace import (capture_after_lecture, materialize_week_workspace, teach_week,
                         record_learning_attempt, save_learning_evaluation, _learning_record,
                         _workspace_paths, _write_record, LEARNING_CAPABILITIES)
-from .reasoning import ReasoningError
+from .reasoning import ReasoningError, supplied_units
+import re
 from datetime import datetime, timezone
 
 
@@ -515,9 +516,17 @@ def evaluate_learning_attempt(module_code: str, week_number: int, attempt_id: st
     record, *_ = _learning_record(module_code, week_number, workspace_root)
     attempt = next((a for a in record["learning"]["evidence"] if a["attempt_id"] == attempt_id), None)
     if attempt is None: raise StateError("Learning attempt not found")
-    context = build_week_context(state, module_code, week_number, "LEARNING_EVALUATION")
-    ids = {s["id"] for s in context["sources"]}
     refs = attempt["source_references"]
+    # Retrieve evidence for what was asked; cited units are always kept.
+    context = build_week_context(
+        state, module_code, week_number, "LEARNING_EVALUATION",
+        # The student's response is deliberately excluded: it could pull in text that
+        # echoes a wrong answer and hide text that contradicts it.
+        query=" ".join(str(attempt.get(k) or "") for k in ("task", "expected_answer")),
+        source_ids=[r["source_id"] for r in refs if r.get("source_id")],
+        pinned=[(r["source_id"], r["pdf_page"]) for r in refs if r.get("source_id") and isinstance(r.get("pdf_page"), int)],
+    )
+    ids = {s["id"] for s in context["sources"]}
     if any(r.get("source_id") not in ids for r in refs): raise StateError("Task source context is no longer available")
     current_sources = {s["id"]: s for s in context["sources"]}
     for ref in refs:
@@ -526,6 +535,11 @@ def evaluate_learning_attempt(module_code: str, week_number: int, attempt_id: st
         if old_fingerprint is not None and old_fingerprint != current_fingerprint:
             raise StateError("Task source has changed since the response; its original context is retained, but re-evaluation needs a new task")
     referenced_ids = {r["source_id"] for r in refs}
+    if any(c.get("retrieval", {}).get("status", "matched") != "matched" for c in context["source_contexts"]):
+        evaluation = {"outcome": "UNCLEAR", "reason": "No supporting source passage could be retrieved for this task, so the response cannot be judged against the sources.",
+                      "evidence_references": [], "basis": "NO_EVIDENCE_RETRIEVED", "provider": None,
+                      "evaluated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat()}
+        return save_learning_evaluation(module_code, week_number, attempt_id, evaluation, root=workspace_root)
     bounded = {"task": attempt["task"], "expected_answer_or_rubric": attempt["expected_answer"],
                "student_response": attempt["student_response"], "assistance_status": attempt["assistance_status"],
                "prompt_help": attempt["prompt_help"], "source_contexts": [x for x in context["source_contexts"] if x.get("source_id") in referenced_ids],
@@ -533,6 +547,11 @@ def evaluate_learning_attempt(module_code: str, week_number: int, attempt_id: st
     schema = {"type":"json_schema", "name":"learning_evaluation", "strict":True, "schema":{"type":"object","properties":{"outcome":{"type":"string","enum":["SUPPORTED","PARTLY_SUPPORTED","NOT_SUPPORTED","UNCLEAR"]},"reason":{"type":"string"},"evidence_references":{"type":"array","items":{"type":"object","properties":{"source_id":{"type":"string"},"location":{"type":"string"}},"required":["source_id","location"],"additionalProperties":False}}},"required":["outcome","reason","evidence_references"],"additionalProperties":False}}
     raw = provider.generate_structured_output(bounded, "Evaluate only this response against the supplied expected answer and source excerpts. This is a provisional task-level model judgement, not a mastery or psychometric claim. Cite only supplied source IDs; use UNCLEAR when evidence is insufficient.", schema)
     allowed = {r["source_id"] for r in refs}
+    units = supplied_units(bounded["source_contexts"])
+    for ref in raw.get("evidence_references", []) if isinstance(raw.get("evidence_references"), list) else []:
+        for number in re.findall(r"(?:p\.?|pages?|slides?)\s*(\d+)", str(ref.get("location", "")), re.I):
+            if int(number) not in units.get(ref.get("source_id"), set()):
+                raise ReasoningError("Evaluation cited a page or slide that was not supplied")
     if raw.get("outcome") not in {"SUPPORTED","PARTLY_SUPPORTED","NOT_SUPPORTED","UNCLEAR"} or any(r.get("source_id") not in allowed for r in raw.get("evidence_references", [])):
         raise ReasoningError("Evaluation returned invalid outcome or source references")
     evaluation = {**raw, "basis":"MODEL_JUDGEMENT", "provider":provider.cache_identity(), "evaluated_at":datetime.now(timezone.utc).replace(microsecond=0).isoformat()}

@@ -1307,14 +1307,33 @@ def teach_week(
     ).get("number") != week_number:
         raise StateError("Academic record module/week does not match the requested TEACH interaction")
 
-    context = build_week_context(state, module_code, week_number, "TEACH")
+    teach_request, student_context = _teach_target(record, topic)
+    retrieval_query = " ".join(
+        [teach_request["topic"], *(item["text"] for item in student_context)]
+    )
+    context = build_week_context(
+        state, module_code, week_number, "TEACH", query=retrieval_query
+    )
+    unmatched = next(
+        (
+            c["retrieval"]
+            for c in context["source_contexts"]
+            if c.get("retrieval", {}).get("status", "matched") != "matched"
+        ),
+        None,
+    )
+    if unmatched is not None:
+        raise StateError(
+            f"No passage in this week's sources matches '{teach_request['topic']}', so Serapis "
+            "will not explain it from unrelated material. Try the wording used in the slides or "
+            "reading, check the topic belongs to this week, or ask your lecturer."
+        )
     current_source_ids = {source["id"] for source in context["sources"]}
     record_source_ids = {source["source_id"] for source in record.get("sources", [])}
     if current_source_ids != record_source_ids:
         raise StateError(
             "Configured week sources no longer match the academic record; rematerialize the workspace"
         )
-    teach_request, student_context = _teach_target(record, topic)
     context["teach_request"] = teach_request
     context["prepare_me"] = {
         "classification": "source_grounded_preparation",
