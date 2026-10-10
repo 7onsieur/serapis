@@ -1458,17 +1458,105 @@ def _learning_record(module_code: str, week_number: int, root: Path | None) -> t
     return record, record_path, study_pack_path, notebooklm_path
 
 
+ASSISTANCE_RANK = {"UNAIDED": 0, "PROMPTED": 1, "REVEALED": 2}
+EXPOSURE_KINDS = {"HINT": "PROMPTED", "EXPLANATION": "PROMPTED", "FEEDBACK": "PROMPTED", "REVEAL": "REVEALED"}
+
+
+def task_text_hash(text: str | None) -> str | None:
+    """Stable identity of a task's wording (case, punctuation and spacing ignored)."""
+    words = " ".join(re.findall(r"[a-z0-9]+", (text or "").lower()))
+    return sha256(words.encode("utf-8")).hexdigest() if words else None
+
+
+def task_exposure_keys(record: dict[str, Any]) -> set[str]:
+    """Task keys the student has already been helped with, even if never answered."""
+    return {e.get("task_key") for e in record.get("learning", {}).get("task_exposures", [])}
+
+
+def exposed_task_hashes(record: dict[str, Any]) -> set[str]:
+    """Wording hashes of helped tasks, so an identical question under another id is also spent."""
+    return {e["task_text_hash"] for e in record.get("learning", {}).get("task_exposures", []) if e.get("task_text_hash")}
+
+
+def _assistance_floor(record: dict[str, Any], task_key: str, task_text: str | None = None) -> tuple[str, list[str]]:
+    """Weakest assistance status this task can honestly carry, with the reasons.
+
+    "This task" means the same task key OR identical wording (so the same question
+    reappearing in a later quiz is still the same task). A different question on
+    the same concept is a different task and starts unaided. Derived only from the
+    evidence record, so it holds across sessions and cannot be lowered by the caller.
+    """
+    text_hash = task_text_hash(task_text)
+    floor, reasons = "UNAIDED", []
+
+    def raise_to(status: str, reason: str) -> None:
+        nonlocal floor
+        if ASSISTANCE_RANK[status] > ASSISTANCE_RANK[floor]:
+            floor = status
+        if reason not in reasons:
+            reasons.append(reason)
+
+    for exposure in record.get("learning", {}).get("task_exposures", []):
+        if exposure.get("task_key") == task_key or (text_hash and exposure.get("task_text_hash") == text_hash):
+            raise_to(EXPOSURE_KINDS[exposure["kind"]], f"Earlier {exposure['kind'].lower()} on this task")
+    for attempt in record.get("learning", {}).get("evidence", []):
+        same_task = task_key in (attempt.get("task_key"), attempt.get("origin")) or (
+            text_hash is not None and task_text_hash(attempt.get("task")) == text_hash)
+        if same_task and attempt.get("assistance_status") in ("PROMPTED", "REVEALED"):
+            raise_to(attempt["assistance_status"], "Earlier assisted attempt on this task")
+    return floor, reasons
+
+
+def record_task_exposure(module_code: str, week_number: int, *, task_key: str, kind: str,
+                         session_id: str, turn_id: str, hint_level: int | None = None,
+                         task_text: str | None = None, root: Path | None = None,
+                         exposed_at: str | None = None) -> dict[str, Any]:
+    """Durably note that a hint, explanation, feedback or answer was shown for a task.
+
+    Idempotent on (session_id, turn_id, kind). Conservative rule: callers record the
+    exposure immediately BEFORE the help is stored for display, so a crash in that
+    narrow window can over-count help (the task is then treated as assisted although
+    the student may not have seen it) but never under-count it. Callers must not
+    record an exposure for help that was never produced (e.g. a failed model call).
+    """
+    if kind not in EXPOSURE_KINDS:
+        raise StateError("Unsupported task exposure kind")
+    record_path = _workspace_paths(module_code, week_number, root)[0]
+    with record_lock(record_path):
+        record, record_path, _, _ = _learning_record(module_code, week_number, root)
+        exposures = record["learning"].setdefault("task_exposures", [])
+        existing = next((e for e in exposures if (e["session_id"], e["turn_id"], e["kind"]) == (session_id, turn_id, kind)), None)
+        if existing is not None:
+            return deepcopy(existing)
+        exposure = {"exposure_id": f"exposure-{len(exposures)+1:06d}", "task_key": task_key, "kind": kind,
+                    "hint_level": hint_level, "session_id": session_id, "turn_id": turn_id,
+                    "task_text_hash": task_text_hash(task_text),
+                    "exposed_at": exposed_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()}
+        exposures.append(exposure)
+        _write_record(record, record_path)
+        return deepcopy(exposure)
+
+
 def record_learning_attempt(module_code: str, week_number: int, *, capability: str, task: str,
                             origin: str, response: str, assistance_status: str = "UNAIDED",
                             prompt_help: list[str] | None = None, expected_answer: str | None = None,
                             source_references: list[dict[str, Any]] | None = None,
                             topic: str | None = None, root: Path | None = None,
-                            attempted_at: str | None = None) -> dict[str, Any]:
-    """Append a raw student response before any evaluation is considered."""
+                            attempted_at: str | None = None, session_id: str | None = None,
+                            turn_id: str | None = None, hint_level: int | None = None,
+                            task_key: str | None = None) -> dict[str, Any]:
+    """Append a raw student response before any evaluation is considered.
+
+    With ``session_id`` and ``turn_id`` the call is idempotent: repeating it returns
+    the stored attempt and never appends a second one. The stored assistance status
+    can never be weaker than the task's recorded exposures and earlier assisted attempts.
+    """
     if capability not in LEARNING_CAPABILITIES:
         raise StateError("Unsupported learning capability")
-    if assistance_status not in {"UNAIDED", "PROMPTED"}:
-        raise StateError("Assistance must be UNAIDED or PROMPTED")
+    if assistance_status not in ASSISTANCE_RANK:
+        raise StateError("Assistance must be UNAIDED, PROMPTED or REVEALED")
+    if (session_id is None) != (turn_id is None):
+        raise StateError("session_id and turn_id must be supplied together")
     if not task.strip() or not response.strip():
         raise StateError("Task and response must not be empty")
     parsed_time = datetime.fromisoformat(attempted_at) if attempted_at else datetime.now(timezone.utc)
@@ -1479,6 +1567,18 @@ def record_learning_attempt(module_code: str, week_number: int, *, capability: s
     with record_lock(record_path):
         record, record_path, _, _ = _learning_record(module_code, week_number, root)
         evidence = record["learning"]["evidence"]
+        if session_id is not None:
+            previous = next((a for a in evidence if (a.get("session_id"), a.get("turn_id")) == (session_id, turn_id)), None)
+            if previous is not None:
+                if previous["student_response"] != response:
+                    raise StateError("This turn was already recorded with a different response")
+                return deepcopy(previous)
+        prompt_help = list(prompt_help or [])
+        # Applies to every caller: the status can never be weaker than the task's history.
+        floor, reasons = _assistance_floor(record, task_key or origin, task)
+        if ASSISTANCE_RANK[floor] > ASSISTANCE_RANK[assistance_status]:
+            assistance_status = floor
+        prompt_help += [reason for reason in reasons if reason not in prompt_help]
         source_index = {s.get("source_id"): s for s in record.get("sources", [])}
         stable_refs = []
         for ref in source_references or []:
@@ -1491,10 +1591,13 @@ def record_learning_attempt(module_code: str, week_number: int, *, capability: s
             "module_code": module_code.upper(), "week": week_number,
             "topic": topic or record.get("week", {}).get("topic"), "capability": capability,
             "task": task, "origin": origin, "student_response": response,
-            "assistance_status": assistance_status, "prompt_help": list(prompt_help or []),
+            "assistance_status": assistance_status, "prompt_help": prompt_help,
             "source_references": stable_refs,
             "expected_answer": expected_answer, "evaluation": None,
         }
+        if session_id is not None:
+            attempt.update({"session_id": session_id, "turn_id": turn_id, "hint_level": hint_level,
+                            "task_key": task_key})
         evidence.append(attempt)
         record["workspace_schema_version"] = WORKSPACE_SCHEMA_VERSION
         # Exports do not render learning evidence, so only the record is written.

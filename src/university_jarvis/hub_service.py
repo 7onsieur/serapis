@@ -63,7 +63,8 @@ from .university import check_university
 from .workflows import build_assignment_context, build_week_context
 from .workspace import (capture_after_lecture, materialize_week_workspace, teach_week,
                         record_learning_attempt, save_learning_evaluation, _learning_record,
-                        _workspace_paths, _write_record, LEARNING_CAPABILITIES)
+                        _workspace_paths, _write_record, LEARNING_CAPABILITIES, task_exposure_keys,
+                        exposed_task_hashes, task_text_hash)
 from .reasoning import ReasoningError, supplied_units
 import re
 from datetime import datetime, timezone
@@ -354,6 +355,7 @@ def learning_view(module_code: str, week_number: int, *, workspace_root: Path | 
         latest = rows[-1] if rows else None
         if latest is None: status = "Not yet tested"
         elif latest["evaluation"] is None: status = "Attempted — awaiting evaluation"
+        elif latest["assistance_status"] == "REVEALED": status = "Attempted after the answer was shown"
         elif latest["evaluation"]["outcome"] == "SUPPORTED" and latest["assistance_status"] == "UNAIDED": status = "Demonstrated unaided"
         elif latest["evaluation"]["outcome"] == "SUPPORTED": status = "Demonstrated after help"
         else: status = "Needs another attempt"
@@ -378,7 +380,7 @@ def select_next_study_task(attempts: list[dict[str, Any]], sources: list[dict[st
         outcome = (row.get("evaluation") or {}).get("outcome") if row else None
         if outcome in {"NOT_SUPPORTED", "UNCLEAR", "PARTLY_SUPPORTED"}:
             return {"action": f"Review and retry {cap.lower()}", "reason": f"The latest task-level evaluation was {outcome.lower().replace('_',' ')}.", "capability": cap, "mode": "RETRY"}
-        if row is not None and row["assistance_status"] == "PROMPTED":
+        if row is not None and row["assistance_status"] in {"PROMPTED", "REVEALED"}:
             return {"action": f"Retest {cap.lower()} unaided", "reason": "The latest response followed help, so an unaided retest would add different evidence.", "capability": cap, "mode": "UNAIDED_RETEST"}
     for cap in LEARNING_CAPABILITIES:
         if latest[cap] is None:
@@ -390,7 +392,8 @@ def select_next_study_task(attempts: list[dict[str, Any]], sources: list[dict[st
 
 def _learning_task_candidates(record: dict[str, Any], capability: str) -> list[dict[str, Any]]:
     attempts = record.get("learning", {}).get("evidence", [])
-    used = {a.get("origin") for a in attempts}
+    used = {a.get("origin") for a in attempts} | task_exposure_keys(record)
+    spent_wording = exposed_task_hashes(record)  # identical wording under a new id is the same task
     candidates = []
     for quiz in record.get("learning", {}).get("quiz_history", {}).get("attempts", []):
         answers = {a["question_id"]: a for a in quiz.get("answers", [])}
@@ -415,7 +418,7 @@ def _learning_task_candidates(record: dict[str, Any], capability: str) -> list[d
     for task in record.get("learning", {}).get("generated_tasks", []):
         if task.get("capability") == capability and f"GENERATED:{task.get('task_id')}" not in used:
             candidates.append({**task, "origin": f"GENERATED:{task['task_id']}", "assistance_status": "UNAIDED", "prompt_help": []})
-    return candidates
+    return [c for c in candidates if task_text_hash(c.get("task")) not in spent_wording]
 
 
 def continue_learning_task(module_code: str, week_number: int, *, state: dict[str, Any],

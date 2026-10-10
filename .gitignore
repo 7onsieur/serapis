@@ -4,6 +4,10 @@
 .jarvis-cache/
 .jarvis-browser/
 workspace/
+# Learning records and tutoring sessions hold student answers and reference answers.
+# Ignored wherever a custom workspace folder sits inside a checkout.
+academic-record.json*
+tutor-sessions/
 __pycache__/
 *.py[cod]
 *.egg-info/
