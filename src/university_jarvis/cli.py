@@ -275,7 +275,10 @@ def _parser() -> argparse.ArgumentParser:
     hub.add_argument(
         "--host",
         default="127.0.0.1",
-        help="bind host (default: %(default)s; do not expose beyond localhost)",
+        help=(
+            "bind host (default: %(default)s; do not expose beyond localhost). "
+            "The Hub rejects requests whose Host header is not localhost or this value."
+        ),
     )
     hub.add_argument("--port", type=int, default=8765, help="bind port (default: %(default)s)")
     return parser
@@ -817,7 +820,8 @@ def main(
 
             print(f"Serapis Hub — read-only — http://{args.host}:{args.port}")
             print("No Blackboard/Drive/model call is made by loading any Hub page.")
-            uvicorn.run(create_app(), host=args.host, port=args.port)
+            extra_hosts = () if args.host in {"127.0.0.1", "localhost", "::1", "0.0.0.0", "::"} else (args.host,)
+            uvicorn.run(create_app(allowed_hosts=extra_hosts), host=args.host, port=args.port)
     except StateError as exc:
         print(f"serapis: {exc}", file=sys.stderr)
         usage = getattr(exc, "usage", None)

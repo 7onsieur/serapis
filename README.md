@@ -75,6 +75,8 @@ To enable AI actions, install the `ai` extra and configure `OPENAI_API_KEY` in y
 
 Personal academic state, imported materials, learning attempts and generated local study records are designed to live on your computer in the operating system's application-data location under `serapis`. `SERAPIS_HOME` can select another workspace directory. Explicit path overrides are also supported for advanced setups. Credentials are handled separately from academic state.
 
+The Hub only answers requests addressed to `localhost`/`127.0.0.1`/`[::1]` and rejects cross-site form submissions, so a web page open in your browser cannot drive it. Binding to `0.0.0.0` therefore does not give LAN access; use `--host <name>` for a specific hostname.
+
 Ordinary Hub page views do not call an AI provider. When you explicitly invoke an AI action, the relevant bounded academic context, selected source excerpts and any response being evaluated may be sent to OpenAI. Read the provider's terms and your institution's course-material rules before using those actions. Optional Blackboard and Drive actions have separate external boundaries: Blackboard login/discovery/download requests contact the configured institution; Drive authentication and transfers contact Google. No hosted Serapis service is required for local use.
 
 The repository's sample academic record is fictional and separate from personal workspace data. Do not commit private course files, notes, generated study outputs or credentials.
@@ -84,6 +86,8 @@ The repository's sample academic record is fictional and separate from personal 
 - **PPTX:** direct text extraction from readable slide text, using Python's standard ZIP/XML libraries; portable across platforms.
 - **PDF:** direct text extraction through macOS PDFKit only. Other platforms can store and manage PDFs but cannot currently extract their text. OCR for scanned/image-only PDFs is not implemented.
 - **DOCX and other formats:** not currently supported for source-text ingestion.
+
+Uploads through the Hub are limited to 100 MiB per file, and the file's content (PDF header or PowerPoint package structure) must match its extension.
 
 Extraction may also fail for damaged or textless files. Unextractable content is not passed to AI workflows.
 

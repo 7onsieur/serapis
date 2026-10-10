@@ -74,6 +74,7 @@ from starlette.responses import Response
 from fastapi.templating import Jinja2Templates
 
 from . import hub_service
+from .hub_security import MAX_UPLOAD_BYTES, HubSecurityMiddleware
 from .reasoning import ReasoningProvider
 from .state import StateError
 
@@ -158,6 +159,45 @@ async def _form_fields(request: Request) -> dict[str, str]:
     return dict(parse_qsl(body.decode("utf-8"), keep_blank_values=True))
 
 
+_UPLOAD_CHUNK_BYTES = 1024 * 1024
+_UPLOAD_SUFFIXES = (".pdf", ".pptx")
+
+
+def _safe_upload_name(filename: str) -> str:
+    """A filesystem-safe basename that keeps the (validated) extension."""
+    name = Path(filename.replace("\\", "/")).name
+    suffix = Path(name).suffix.lower()
+    if suffix not in _UPLOAD_SUFFIXES:
+        raise StateError("Choose a PDF or PowerPoint (.pptx) file.")
+    stem = "".join(c if (c.isalnum() or c in " ._-()") else "_" for c in Path(name).stem).strip(" .")
+    return (stem[:120] or "material") + suffix
+
+
+async def _stream_upload_to_private_file(upload: Any, directory: Path) -> Path:
+    """Copy an upload to ``directory`` in chunks, enforcing the size limit and
+    checking the content matches the declared file type. The directory is
+    private (0700) and caller-owned; the caller removes it."""
+    from .student_setup import validate_material_content
+
+    target = directory / _safe_upload_name(upload.filename)
+    written = 0
+    with target.open("xb") as handle:
+        while True:
+            chunk = await upload.read(_UPLOAD_CHUNK_BYTES)
+            if not chunk:
+                break
+            written += len(chunk)
+            if written > MAX_UPLOAD_BYTES:
+                raise StateError(
+                    f"File is too large. The limit is {MAX_UPLOAD_BYTES // (1024 * 1024)} MiB per file."
+                )
+            handle.write(chunk)
+    if written == 0:
+        raise StateError("The selected file is empty.")
+    validate_material_content(target)
+    return target
+
+
 def _default_blackboard_client_factory() -> ContextManager[Any]:
     from .blackboard import DEFAULT_BASE_URL
     from .cli import _resolve_blackboard_client
@@ -173,6 +213,7 @@ def create_app(
     blackboard_client_factory: Callable[[], ContextManager[Any]] | None = None,
     reasoning_provider: ReasoningProvider | None = None,
     cache_dir: Path | None = None,
+    allowed_hosts: tuple[str, ...] = (),
 ) -> FastAPI:
     """Build the Hub FastAPI app.
 
@@ -183,6 +224,7 @@ def create_app(
     defaults and ``cli.py``'s existing resolver do today.
     """
     app = FastAPI(title="Serapis Hub")
+    app.add_middleware(HubSecurityMiddleware, allowed_hosts=allowed_hosts)
     app.state.hub_state = state
     app.state.hub_ledger = ledger
     app.state.hub_workspace_root = workspace_root
@@ -358,13 +400,14 @@ def create_app(
                 raise StateError("Choose a PDF or PowerPoint (.pptx) file to add.")
             week_text = str(form.get("week", "")).strip()
             week = int(week_text) if week_text else None
+            import shutil
             import tempfile
-            scratch = Path(tempfile.gettempdir()) / ("serapis-upload-" + os.urandom(8).hex() + Path(upload.filename).suffix)
+            scratch_dir = Path(tempfile.mkdtemp(prefix="serapis-upload-"))
             try:
-                scratch.write_bytes(await upload.read())
+                scratch = await _stream_upload_to_private_file(upload, scratch_dir)
                 result = import_material(module_code, scratch, week=week)
             finally:
-                scratch.unlink(missing_ok=True)
+                shutil.rmtree(scratch_dir, ignore_errors=True)
             return RedirectResponse(f"/modules/{module_code}?imported=1", status_code=303)
         except (StateError, ValueError, OSError) as exc:
             return _not_found(request, f"Material could not be added: {exc}")
@@ -385,16 +428,17 @@ def create_app(
         upload = form.get("file")
         if upload is None or not getattr(upload, "filename", ""):
             return _not_found(request, "Choose a replacement PDF or PowerPoint file.")
+        import shutil
         import tempfile
-        scratch = Path(tempfile.gettempdir()) / ("serapis-replace-" + os.urandom(8).hex() + Path(upload.filename).suffix)
+        scratch_dir = Path(tempfile.mkdtemp(prefix="serapis-replace-"))
         try:
-            scratch.write_bytes(await upload.read())
+            scratch = await _stream_upload_to_private_file(upload, scratch_dir)
             result = replace_material(source_id, scratch)
             return RedirectResponse("/modules", status_code=303)
         except (StateError, OSError) as exc:
             return _not_found(request, f"Replacement was not saved: {exc}")
         finally:
-            scratch.unlink(missing_ok=True)
+            shutil.rmtree(scratch_dir, ignore_errors=True)
 
     @app.post("/materials/{source_id}/reassign")
     async def reassign_material_route(request: Request, source_id: str) -> RedirectResponse:

@@ -147,11 +147,12 @@ class StudentSetupTests(unittest.TestCase):
         state = load_state()
         assessment = state["modules"][0]["assessments"][0]
         self.assertEqual(assessment["fact_provenance"]["deadline"]["status"], "NEEDS_VERIFICATION")
-        class FakeUpload:
-            filename = "lecture.pptx"
-            async def read(self): return b"synthetic bytes"
-        async def fake_form(_request): return {"week": "1", "file": FakeUpload()}
-        with patch("starlette.requests.Request.form", fake_form):
-            upload = client.post("/modules/BIO101/materials", content=b"synthetic", headers={"content-type": "multipart/form-data; boundary=x"}, follow_redirects=False)
+        import io, zipfile
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w") as package:
+            package.writestr("[Content_Types].xml", "<Types/>")
+            package.writestr("ppt/presentation.xml", "<p/>")
+        upload = client.post("/modules/BIO101/materials", data={"week": "1"},
+                             files={"file": ("lecture.pptx", buffer.getvalue())}, follow_redirects=False)
         self.assertEqual(upload.status_code, 303)
         self.assertEqual(client.get("/").status_code, 200)

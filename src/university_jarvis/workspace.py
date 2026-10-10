@@ -28,6 +28,7 @@ from .reasoning import (
     generate_teach_brief,
     load_cached_prepare_brief,
 )
+from .locking import record_lock
 from .sources import PROJECT_ROOT, render_source_location
 from .state import StateError, personal_data_dir
 from .workflows import build_prepare_context, build_week_context
@@ -957,26 +958,37 @@ def _workspace_paths(
     )
 
 
+def _write_record(record: dict[str, Any], record_path: Path) -> None:
+    """Atomically persist only the canonical academic record (no exports)."""
+    record_bytes = (
+        json.dumps(record, ensure_ascii=False, indent=2, sort_keys=False) + "\n"
+    ).encode("utf-8")
+    record_path.parent.mkdir(parents=True, exist_ok=True)
+    record_temp = record_path.with_suffix(".json.tmp")
+    record_temp.write_bytes(record_bytes)
+    record_temp.replace(record_path)
+
+
 def _write_workspace(
     record: dict[str, Any],
     record_path: Path,
     study_pack_path: Path,
     notebooklm_path: Path,
 ) -> None:
-    record_bytes = (
-        json.dumps(record, ensure_ascii=False, indent=2, sort_keys=False) + "\n"
-    ).encode("utf-8")
+    """Persist the record and regenerate both derived exports.
+
+    Learning-evidence writes (attempts, evaluations, quizzes, generated tasks)
+    do not alter anything the exports render, so they use ``_write_record``.
+    """
     study_pack_bytes = _docx_bytes(record)
     notebooklm_bytes = _notebooklm_markdown(record).encode("utf-8")
 
-    record_path.parent.mkdir(parents=True, exist_ok=True)
-    record_temp = record_path.with_suffix(".json.tmp")
     study_pack_temp = study_pack_path.with_suffix(".docx.tmp")
     notebooklm_temp = notebooklm_path.with_suffix(".md.tmp")
-    record_temp.write_bytes(record_bytes)
+    record_path.parent.mkdir(parents=True, exist_ok=True)
     study_pack_temp.write_bytes(study_pack_bytes)
     notebooklm_temp.write_bytes(notebooklm_bytes)
-    record_temp.replace(record_path)
+    _write_record(record, record_path)
     study_pack_temp.replace(study_pack_path)
     notebooklm_temp.replace(notebooklm_path)
 
@@ -1031,6 +1043,44 @@ def _extract_explicit_questions(notes: list[str]) -> list[str]:
 
 
 def capture_after_lecture(
+    module_code: str,
+    week_number: int,
+    *,
+    notes: list[str] | None = None,
+    notes_file: Path | None = None,
+    lecturer_emphasis: list[str] | None = None,
+    examples_cases: list[str] | None = None,
+    understood: list[str] | None = None,
+    uncertainties: list[str] | None = None,
+    questions: list[str] | None = None,
+    assessment_comments: list[str] | None = None,
+    workspace_root: Path | None = None,
+    captured_at: str | None = None,
+) -> CaptureResult:
+    """Append a deterministic student report and rebuild its derived study pack.
+
+    The whole read-modify-write runs under the record lock so a concurrent
+    Hub/CLI write cannot be lost.
+    """
+    record_path, _, _ = _workspace_paths(module_code, week_number, workspace_root)
+    with record_lock(record_path):
+        return _capture_after_lecture_locked(
+            module_code,
+            week_number,
+            notes=notes,
+            notes_file=notes_file,
+            lecturer_emphasis=lecturer_emphasis,
+            examples_cases=examples_cases,
+            understood=understood,
+            uncertainties=uncertainties,
+            questions=questions,
+            assessment_comments=assessment_comments,
+            workspace_root=workspace_root,
+            captured_at=captured_at,
+        )
+
+
+def _capture_after_lecture_locked(
     module_code: str,
     week_number: int,
     *,
@@ -1275,45 +1325,52 @@ def teach_week(
     selected_provider = provider or OpenAIReasoningProvider()
     result = generate_teach_brief(context, selected_provider, cache_dir=cache_dir)
 
-    teach_state = record.setdefault("workflows", {}).setdefault(
-        "teach", {"status": "not_recorded", "interactions": []}
-    )
-    interactions = teach_state.setdefault("interactions", [])
-    teach_id = f"teach-{len(interactions) + 1:04d}"
-    timestamp = taught_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
-    usage = result.usage.to_dict() if result.usage else None
-    generated_learning = result.brief.to_dict()
-    source_fingerprints = {s.get("source_id"): s.get("extraction", {}).get("fingerprint") for s in record.get("sources", [])}
-    for question in generated_learning.get("check_questions", []):
-        for reference in question.get("provenance", []):
-            reference["fingerprint"] = source_fingerprints.get(reference.get("source_id"))
-    interactions.append(
-        {
-            "teach_id": teach_id,
-            "taught_at": timestamp,
-            "topic": teach_request["topic"],
-            "addressed_learning_item_id": teach_request["learning_item_id"],
-            "selection": teach_request["selection"],
-            "student_context": deepcopy(student_context),
-            "generated_learning": generated_learning,
-            "provenance": {
-                "classification": "generated_learning",
-                "canonical_source_evidence": False,
-            },
-            "generation": {
-                "cache_status": result.cache_status,
-                "cache_key": result.cache_key,
-                "prompt_version": TEACH_PROMPT_VERSION,
-                "schema_version": TEACH_SCHEMA_VERSION,
-                "provider": selected_provider.cache_identity(),
-                "usage": usage,
-            },
-        }
-    )
-    teach_state["status"] = "recorded"
-    record["workspace_schema_version"] = WORKSPACE_SCHEMA_VERSION
-    record["knowledge_classification"] = _knowledge_classification()
-    _write_workspace(record, record_path, study_pack_path, notebooklm_path)
+    # The model call above can be slow, so the lock is taken only now and the
+    # record is reloaded: writes made by other operations meanwhile are kept.
+    with record_lock(record_path):
+        try:
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+        except (FileNotFoundError, json.JSONDecodeError) as exc:
+            raise StateError(f"Academic record could not be re-read: {record_path}") from exc
+        teach_state = record.setdefault("workflows", {}).setdefault(
+            "teach", {"status": "not_recorded", "interactions": []}
+        )
+        interactions = teach_state.setdefault("interactions", [])
+        teach_id = f"teach-{len(interactions) + 1:04d}"
+        timestamp = taught_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+        usage = result.usage.to_dict() if result.usage else None
+        generated_learning = result.brief.to_dict()
+        source_fingerprints = {s.get("source_id"): s.get("extraction", {}).get("fingerprint") for s in record.get("sources", [])}
+        for question in generated_learning.get("check_questions", []):
+            for reference in question.get("provenance", []):
+                reference["fingerprint"] = source_fingerprints.get(reference.get("source_id"))
+        interactions.append(
+            {
+                "teach_id": teach_id,
+                "taught_at": timestamp,
+                "topic": teach_request["topic"],
+                "addressed_learning_item_id": teach_request["learning_item_id"],
+                "selection": teach_request["selection"],
+                "student_context": deepcopy(student_context),
+                "generated_learning": generated_learning,
+                "provenance": {
+                    "classification": "generated_learning",
+                    "canonical_source_evidence": False,
+                },
+                "generation": {
+                    "cache_status": result.cache_status,
+                    "cache_key": result.cache_key,
+                    "prompt_version": TEACH_PROMPT_VERSION,
+                    "schema_version": TEACH_SCHEMA_VERSION,
+                    "provider": selected_provider.cache_identity(),
+                    "usage": usage,
+                },
+            }
+        )
+        teach_state["status"] = "recorded"
+        record["workspace_schema_version"] = WORKSPACE_SCHEMA_VERSION
+        record["knowledge_classification"] = _knowledge_classification()
+        _write_workspace(record, record_path, study_pack_path, notebooklm_path)
     return TeachResult(
         record_path=record_path,
         study_pack_path=study_pack_path,
@@ -1345,22 +1402,23 @@ def materialize_week_workspace(
     record_path, study_pack_path, notebooklm_path = _workspace_paths(
         context["module"]["code"], week_number, workspace_root
     )
-    if record_path.exists():
-        existing = json.loads(record_path.read_text(encoding="utf-8"))
-        existing_after_lecture = existing.get("workflows", {}).get("after_lecture", {})
-        existing_teach = existing.get("workflows", {}).get("teach", {})
-        record["sources"] = existing.get("sources", record["sources"])
-        record["workflows"] = existing.get("workflows", record["workflows"])
-        prior_learning = existing.get("learning", {})
-        record["learning"].update(prior_learning)
-        record["learning"].setdefault("evidence", [])
-        record["knowledge_classification"] = existing.get(
-            "knowledge_classification", record["knowledge_classification"]
-        )
-        record["workspace_schema_version"] = max(
-            WORKSPACE_SCHEMA_VERSION, existing.get("workspace_schema_version", 1)
-        )
-    _write_workspace(record, record_path, study_pack_path, notebooklm_path)
+    with record_lock(record_path, create_dir=True):
+        if record_path.exists():
+            existing = json.loads(record_path.read_text(encoding="utf-8"))
+            existing_after_lecture = existing.get("workflows", {}).get("after_lecture", {})
+            existing_teach = existing.get("workflows", {}).get("teach", {})
+            record["sources"] = existing.get("sources", record["sources"])
+            record["workflows"] = existing.get("workflows", record["workflows"])
+            prior_learning = existing.get("learning", {})
+            record["learning"].update(prior_learning)
+            record["learning"].setdefault("evidence", [])
+            record["knowledge_classification"] = existing.get(
+                "knowledge_classification", record["knowledge_classification"]
+            )
+            record["workspace_schema_version"] = max(
+                WORKSPACE_SCHEMA_VERSION, existing.get("workspace_schema_version", 1)
+            )
+        _write_workspace(record, record_path, study_pack_path, notebooklm_path)
 
     return WorkspaceResult(
         record_path=record_path,
@@ -1394,42 +1452,47 @@ def record_learning_attempt(module_code: str, week_number: int, *, capability: s
         raise StateError("Assistance must be UNAIDED or PROMPTED")
     if not task.strip() or not response.strip():
         raise StateError("Task and response must not be empty")
-    record, record_path, study_pack_path, notebooklm_path = _learning_record(module_code, week_number, root)
-    evidence = record["learning"]["evidence"]
     parsed_time = datetime.fromisoformat(attempted_at) if attempted_at else datetime.now(timezone.utc)
     if parsed_time.tzinfo is None:
         raise StateError("Learning attempt timestamp must include a timezone")
     timestamp = parsed_time.astimezone(timezone.utc).replace(microsecond=0).isoformat()
-    source_index = {s.get("source_id"): s for s in record.get("sources", [])}
-    stable_refs = []
-    for ref in source_references or []:
-        source = source_index.get(ref.get("source_id"), {})
-        stable_refs.append({**deepcopy(ref), "source_title": source.get("title"),
-                            "source_type": source.get("type"),
-                            "fingerprint": source.get("extraction", {}).get("fingerprint")})
-    attempt = {
-        "attempt_id": f"attempt-{len(evidence)+1:06d}", "attempted_at": timestamp,
-        "module_code": module_code.upper(), "week": week_number,
-        "topic": topic or record.get("week", {}).get("topic"), "capability": capability,
-        "task": task, "origin": origin, "student_response": response,
-        "assistance_status": assistance_status, "prompt_help": list(prompt_help or []),
-        "source_references": stable_refs,
-        "expected_answer": expected_answer, "evaluation": None,
-    }
-    evidence.append(attempt)
-    record["workspace_schema_version"] = WORKSPACE_SCHEMA_VERSION
-    _write_workspace(record, record_path, study_pack_path, notebooklm_path)
+    record_path = _workspace_paths(module_code, week_number, root)[0]
+    with record_lock(record_path):
+        record, record_path, _, _ = _learning_record(module_code, week_number, root)
+        evidence = record["learning"]["evidence"]
+        source_index = {s.get("source_id"): s for s in record.get("sources", [])}
+        stable_refs = []
+        for ref in source_references or []:
+            source = source_index.get(ref.get("source_id"), {})
+            stable_refs.append({**deepcopy(ref), "source_title": source.get("title"),
+                                "source_type": source.get("type"),
+                                "fingerprint": source.get("extraction", {}).get("fingerprint")})
+        attempt = {
+            "attempt_id": f"attempt-{len(evidence)+1:06d}", "attempted_at": timestamp,
+            "module_code": module_code.upper(), "week": week_number,
+            "topic": topic or record.get("week", {}).get("topic"), "capability": capability,
+            "task": task, "origin": origin, "student_response": response,
+            "assistance_status": assistance_status, "prompt_help": list(prompt_help or []),
+            "source_references": stable_refs,
+            "expected_answer": expected_answer, "evaluation": None,
+        }
+        evidence.append(attempt)
+        record["workspace_schema_version"] = WORKSPACE_SCHEMA_VERSION
+        # Exports do not render learning evidence, so only the record is written.
+        _write_record(record, record_path)
     return deepcopy(attempt)
 
 
 def save_learning_evaluation(module_code: str, week_number: int, attempt_id: str,
                              evaluation: dict[str, Any], *, root: Path | None = None) -> dict[str, Any]:
-    record, record_path, study_pack_path, notebooklm_path = _learning_record(module_code, week_number, root)
-    attempt = next((item for item in record["learning"]["evidence"] if item["attempt_id"] == attempt_id), None)
-    if attempt is None:
-        raise StateError("Learning attempt not found")
-    if attempt.get("evaluation") is not None:
-        raise StateError("Learning attempt already has an evaluation")
-    attempt["evaluation"] = deepcopy(evaluation)
-    _write_workspace(record, record_path, study_pack_path, notebooklm_path)
-    return deepcopy(attempt)
+    record_path = _workspace_paths(module_code, week_number, root)[0]
+    with record_lock(record_path):
+        record, record_path, _, _ = _learning_record(module_code, week_number, root)
+        attempt = next((item for item in record["learning"]["evidence"] if item["attempt_id"] == attempt_id), None)
+        if attempt is None:
+            raise StateError("Learning attempt not found")
+        if attempt.get("evaluation") is not None:
+            raise StateError("Learning attempt already has an evaluation")
+        attempt["evaluation"] = deepcopy(evaluation)
+        _write_record(record, record_path)
+        return deepcopy(attempt)

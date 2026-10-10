@@ -1,6 +1,7 @@
 """Small local operations for student setup and academic edits."""
 from __future__ import annotations
 
+import functools
 import os
 import json
 import re
@@ -10,6 +11,7 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from .locking import record_lock
 from .sources import PROJECT_ROOT
 from .state import StateError, _validate_state, normalize_academic_truth, personal_data_dir, save_state
 
@@ -48,6 +50,13 @@ def initialize_personal_state(*, copy_existing: bool = False) -> Path:
     target = personal_state_path()
     if target.exists():
         return target
+    with record_lock(target, create_dir=True):
+        if target.exists():  # created by a concurrent process while we waited
+            return target
+        return _create_personal_state(target, copy_existing)
+
+
+def _create_personal_state(target: Path, copy_existing: bool) -> Path:
     sample_path = PROJECT_ROOT / "data" / "academic-state.json"
     legacy_candidate = existing_user_state_path()
     legacy_path = legacy_candidate or (Path.cwd() / "data" / "academic-state.json" if (Path.cwd() / "data" / "academic-state.json").is_file() else sample_path)
@@ -64,6 +73,21 @@ def initialize_personal_state(*, copy_existing: bool = False) -> Path:
         seed["progress"] = {"overall_status": "unknown", "last_updated": None}
     save_state(seed, target)
     return target
+
+
+def _state_transaction(func):
+    """Run a state mutator as one locked load -> modify -> save transaction.
+
+    The lock is held from before the state is read until after it is saved
+    (including rollback), so concurrent Hub/CLI edits cannot silently overwrite
+    each other. Re-entrant, so mutators may call each other.
+    """
+    @functools.wraps(func)
+    def wrapper(*args, path: Path | None = None, **kwargs):
+        target = path or personal_state_path()
+        with record_lock(target, create_dir=True):
+            return func(*args, path=path, **kwargs)
+    return wrapper
 
 
 def _load(path: Path | None = None) -> tuple[dict[str, Any], Path]:
@@ -90,6 +114,7 @@ def _facts(owner: dict[str, Any], fields: tuple[str, ...]) -> None:
     owner["fact_provenance"] = {field: _fact(owner.get(field), field=field) for field in fields}
 
 
+@_state_transaction
 def edit_profile(*, university: str | None = None, programme: str | None = None, path: Path | None = None) -> dict[str, Any]:
     state, target = _load(path)
     if university is not None: state["student"]["university"] = university.strip()
@@ -98,6 +123,7 @@ def edit_profile(*, university: str | None = None, programme: str | None = None,
     return state
 
 
+@_state_transaction
 def add_module(code: str, title: str, *, path: Path | None = None) -> dict[str, Any]:
     state, target = _load(path)
     code = code.strip().upper()
@@ -111,6 +137,7 @@ def add_module(code: str, title: str, *, path: Path | None = None) -> dict[str, 
     return _save(state, target)
 
 
+@_state_transaction
 def update_module(code: str, title: str, *, new_code: str | None = None, path: Path | None = None) -> dict[str, Any]:
     state, target = _load(path)
     module = next((m for m in state["modules"] if m["code"].upper() == code.upper()), None)
@@ -130,6 +157,7 @@ def update_module(code: str, title: str, *, new_code: str | None = None, path: P
     return _save(state, target)
 
 
+@_state_transaction
 def remove_module(code: str, *, path: Path | None = None) -> dict[str, Any]:
     state, target = _load(path)
     if not any(m["code"].upper() == code.upper() for m in state["modules"]): raise StateError(f"Module {code} was not found.")
@@ -149,6 +177,7 @@ def remove_module(code: str, *, path: Path | None = None) -> dict[str, Any]:
     return result
 
 
+@_state_transaction
 def save_assessment(module_code: str, *, assessment_id: str | None = None, title: str, deadline: str = "", weight_percent: str = "", requirements: str = "", path: Path | None = None) -> dict[str, Any]:
     state, target = _load(path)
     module = next((m for m in state["modules"] if m["code"].upper() == module_code.upper()), None)
@@ -174,6 +203,7 @@ def save_assessment(module_code: str, *, assessment_id: str | None = None, title
     return _save(state, target)
 
 
+@_state_transaction
 def remove_assessment(module_code: str, assessment_id: str, *, path: Path | None = None) -> dict[str, Any]:
     state, target = _load(path)
     module = next((m for m in state["modules"] if m["code"].upper() == module_code.upper()), None)
@@ -189,6 +219,38 @@ def material_capability(path: Path) -> str:
     raise StateError("Serapis can currently import PDF and PowerPoint (.pptx) files only.")
 
 
+_MAX_PPTX_UNCOMPRESSED_BYTES = 1024 * 1024 * 1024
+
+
+def validate_material_content(path: Path) -> None:
+    """Check that a file's bytes match its PDF/PPTX extension (not just its name).
+
+    Used at the Hub upload boundary, where the file is untrusted. It inspects
+    only the header and the ZIP directory; nothing is decompressed.
+    """
+    suffix = path.suffix.lower()
+    with path.open("rb") as handle:
+        head = handle.read(1024)
+    if suffix == ".pdf":
+        if b"%PDF-" not in head:
+            raise StateError("This file is not a valid PDF (missing PDF header).")
+    elif suffix == ".pptx":
+        import zipfile
+        try:
+            with zipfile.ZipFile(path) as archive:
+                names = set(archive.namelist())
+                declared = sum(info.file_size for info in archive.infolist())
+        except (zipfile.BadZipFile, OSError) as exc:
+            raise StateError("This file is not a valid PowerPoint (.pptx) package.") from exc
+        if "[Content_Types].xml" not in names or "ppt/presentation.xml" not in names:
+            raise StateError("This file is not a valid PowerPoint (.pptx) presentation.")
+        if declared > _MAX_PPTX_UNCOMPRESSED_BYTES:
+            raise StateError("This PowerPoint file expands to an unreasonable size and was rejected.")
+    else:
+        raise StateError("Serapis can currently import PDF and PowerPoint (.pptx) files only.")
+
+
+@_state_transaction
 def import_material(module_code: str, source_path: Path, *, week: int | None = None, source_id: str | None = None, path: Path | None = None) -> dict[str, Any]:
     state, target = _load(path)
     module = next((m for m in state["modules"] if m["code"].upper() == module_code.upper()), None)
@@ -238,6 +300,7 @@ def import_material(module_code: str, source_path: Path, *, week: int | None = N
     return {"state": state, "source": source, "capability": capability, "duplicate": False}
 
 
+@_state_transaction
 def reassign_material(source_id: str, module_code: str, week: int | None, *, path: Path | None = None) -> dict[str, Any]:
     state, target = _load(path)
     source = next((s for s in state["sources"] if s["id"] == source_id), None)
@@ -258,6 +321,7 @@ def reassign_material(source_id: str, module_code: str, week: int | None, *, pat
     return _save(state, target)
 
 
+@_state_transaction
 def replace_material(source_id: str, source_path: Path, *, path: Path | None = None) -> dict[str, Any]:
     state, target = _load(path)
     source = next((s for s in state["sources"] if s["id"] == source_id), None)
@@ -291,6 +355,7 @@ def replace_material(source_id: str, source_path: Path, *, path: Path | None = N
     return {"state": state, "source": source, "capability": capability}
 
 
+@_state_transaction
 def remove_material(source_id: str, *, path: Path | None = None) -> dict[str, Any]:
     state, target = _load(path)
     source = next((s for s in state["sources"] if s["id"] == source_id), None)

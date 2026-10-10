@@ -57,12 +57,13 @@ from .reasoning import (
     render_teach_brief,
 )
 from .reconcile import CHANGED, METADATA_CHANGED, MISSING_SINCE_LAST_CHECK, NEW, UNCHANGED
+from .locking import record_lock
 from .state import StateError, load_state
 from .university import check_university
 from .workflows import build_assignment_context, build_week_context
 from .workspace import (capture_after_lecture, materialize_week_workspace, teach_week,
                         record_learning_attempt, save_learning_evaluation, _learning_record,
-                        LEARNING_CAPABILITIES)
+                        _workspace_paths, _write_record, LEARNING_CAPABILITIES)
 from .reasoning import ReasoningError
 from datetime import datetime, timezone
 
@@ -302,30 +303,37 @@ def generate_quiz(
     result = generate_quiz_brief(context, selected_provider, cache_dir=cache_dir)
     location_index = build_source_location_index(context)
     rendered = render_quiz_brief(result.brief, location_index).split("\nAnswers", 1)[0]
-    try:
-        record, record_path, study_pack_path, notebooklm_path = _learning_record(
-            context["module"]["code"], week_number, workspace_root
-        )
-    except StateError:
-        # Quiz generation remains usable without a materialized workspace;
-        # attempts become persistent only after the student has one to save into.
-        return {"module_code": context["module"]["code"], "week": week_number,
-                "cache_status": result.cache_status, "rendered": rendered}
-    # Keep answer keys in the local record, but render only the questions.
-    quiz_id = f"quiz-{len(record.get('learning', {}).get('quiz_history', {}).get('attempts', []))+1:04d}"
+    record_path = _workspace_paths(context["module"]["code"], week_number, workspace_root)[0]
     fingerprints = {s["id"]: s.get("extraction", {}).get("fingerprint") for s in context["sources"]}
     questions = [_jsonable(q) for q in result.brief.questions]
     answers = [_jsonable(a) for a in result.brief.answers]
     for item in questions + answers:
         for ref in item.get("provenance", []):
             ref["fingerprint"] = fingerprints.get(ref["source_id"])
-    quiz = {"quiz_id": quiz_id, "created_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
-            "questions": questions, "answers": answers}
-    quiz_history = record.setdefault("learning", {}).setdefault("quiz_history", {"status": "not_recorded", "attempts": []})
-    quiz_history.setdefault("attempts", []).append(quiz)
-    quiz_history["status"] = "recorded"
-    from .workspace import _write_workspace
-    _write_workspace(record, record_path, study_pack_path, notebooklm_path)
+    no_workspace = {"module_code": context["module"]["code"], "week": week_number,
+                    "cache_status": result.cache_status, "rendered": rendered}
+    if not record_path.exists():
+        # Quiz generation remains usable without a materialized workspace;
+        # attempts become persistent only after the student has one to save into.
+        # (Return before locking: locking must not create workspace directories.)
+        return no_workspace
+    # The model call is finished; take the record lock only for the
+    # read-modify-write so concurrent attempts or evaluations are preserved.
+    with record_lock(record_path):
+        try:
+            record, record_path, _, _ = _learning_record(
+                context["module"]["code"], week_number, workspace_root
+            )
+        except StateError:
+            return no_workspace
+        # Keep answer keys in the local record, but render only the questions.
+        quiz_id = f"quiz-{len(record.get('learning', {}).get('quiz_history', {}).get('attempts', []))+1:04d}"
+        quiz = {"quiz_id": quiz_id, "created_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat(),
+                "questions": questions, "answers": answers}
+        quiz_history = record.setdefault("learning", {}).setdefault("quiz_history", {"status": "not_recorded", "attempts": []})
+        quiz_history.setdefault("attempts", []).append(quiz)
+        quiz_history["status"] = "recorded"
+        _write_record(record, record_path)
     return {
         "module_code": context["module"]["code"],
         "week": week_number,
@@ -440,15 +448,18 @@ def continue_learning_task(module_code: str, week_number: int, *, state: dict[st
     refs = raw.get("source_references", [])
     if not isinstance(raw.get("task"), str) or not raw["task"].strip() or not raw.get("expected_answer_or_rubric") or not refs or any(r.get("source_id") not in allowed for r in refs):
         raise ReasoningError("Generated learning task was incomplete or cited an unavailable source")
-    task_id = f"generated-{len(record['learning'].get('generated_tasks', []))+1:04d}"
-    source_index = {s.get("source_id"): s for s in record.get("sources", [])}
-    refs = [{**r, "fingerprint": source_index.get(r["source_id"], {}).get("extraction", {}).get("fingerprint")} for r in refs]
-    task = {"task_id": task_id, "capability": capability, "task": raw["task"],
-            "expected_answer": raw["expected_answer_or_rubric"], "source_references": refs,
-            "origin": f"GENERATED:{task_id}", "assistance_status": "UNAIDED", "prompt_help": []}
-    record["learning"].setdefault("generated_tasks", []).append(task)
-    from .workspace import _write_workspace
-    _write_workspace(record, record_path, study_pack_path, notebooklm_path)
+    # Reload under the lock: the model call may have been slow and the record
+    # may have gained attempts or tasks in the meantime.
+    with record_lock(record_path):
+        record, record_path, _, _ = _learning_record(module_code, week_number, workspace_root)
+        task_id = f"generated-{len(record['learning'].get('generated_tasks', []))+1:04d}"
+        source_index = {s.get("source_id"): s for s in record.get("sources", [])}
+        refs = [{**r, "fingerprint": source_index.get(r["source_id"], {}).get("extraction", {}).get("fingerprint")} for r in refs]
+        task = {"task_id": task_id, "capability": capability, "task": raw["task"],
+                "expected_answer": raw["expected_answer_or_rubric"], "source_references": refs,
+                "origin": f"GENERATED:{task_id}", "assistance_status": "UNAIDED", "prompt_help": []}
+        record["learning"].setdefault("generated_tasks", []).append(task)
+        _write_record(record, record_path)
     return {"recommendation": recommendation, "task": task, "generated": True}
 
 

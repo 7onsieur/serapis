@@ -32,3 +32,18 @@ def _blocked_connect(*_args, **_kwargs):
 @pytest.fixture(autouse=True)
 def _block_real_network_calls(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(socket.socket, "connect", _blocked_connect)
+
+
+@pytest.fixture(autouse=True)
+def _hub_test_client_uses_localhost(monkeypatch: pytest.MonkeyPatch) -> None:
+    """The Hub rejects non-loopback Host headers (DNS-rebinding guard), so make
+    Starlette's TestClient default to ``http://localhost`` rather than its
+    ``http://testserver``. Tests that need another host pass ``base_url``."""
+    from starlette.testclient import TestClient
+
+    original = TestClient.__init__
+
+    def init(self, app, base_url: str = "http://localhost", *args, **kwargs):
+        original(self, app, base_url, *args, **kwargs)
+
+    monkeypatch.setattr(TestClient, "__init__", init)
