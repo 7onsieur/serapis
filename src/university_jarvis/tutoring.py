@@ -460,6 +460,26 @@ def end_session(module_code: str, week_number: int, session_id: str, *, reason: 
         return _view(session)
 
 
+def delete_session(module_code: str, week_number: int, session_id: str, *,
+                   workspace_root: Path | None = None) -> None:
+    """Delete the transcript file only.
+
+    Learning evidence and task exposures live in the week's academic record and are
+    untouched, so deleting a conversation cannot turn a helped or revealed task back
+    into a fresh unaided one. An unfinished answer is first saved to the evidence record.
+    """
+    path = _session_path(module_code, week_number, session_id, workspace_root)
+    with record_lock(path, create_dir=True):
+        session = _read(path, module_code, week_number)
+        pending = _recoverable_turn(session)
+        if pending is not None and pending["status"] == "PENDING" and _age_seconds(pending["started_at"]) < STALE_PENDING_SECONDS:
+            raise TutorSessionError("A request for this session is still being processed; try again shortly")
+        if session["status"] == "ACTIVE":
+            _abandon_unfinished(session, module_code, week_number, workspace_root)
+        path.unlink()
+        path.with_suffix(".json.tmp").unlink(missing_ok=True)
+
+
 def _result(session: dict[str, Any], turn: dict[str, Any]) -> dict[str, Any]:
     reply = next((t for t in session["turns"] if t.get("in_reply_to") == turn["turn_id"]), None)
     return {"session": _view(session), "turn_id": turn["turn_id"], "status": turn["status"],

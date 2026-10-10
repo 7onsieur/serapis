@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Tutor — {{ module.module_code }} Week {{ week.week }} — Serapis by Limitless Hub{% endblock %}
+{% block content %}
+<style>
+  .tutor-turn { margin: 0.75rem 0; }
+  .tutor-help form + form { margin-top: 0.6rem; }
+</style>
+{% set base = "/modules/" ~ module.module_code ~ "/weeks/" ~ week.week %}
+{% set post = base ~ "/tutor/" ~ session.session_id %}
+{% set assist = {"UNAIDED": "Recorded as unaided", "PROMPTED": "Recorded as assisted", "REVEALED": "Recorded after the answer was shown"} %}
+{% set already_assisted = session.intention == "TEACH_ME" or (session.turns | selectattr("action", "defined") | selectattr("action", "equalto", "ANSWER") | list | length > 0) or session.hint_level > 0 %}
+{% set reads = {"correct": "looks correct", "partial": "partly correct", "misconception": "contains a misunderstanding", "off_target": "does not address the question", "unclear": "could not be judged"} %}
+{% macro why(t) -%}
+{%- set r = [] -%}
+{%- if t.assistance_status == "REVEALED" %}{% set _ = r.append("the answer had been shown") %}
+{%- else -%}
+{%- if session.intention == "TEACH_ME" %}{% set _ = r.append("the tutor explained first") %}{% endif -%}
+{%- if t.hint_level %}{% set _ = r.append("hint " ~ t.hint_level ~ " used") %}{% endif -%}
+{%- if not r %}{% set _ = r.append("help or feedback was already shown for this question") %}{% endif -%}
+{%- endif -%}
+{{ r | join(", ") }}
+{%- endmacro %}
+<p class="breadcrumb"><a href="/modules">Modules</a> &rarr; <a href="/modules/{{ module.module_code }}">{{ module.module_code }}</a> &rarr; <a href="{{ base }}#tutor">Week {{ week.week }}</a> &rarr; Tutor</p>
+<div class="page-head">
+  <p class="eyebrow">Tutor &middot; {{ "Teach me" if session.intention == "TEACH_ME" else "Test me" }} &middot; {{ "in progress" if session.status == "ACTIVE" else "ended" }}</p>
+  <h1>{{ session.task.task }}</h1>
+</div>
+<p class="section-note">Each AI turn sends the relevant excerpts from this week's sources and your messages to the configured AI provider. Judgements are provisional AI opinions, not grades. Answers after a hint, an explanation, feedback or a revealed answer are recorded as assisted &mdash; only an answer given with no help counts as unaided.</p>
+
+{% if error %}
+<div class="action-error"><strong>Something went wrong:</strong> {{ error }}</div>
+{% endif %}
+
+<div class="section">
+  <div class="section-head"><h2>Conversation</h2><span class="kicker">Hints used: {{ session.hint_level }} of 2</span></div>
+  {% for t in session.turns %}
+    {% if t.role == "tutor" %}
+    <div class="response-card">
+      <div class="response-label"><span class="dot"></span>
+        {% if t.kind == "EXPLANATION" %}Tutor &mdash; explanation
+        {% elif t.kind == "QUESTION" %}Tutor &mdash; question
+        {% elif t.kind == "HINT" %}Tutor &mdash; hint {{ t.hint_level }}
+        {% elif t.kind == "REVEAL" %}Reference answer (you asked to see it)
+        {% else %}Tutor &mdash; feedback (provisional){% endif %}
+      </div>
+      <pre class="rendered-output">{{ t.text }}</pre>
+    </div>
+    {% else %}
+    <div class="card tutor-turn">
+      <p><strong>You</strong>
+        {% if t.action == "HINT" %}asked for a hint
+        {% elif t.action == "REVEAL" %}asked to see the answer
+        {% endif %}</p>
+      {% if t.text %}<pre class="rendered-output">{{ t.text }}</pre>{% endif %}
+      {% if t.action == "ANSWER" and t.assistance_status %}<p class="note"><strong>{{ assist[t.assistance_status] }}</strong>{% if t.assistance_status != "UNAIDED" %} ({{ why(t) }}){% endif %}.
+        {% if t.diagnosis %}Tutor's provisional read: {{ reads[t.diagnosis] }}.{% endif %}</p>{% endif %}
+      {% if t.status in ["PENDING", "FAILED"] %}<p class="note">The tutor has not replied to this yet{% if t.action == "ANSWER" %} &mdash; your answer is saved{% endif %}.</p>{% endif %}
+      {% if t.status == "BLOCKED" %}<p class="note">Your answer is saved but could not be judged because the source material changed.</p>{% endif %}
+      {% if t.status == "ABANDONED" %}<p class="note">This turn was not completed before the session ended; your answer was saved.</p>{% endif %}
+    </div>
+    {% endif %}
+  {% endfor %}
+</div>
+
+{% if session.status == "ACTIVE" %}
+<div class="section">
+  {% if session.recovery and session.recovery.state == "RETRY" %}
+    {% set pending = (session.turns | selectattr("client_turn_id", "defined") | selectattr("client_turn_id", "equalto", session.recovery.client_turn_id) | list | first) %}
+    <div class="action-form">
+      <h3>The last request did not finish</h3>
+      <p class="note">{% if pending.action == "ANSWER" %}Your answer is saved and will not be duplicated.{% endif %} Retrying repeats exactly that request.</p>
+      <form method="post" action="{{ post }}/{{ 'answer' if pending.action == 'ANSWER' else pending.action | lower }}">
+        <input type="hidden" name="client_turn_id" value="{{ session.recovery.client_turn_id }}">
+        {% if pending.action == "ANSWER" %}<input type="hidden" name="response" value="{{ pending.text }}">{% endif %}
+        {% if pending.action == "REVEAL" %}<input type="hidden" name="confirm" value="yes">{% endif %}
+        <button type="submit">Retry</button>
+      </form>
+    </div>
+  {% elif session.recovery %}
+    <div class="action-form"><p class="note">The tutor is still working on your last request. <a href="{{ post }}">Refresh</a> in a moment.</p></div>
+  {% else %}
+    {% if "ANSWER" in session.available_actions %}
+    <div class="action-form">
+      <h3>Your answer</h3>
+      <form method="post" action="{{ post }}/answer">
+        <input type="hidden" name="client_turn_id" value="{{ new_turn_id }}">
+        <textarea name="response" required rows="5" maxlength="2000" placeholder="Answer in your own words"></textarea>
+        <button type="submit">Send answer</button>
+      </form>
+    </div>
+    {% endif %}
+    <div class="action-grid">
+      {% if "HINT" in session.available_actions %}
+      <div class="action-form tutor-help">
+        <h3>Need help?</h3>
+        <p class="note">{% if already_assisted %}Your answers to this question are already recorded as assisted.{% else %}A hint means your next answer is recorded as assisted.{% endif %}</p>
+        <form method="post" action="{{ post }}/hint"><input type="hidden" name="client_turn_id" value="{{ new_turn_id }}"><button type="submit">Give me a hint</button></form>
+        <form method="post" action="{{ post }}/dont-know"><input type="hidden" name="client_turn_id" value="{{ new_turn_id }}"><button type="submit">I don't know</button></form>
+      </div>
+      {% endif %}
+      {% if "REVEAL" in session.available_actions %}
+      <div class="action-form">
+        <h3>Show the answer</h3>
+        <p class="note">After the answer is shown, this question can no longer count as independent evidence of your understanding &mdash; a different question will be needed.</p>
+        <form method="post" action="{{ post }}/reveal">
+          <input type="hidden" name="client_turn_id" value="{{ new_turn_id }}">
+          <label><input type="checkbox" name="confirm" value="yes" required> I understand and want the answer shown</label>
+          <button type="submit">Show the answer</button>
+        </form>
+      </div>
+      {% endif %}
+    </div>
+  {% endif %}
+  <div class="action-form">
+    <h3>Finish</h3>
+    <form method="post" action="{{ post }}/end"><button type="submit">End session</button></form>
+  </div>
+</div>
+{% else %}
+<div class="section"><div class="card"><p>This session has ended. You can <a href="{{ base }}#tutor">start a new one</a> from the week page.</p></div></div>
+{% endif %}
+
+<div class="section">
+  <div class="action-form">
+    <h3>Delete this transcript</h3>
+    <p class="note">Deletes the conversation only. Your recorded answers, hints and assisted/unaided labels stay in your learning evidence, and questions you already saw help for will not be offered again as fresh, unaided questions.</p>
+    <form method="post" action="{{ post }}/delete">
+      <label><input type="checkbox" name="confirm" value="yes" required> Delete this transcript permanently</label>
+      <button type="submit">Delete transcript</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

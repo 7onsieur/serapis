@@ -49,6 +49,12 @@ material observed at all" from "material observed, no gaps identified"
 from "gaps exist" via ``hub_service.has_any_observed_material`` -- never
 "all studying complete".
 
+Phase 3B adds the Tutor: ``GET .../tutor/{session_id}`` renders a saved session
+read-only (no write, no provider call); ``POST .../tutor/start`` and
+``POST .../tutor/{session_id}/{answer|hint|dont-know|reveal|end|delete}`` are thin
+wrappers over ``tutoring`` that redirect (303) back to the GET page. Every turn
+carries a ``client_turn_id`` so a resubmitted form is idempotent.
+
 Route handlers never construct or resolve credentials themselves. The
 Blackboard client used by ``/check`` is produced by
 ``blackboard_client_factory`` -- a zero-argument callable returning a
@@ -64,6 +70,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import os
+import secrets
 import sys
 from typing import Any, Callable, ContextManager
 from urllib.parse import parse_qsl
@@ -73,10 +80,10 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from starlette.responses import Response
 from fastapi.templating import Jinja2Templates
 
-from . import hub_service
+from . import hub_service, tutoring
 from .hub_security import MAX_UPLOAD_BYTES, HubSecurityMiddleware
-from .reasoning import ReasoningProvider
-from .state import StateError
+from .reasoning import OpenAIReasoningProvider, ReasoningProvider
+from .state import StateError, load_state
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "hub_templates"
 
@@ -288,12 +295,21 @@ def create_app(
             quizzes = record.get("learning", {}).get("quiz_history", {}).get("attempts", [])
             if quizzes:
                 quiz_questions = [{"quiz_id": quizzes[-1]["quiz_id"], **q} for q in quizzes[-1].get("questions", [])]
+        tutor = None
+        if learning is not None:
+            # Read-only: lists session files; never writes or calls the provider.
+            tutor = {
+                "sessions": tutoring.list_sessions(
+                    module["module_code"], week["week"], workspace_root=request.app.state.hub_workspace_root),
+                "request_id": secrets.token_hex(12),
+            }
         return templates.TemplateResponse(
             request,
             "week.html",
             {
                 "module": module,
                 "week": week,
+                "tutor": tutor,
                 "active_nav": "modules",
                 "action_rows": _present_action_result(action_result),
                 "action_rendered": _action_rendered_text(action_result),
@@ -671,6 +687,100 @@ def create_app(
             return _render_week(request, module, week, action_result={"evaluation_outcome": result["evaluation"]["outcome"]})
         except StateError as exc:
             return _render_week(request, module, week, action_error=str(exc))
+
+    # --- Tutor (Phase 3B): thin wrappers over ``tutoring``; no tutoring logic lives here. ---
+    # GET renders a saved session read-only. Every action is a POST carrying a
+    # client_turn_id, then redirects (303) back to the GET page.
+
+    def _tutor_url(module: dict[str, Any], week_number: int, session_id: str) -> str:
+        return f"/modules/{module['module_code']}/weeks/{week_number}/tutor/{session_id}"
+
+    def _render_tutor(request: Request, module: dict[str, Any], week: dict[str, Any],
+                      view: dict[str, Any], *, error: str | None = None) -> HTMLResponse:
+        return templates.TemplateResponse(
+            request, "tutor.html",
+            {"module": module, "week": week, "session": view, "error": error,
+             "new_turn_id": secrets.token_hex(12), "active_nav": "modules"},
+        )
+
+    @app.get("/modules/{module_code}/weeks/{week_number}/tutor/{session_id}", response_class=HTMLResponse)
+    def tutor_session(request: Request, module_code: str, week_number: int, session_id: str) -> HTMLResponse:
+        found = _week_or_404(request, module_code, week_number)
+        if isinstance(found, HTMLResponse):
+            return found
+        module, week = found
+        try:
+            view = tutoring.load_session(
+                module["module_code"], week_number, session_id,
+                workspace_root=request.app.state.hub_workspace_root)
+        except StateError:
+            return _not_found(request, "That tutoring session was not found. It may have been deleted.")
+        return _render_tutor(request, module, week, view)
+
+    @app.post("/modules/{module_code}/weeks/{week_number}/tutor/start", response_class=HTMLResponse)
+    async def tutor_start(request: Request, module_code: str, week_number: int) -> Response:
+        found = _week_or_404(request, module_code, week_number)
+        if isinstance(found, HTMLResponse):
+            return found
+        module, week = found
+        form = await _form_fields(request)
+        try:
+            view = tutoring.create_session(
+                request.app.state.hub_state if request.app.state.hub_state is not None else load_state(),
+                module["module_code"], week_number,
+                intention=form.get("intention", ""), client_request_id=form.get("client_request_id", ""),
+                provider=request.app.state.hub_reasoning_provider or OpenAIReasoningProvider(),
+                workspace_root=request.app.state.hub_workspace_root)
+        except StateError as exc:
+            return _render_week(request, module, week, action_error=str(exc))
+        return RedirectResponse(_tutor_url(module, week_number, view["session_id"]), status_code=303)
+
+    @app.post("/modules/{module_code}/weeks/{week_number}/tutor/{session_id}/{action}", response_class=HTMLResponse)
+    async def tutor_action(request: Request, module_code: str, week_number: int, session_id: str,
+                           action: str) -> Response:
+        found = _week_or_404(request, module_code, week_number)
+        if isinstance(found, HTMLResponse):
+            return found
+        module, week = found
+        if action not in {"answer", "hint", "dont-know", "reveal", "end", "delete"}:
+            return _not_found(request, "Unknown tutoring action.")
+        form = await _form_fields(request)
+        root = request.app.state.hub_workspace_root
+        code = module["module_code"]
+        turn_id = form.get("client_turn_id", "")
+        provider = request.app.state.hub_reasoning_provider or OpenAIReasoningProvider()
+        state = request.app.state.hub_state if request.app.state.hub_state is not None else load_state()
+        url = _tutor_url(module, week_number, session_id)
+        error: str | None = None
+        try:
+            if action == "answer":
+                tutoring.submit_response(state, code, week_number, session_id, client_turn_id=turn_id,
+                                         text=form.get("response", ""), provider=provider, workspace_root=root)
+            elif action in ("hint", "dont-know"):
+                # "I don't know" asks for the next hint; the answer is only ever shown on request.
+                tutoring.request_hint(state, code, week_number, session_id, client_turn_id=turn_id,
+                                      provider=provider, workspace_root=root)
+            elif action == "reveal":
+                if form.get("confirm") != "yes":
+                    raise StateError("Tick the box to confirm you want the answer shown.")
+                tutoring.reveal_answer(state, code, week_number, session_id, client_turn_id=turn_id,
+                                       provider=provider, workspace_root=root)
+            elif action == "end":
+                tutoring.end_session(code, week_number, session_id, workspace_root=root)
+            else:
+                if form.get("confirm") != "yes":
+                    raise StateError("Tick the box to confirm you want this transcript deleted.")
+                tutoring.delete_session(code, week_number, session_id, workspace_root=root)
+                return RedirectResponse(f"/modules/{code}/weeks/{week_number}", status_code=303)
+        except StateError as exc:
+            error = str(exc)
+        if error is None:
+            return RedirectResponse(url, status_code=303)
+        try:
+            view = tutoring.load_session(code, week_number, session_id, workspace_root=root)
+        except StateError:
+            return _render_week(request, module, week, action_error=error)
+        return _render_tutor(request, module, week, view, error=error)
 
     @app.post("/modules/{module_code}/weeks/{week_number}/revise", response_class=HTMLResponse)
     def revise(request: Request, module_code: str, week_number: int) -> HTMLResponse:

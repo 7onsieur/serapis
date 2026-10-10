@@ -123,6 +123,38 @@
   {% if learning.latest_unevaluated %}<form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/learning/evaluate"><input type="hidden" name="attempt_id" value="{{ learning.latest_unevaluated }}"><button type="submit">Evaluate with AI</button></form>{% endif %}
 </section>
 {% endif %}
+{% if tutor %}
+<section class="section" id="tutor">
+  <div class="section-head"><h2>Tutor</h2><span class="kicker">AI conversation</span></div>
+  <p class="section-note">A back-and-forth session on one question from this week's materials. Each AI turn sends the relevant excerpts from this week's sources and your messages to the configured AI provider, so do not type personal information. Judgements are provisional AI opinions, not grades. Answers given after a hint, an explanation, feedback or a revealed answer are recorded as assisted, not as independent understanding.</p>
+  <div class="action-grid">
+    <div class="action-form">
+      <h3>Start a session <span class="badge writes">Sends excerpts and messages to AI</span></h3>
+      <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/tutor/start">
+        <input type="hidden" name="client_request_id" value="{{ tutor.request_id }}">
+        <label><input type="radio" name="intention" value="TEACH_ME" checked> <strong>Teach me</strong> &mdash; explanation first, then a question. Your first answer is recorded as assisted.</label>
+        <label><input type="radio" name="intention" value="TEST_ME"> <strong>Test me</strong> &mdash; the question first, no help. Your first answer can count as unaided.</label>
+        <button type="submit">Start tutoring</button>
+      </form>
+    </div>
+    <div class="action-form">
+      <h3>Your sessions</h3>
+      {% if tutor.sessions %}
+      <ul>
+      {% for s in tutor.sessions %}
+        {% if s.status == "UNREADABLE" %}
+        <li>Unreadable session file</li>
+        {% else %}
+        <li><a href="/modules/{{ module.module_code }}/weeks/{{ week.week }}/tutor/{{ s.session_id }}">{{ "Teach me" if s.intention == "TEACH_ME" else "Test me" }}: {{ s.task }}</a>
+          &mdash; {{ "in progress (resume)" if s.status == "ACTIVE" else "ended" }}</li>
+        {% endif %}
+      {% endfor %}
+      </ul>
+      {% else %}<p class="note">No tutoring sessions yet.</p>{% endif %}
+    </div>
+  </div>
+</section>
+{% endif %}
 {% if action_rows or action_rendered %}
 <div class="action-result">
   <strong>Action succeeded.</strong>

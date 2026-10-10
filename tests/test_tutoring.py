@@ -626,6 +626,33 @@ class TutoringTests(unittest.TestCase):
         self.assertEqual([t["status"] for t in ended["turns"] if t["role"] == "student"], ["PENDING"])
         self.assertEqual(len(self.learning()["evidence"]), before)
 
+    def test_delete_removes_only_the_transcript(self):
+        session = self.create()
+        self.reveal(session)
+        before = self.learning()
+        tutoring.delete_session("BIO101", 1, session["session_id"], workspace_root=self.root)
+        self.assertFalse(self.session_file(session).exists())
+        self.assertEqual(self.learning(), before)
+        with self.assertRaises(StateError):
+            tutoring.load_session("BIO101", 1, session["session_id"], workspace_root=self.root)
+        with self.assertRaises(StateError):
+            tutoring.delete_session("BIO101", 1, session["session_id"], workspace_root=self.root)
+        follow_up = self.create(request="after")
+        self.assertNotEqual(follow_up["task"]["task_key"], session["task"]["task_key"])
+
+    def test_delete_refuses_while_a_request_is_in_flight(self):
+        session = self.create()
+        with self.assertRaises(ReasoningError):
+            self.answer(session, "live", provider=FakeProvider(fail_times=1))
+        path = self.session_file(session)
+        data = json.loads(path.read_text())
+        turn = next(t for t in data["turns"] if t["role"] == "student")
+        turn.update(status="PENDING", started_at=datetime.now(timezone.utc).replace(microsecond=0).isoformat())
+        path.write_text(json.dumps(data))
+        with self.assertRaisesRegex(StateError, "still being processed"):
+            tutoring.delete_session("BIO101", 1, session["session_id"], workspace_root=self.root)
+        self.assertTrue(path.exists())
+
 
 class TutoringStorageTests(unittest.TestCase):
     """Where sessions live, and that Git never sees them. Synthetic paths only."""
