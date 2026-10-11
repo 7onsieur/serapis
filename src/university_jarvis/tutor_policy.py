@@ -25,6 +25,7 @@ import re
 from decimal import Decimal
 from typing import Any, Callable, Iterable
 
+from .relations import relation_conflict
 from .retrieval import tokenize
 
 SELF_CONFIDENCE = ("SURE", "UNSURE", "GUESSING")
@@ -447,6 +448,9 @@ def validate_question(raw: Any, *, step: str, citations_ok: Callable[[list[dict[
     if (relevance := _citation_relevance(question, answer_words, [cited_text([c]) for c in citations],
                                          list(other_pages))):
         return None, relevance
+    if (conflict := relation_conflict(expected, [cited_text([c]) for c in citations])
+            or relation_conflict(question, [cited_text([c]) for c in citations])):
+        return None, f"question or expected answer contradicts the cited passages: {conflict}"
     own = set(tokenize(question)) | expected_stems
     concept_overlap = len(own & set(tokenize(concept_text)))
     if concept_overlap < CONCEPT_OVERLAP_MIN:
@@ -526,8 +530,10 @@ def reference_unsupported(reference: str | None, cited_pages: list[str], other_p
     Lexical screening only. It rejects a reference that is thin, mostly absent from the cited text, cited to
     a page that adds nothing, cited to a page when an uncited page supports it clearly better, flips a known
     direction word the passage uses the other way, or asserts an absolute the passage never states.
-    It does NOT prove the reference is true: a contradiction that reuses the passage's vocabulary in a
-    different relation (for example swapping numerator and denominator) passes, and so does a derived number.
+    A few explicit relations (reversed operands, opposite operation, reversed comparison or direction, flipped
+    negation) are also compared with the passage by ``relations.relation_conflict``; only a clear contradiction
+    rejects. It does NOT prove the reference is true: a relation it cannot parse or match passes, and so does a
+    derived number.
     """
     stems = set(tokenize(reference or ""))
     if not stems or not cited_pages:
@@ -548,6 +554,8 @@ def reference_unsupported(reference: str | None, cited_pages: list[str], other_p
             return f"the reference says '{word}' where the passage says '{_OPPOSITE_OF[word]}'"
         if word in _ABSOLUTES and word not in passage_words:
             return f"the reference claims '{word}' which the passage does not"
+    if (conflict := relation_conflict(reference, cited_pages)):
+        return f"the reference contradicts the cited passages: {conflict}"
     return None
 
 

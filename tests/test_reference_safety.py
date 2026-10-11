@@ -142,11 +142,11 @@ class ReferenceSafetyTests(unittest.TestCase):
         self.assertIn("not supported", tp.reference_unsupported("Pollsters survey many voters.", [PAGE1]))
         self.assertIsNotNone(tp.reference_unsupported(GOOD, [PAGE2], [PAGE1]))  # decoy cited, true page uncited
 
-    def test_known_limitation_a_relation_swap_using_the_passages_own_words_is_not_detected(self):
+    def test_a_swapped_ratio_using_the_passages_own_words_is_rejected(self):
         swapped = ("Standard error is the square root of the sample size divided by the sample standard deviation, "
                    "so a larger sample gives a smaller standard error.")
-        # Documented gap: lexical screening cannot tell a swapped numerator and denominator. Needs semantic checking.
-        self.assertIsNone(tp.reference_unsupported(swapped, [PAGE1], [PAGE2]))
+        # Stage 2: a recognised "A divided by B" with its operands reversed against the cited page is rejected.
+        self.assertIn("contradicts", tp.reference_unsupported(swapped, [PAGE1], [PAGE2]))
 
 
 BAD = "Standard error is the largest mistake a pollster can make in a survey of voters."

@@ -1,0 +1,394 @@
+[
+ {
+  "kind": "text",
+  "case": "rev_ratio_price_over_quantity",
+  "category": "reversed_operands",
+  "gold": "REJECT",
+  "relation_layer": "CONTRADICTED",
+  "rejected_by_relation": true,
+  "rejected_any_validator": true,
+  "outcome": "TRUE_REJECT"
+ },
+ {
+  "kind": "text",
+  "case": "rev_ratio_root_over_sd",
+  "category": "reversed_operands",
+  "gold": "REJECT",
+  "relation_layer": "CONTRADICTED",
+  "rejected_by_relation": true,
+  "rejected_any_validator": true,
+  "outcome": "TRUE_REJECT"
+ },
+ {
+  "kind": "text",
+  "case": "rev_ratio_one_plus_rate_over_fv",
+  "category": "reversed_operands",
+  "gold": "REJECT",
+  "relation_layer": "CONTRADICTED",
+  "rejected_by_relation": true,
+  "rejected_any_validator": true,
+  "outcome": "TRUE_REJECT"
+ },
+ {
+  "kind": "text",
+  "case": "rev_ratio_correct_order",
+  "category": "reversed_operands",
+  "gold": "ACCEPT",
+  "relation_layer": "SUPPORTED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "TRUE_ACCEPT"
+ },
+ {
+  "kind": "text",
+  "case": "rev_subtraction",
+  "category": "reversed_operands",
+  "gold": "REJECT",
+  "relation_layer": "CONTRADICTED",
+  "rejected_by_relation": true,
+  "rejected_any_validator": true,
+  "outcome": "TRUE_REJECT"
+ },
+ {
+  "kind": "text",
+  "case": "op_multiply_for_divide",
+  "category": "reversed_operands",
+  "gold": "REJECT",
+  "relation_layer": "CONTRADICTED",
+  "rejected_by_relation": true,
+  "rejected_any_validator": true,
+  "outcome": "TRUE_REJECT"
+ },
+ {
+  "kind": "text",
+  "case": "op_times_for_divide",
+  "category": "reversed_operands",
+  "gold": "REJECT",
+  "relation_layer": "CONTRADICTED",
+  "rejected_by_relation": true,
+  "rejected_any_validator": true,
+  "outcome": "TRUE_REJECT"
+ },
+ {
+  "kind": "text",
+  "case": "op_plus_for_minus",
+  "category": "reversed_operands",
+  "gold": "REJECT",
+  "relation_layer": "CONTRADICTED",
+  "rejected_by_relation": true,
+  "rejected_any_validator": true,
+  "outcome": "TRUE_REJECT"
+ },
+ {
+  "kind": "text",
+  "case": "op_subtraction_correct",
+  "category": "reversed_operands",
+  "gold": "ACCEPT",
+  "relation_layer": "SUPPORTED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "TRUE_ACCEPT"
+ },
+ {
+  "kind": "text",
+  "case": "equiv_commutative_multiply",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "relation_layer": "SUPPORTED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "TRUE_ACCEPT"
+ },
+ {
+  "kind": "text",
+  "case": "equiv_commutative_add",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "relation_layer": "SUPPORTED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "TRUE_ACCEPT"
+ },
+ {
+  "kind": "text",
+  "case": "equiv_wording_and_article",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "relation_layer": "SUPPORTED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "TRUE_ACCEPT"
+ },
+ {
+  "kind": "text",
+  "case": "equiv_direction_reworded",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "relation_layer": "SUPPORTED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "TRUE_ACCEPT"
+ },
+ {
+  "kind": "text",
+  "case": "equiv_direction_both_reversed",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "relation_layer": "SUPPORTED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "TRUE_ACCEPT"
+ },
+ {
+  "kind": "text",
+  "case": "equiv_comparison_reversed_wording",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "relation_layer": "SUPPORTED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "TRUE_ACCEPT"
+ },
+ {
+  "kind": "text",
+  "case": "cmp_below_for_exceeds",
+  "category": "comparisons",
+  "gold": "REJECT",
+  "relation_layer": "CONTRADICTED",
+  "rejected_by_relation": true,
+  "rejected_any_validator": true,
+  "outcome": "TRUE_REJECT"
+ },
+ {
+  "kind": "text",
+  "case": "cmp_one_exceeds_value",
+  "category": "comparisons",
+  "gold": "REJECT",
+  "relation_layer": "CONTRADICTED",
+  "rejected_by_relation": true,
+  "rejected_any_validator": true,
+  "outcome": "TRUE_REJECT"
+ },
+ {
+  "kind": "text",
+  "case": "cmp_same_direction",
+  "category": "comparisons",
+  "gold": "ACCEPT",
+  "relation_layer": "SUPPORTED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "TRUE_ACCEPT"
+ },
+ {
+  "kind": "text",
+  "case": "dir_larger_gives_larger",
+  "category": "comparisons",
+  "gold": "REJECT",
+  "relation_layer": "CONTRADICTED",
+  "rejected_by_relation": true,
+  "rejected_any_validator": true,
+  "outcome": "TRUE_REJECT"
+ },
+ {
+  "kind": "text",
+  "case": "dir_higher_rate_higher_pv",
+  "category": "comparisons",
+  "gold": "REJECT",
+  "relation_layer": "CONTRADICTED",
+  "rejected_by_relation": true,
+  "rejected_any_validator": true,
+  "outcome": "TRUE_REJECT"
+ },
+ {
+  "kind": "text",
+  "case": "dir_correct",
+  "category": "comparisons",
+  "gold": "ACCEPT",
+  "relation_layer": "SUPPORTED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "TRUE_ACCEPT"
+ },
+ {
+  "kind": "text",
+  "case": "dir_other_page_same_words_other_subject",
+  "category": "comparisons",
+  "gold": "INCONCLUSIVE",
+  "relation_layer": "UNDETERMINED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "INCONCLUSIVE_OK"
+ },
+ {
+  "kind": "text",
+  "case": "neg_added",
+  "category": "negation_scope",
+  "gold": "REJECT",
+  "relation_layer": "CONTRADICTED",
+  "rejected_by_relation": true,
+  "rejected_any_validator": true,
+  "outcome": "TRUE_REJECT"
+ },
+ {
+  "kind": "text",
+  "case": "neg_removed",
+  "category": "negation_scope",
+  "gold": "REJECT",
+  "relation_layer": "CONTRADICTED",
+  "rejected_by_relation": true,
+  "rejected_any_validator": true,
+  "outcome": "TRUE_REJECT"
+ },
+ {
+  "kind": "text",
+  "case": "neg_cannot_added",
+  "category": "negation_scope",
+  "gold": "REJECT",
+  "relation_layer": "CONTRADICTED",
+  "rejected_by_relation": true,
+  "rejected_any_validator": true,
+  "outcome": "TRUE_REJECT"
+ },
+ {
+  "kind": "text",
+  "case": "neg_both_negated",
+  "category": "negation_scope",
+  "gold": "ACCEPT",
+  "relation_layer": "SUPPORTED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "TRUE_ACCEPT"
+ },
+ {
+  "kind": "text",
+  "case": "neg_other_subject",
+  "category": "negation_scope",
+  "gold": "INCONCLUSIVE",
+  "relation_layer": "UNDETERMINED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "INCONCLUSIVE_OK"
+ },
+ {
+  "kind": "text",
+  "case": "neg_not_only",
+  "category": "negation_scope",
+  "gold": "INCONCLUSIVE",
+  "relation_layer": "UNDETERMINED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": true,
+  "outcome": "INCONCLUSIVE_OK"
+ },
+ {
+  "kind": "text",
+  "case": "neg_pronoun_subject",
+  "category": "negation_scope",
+  "gold": "INCONCLUSIVE",
+  "relation_layer": "UNDETERMINED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "INCONCLUSIVE_OK"
+ },
+ {
+  "kind": "text",
+  "case": "neg_implicit_fail",
+  "category": "negation_scope",
+  "gold": "INCONCLUSIVE",
+  "relation_layer": "UNDETERMINED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "INCONCLUSIVE_OK"
+ },
+ {
+  "kind": "text",
+  "case": "neg_in_comparison",
+  "category": "negation_scope",
+  "gold": "INCONCLUSIVE",
+  "relation_layer": "UNDETERMINED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "INCONCLUSIVE_OK"
+ },
+ {
+  "kind": "text",
+  "case": "unsupported_ratio_to",
+  "category": "unsupported",
+  "gold": "INCONCLUSIVE",
+  "relation_layer": "UNDETERMINED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "INCONCLUSIVE_OK"
+ },
+ {
+  "kind": "text",
+  "case": "unsupported_over",
+  "category": "unsupported",
+  "gold": "INCONCLUSIVE",
+  "relation_layer": "UNDETERMINED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "INCONCLUSIVE_OK"
+ },
+ {
+  "kind": "text",
+  "case": "unsupported_numeric_operands",
+  "category": "unsupported",
+  "gold": "INCONCLUSIVE",
+  "relation_layer": "UNDETERMINED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": true,
+  "outcome": "INCONCLUSIVE_OK"
+ },
+ {
+  "kind": "text",
+  "case": "unsupported_other_quantity",
+  "category": "unsupported",
+  "gold": "INCONCLUSIVE",
+  "relation_layer": "UNDETERMINED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "INCONCLUSIVE_OK"
+ },
+ {
+  "kind": "text",
+  "case": "unsupported_no_pattern",
+  "category": "unsupported",
+  "gold": "INCONCLUSIVE",
+  "relation_layer": "UNDETERMINED",
+  "rejected_by_relation": false,
+  "rejected_any_validator": false,
+  "outcome": "INCONCLUSIVE_OK"
+ },
+ {
+  "kind": "generated",
+  "case": "gen_direction_contradicted",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: question or expected answer contradicts the cited passages: its direction relationship ('a larger sample gives a larger standard error') contradicts the cited passage"
+ },
+ {
+  "kind": "generated",
+  "case": "gen_direction_supported",
+  "gold": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "note": ""
+ },
+ {
+  "kind": "generated",
+  "case": "gen_ratio_reversed",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: question or expected answer contradicts the cited passages: its arithmetic relationship ('it is the percentage change in price divided by the percentage change in quantity demanded') contradicts the cited passage"
+ },
+ {
+  "kind": "generated",
+  "case": "gen_question_false_premise",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: question or expected answer contradicts the cited passages: its direction relationship ('since a larger sample gives a larger standard error') contradicts the cited passage"
+ }
+]

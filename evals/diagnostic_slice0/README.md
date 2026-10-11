@@ -60,3 +60,27 @@ Lexical screening does not establish semantic correctness. Everything below rema
   was not retrieved is rejected before these checks run (unchanged by Stage 1; `valid_two_pages_both_needed`).
 - `CITE-mar-valid` is still a false reject ("question gives away its own answer"); Stage 1 did not touch it.
 - Hedge failures (13) and `SOURCE_CHANGED`/`NO_MATCH` recovery are out of scope.
+
+## Stage 2 (relationship and contradiction verification)
+
+New module `src/university_jarvis/relations.py`, called from `tutor_policy.reference_unsupported` (every use of a stored or generated
+reference: grading, reveal, hint, explain, follow-up generation) and from `tutor_policy.validate_question` (expected answer and question text).
+It parses a closed set of explicit patterns from the text and from the cited passages and returns, per relation found, `SUPPORTED`,
+`CONTRADICTED` or `UNDETERMINED`; only `CONTRADICTED` rejects. `UNDETERMINED` is never read as correct or incorrect.
+
+Patterns: `A divided by B` (reversed operands), multiplication versus division and addition versus subtraction on the same operands
+(multiplication and addition match in either operand order), `A is greater/less than B` / `exceeds` / `is above|below` (reversed), `a larger X gives a
+smaller Y` (opposite direction), and a clause identical to the passage's once `not`/`cannot`/`never`/`no` is added or removed. Clauses with a
+negator beside arithmetic or a comparison, mixed or chained operations, pronoun-only subjects, or scope words (`only`, `unless`, `except`, `but` ...)
+are left undetermined.
+
+- `results/stage2_before/`, `results/stage2_after/` = the 164 frozen cases on `8fa2382` and with Stage 2 (frozen artefacts above are untouched).
+- `adversarial_stage2.py` + `run_adversarial_stage2.py` = 40 further cases (reversed operands, negation scope, comparisons, equivalent expressions,
+  unsupported patterns; `results/stage2_adversarial_{before,after}.json`). Gold is REJECT, ACCEPT or INCONCLUSIVE (the layer must abstain).
+
+Stage 2 results (164 frozen cases): root-reference false accepts 2 -> 0; production citation false accepts 1 -> 0 (`CITE-sta-contradicted_claim`); two more
+contradicted-claim cases are now rejected by the validator (`CITE-eco`, `CITE-fin`, already rejected in production by retrieval); no outcome got worse.
+
+Still not solved: relations phrased outside these patterns (`over`, `ratio of A to B`, symbols, prose such as "twice as large"), operands that differ in
+wording by more than the stem match tolerates, a relation whose subject is a pronoun or only partly named (`CITE-psy-contradicted_claim`, `QUANT-*`
+wrong arithmetic), and everything Stage 1 listed. These checks do not establish semantic correctness.
