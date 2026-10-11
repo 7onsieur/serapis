@@ -1,0 +1,7313 @@
+{
+ "cases": [
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ACC2/adaptive_request-correct",
+   "detail": {},
+   "expected": {
+    "diagnosis": "correct",
+    "reason": "CORRECT_ANSWER",
+    "step": "TRANSFER",
+    "student_response_passed": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks the follow-up REQUEST is shaped by the student's last answer; whether the model's question targets the gap is NOT evaluated",
+   "observed": {
+    "diagnosis": "correct",
+    "reason": "CORRECT_ANSWER",
+    "step": "TRANSFER",
+    "student_response_passed": true
+   },
+   "outcome": "PASS",
+   "probe": "adaptive_request",
+   "subject": "Accounting",
+   "task": "AP-ACC2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ACC2/adaptive_request-partial",
+   "detail": {},
+   "expected": {
+    "diagnosis": "partial",
+    "reason": "PARTIAL_ANSWER",
+    "step": "FOLLOW_UP",
+    "student_response_passed": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks the follow-up REQUEST is shaped by the student's last answer; whether the model's question targets the gap is NOT evaluated",
+   "observed": {
+    "diagnosis": "partial",
+    "reason": "PARTIAL_ANSWER",
+    "step": "FOLLOW_UP",
+    "student_response_passed": true
+   },
+   "outcome": "PASS",
+   "probe": "adaptive_request",
+   "subject": "Accounting",
+   "task": "AP-ACC2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ACC2/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Accounting",
+   "task": "AP-ACC2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ACC2/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Accounting",
+   "task": "AP-ACC2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ACC2/question-good_followup",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": {
+     "concept_overlap": 2,
+     "new_words": 4,
+     "novelty_jaccard": 0.111,
+     "novelty_overlap": 0.2,
+     "support": 1.0
+    },
+    "rejected_by_layer": null
+   },
+   "expected": "ACCEPT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "ACCEPT",
+   "outcome": "PASS",
+   "probe": "question_good_followup",
+   "subject": "Accounting",
+   "task": "AP-ACC2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ACC2/question-good_transfer",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "ACCEPT",
+   "failure_class": "GOOD_QUESTION_REJECTED",
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question gives away its own answer",
+   "observed": "REJECT",
+   "outcome": "FAIL",
+   "probe": "question_good_transfer",
+   "subject": "Accounting",
+   "task": "AP-ACC2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ACC2/question-leaky",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question would reveal an earlier reference answer",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_leaky",
+   "subject": "Accounting",
+   "task": "AP-ACC2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ACC2/question-off_concept",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "RETRIEVAL"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question citation is not a supplied source passage",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_off_concept",
+   "subject": "Accounting",
+   "task": "AP-ACC2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ACC2/question-reworded",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question has the same answer as an earlier question",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_reworded",
+   "subject": "Accounting",
+   "task": "AP-ACC2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ACC2/question-unsupported_answer",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: a computed answer needs a verified calculation: it states 10, which neither the question nor the cited passages state",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_unsupported_answer",
+   "subject": "Accounting",
+   "task": "AP-ACC2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ACC2/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "AP-ACC2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ACC2/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "AP-ACC2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ACC2/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Accounting",
+   "task": "AP-ACC2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ACC2/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "AP-ACC2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ACC2/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "AP-ACC2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ACC2/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Accounting",
+   "task": "AP-ACC2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/adaptive_request-correct",
+   "detail": {},
+   "expected": {
+    "diagnosis": "correct",
+    "reason": "CORRECT_ANSWER",
+    "step": "TRANSFER",
+    "student_response_passed": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks the follow-up REQUEST is shaped by the student's last answer; whether the model's question targets the gap is NOT evaluated",
+   "observed": {
+    "diagnosis": "correct",
+    "reason": "CORRECT_ANSWER",
+    "step": "TRANSFER",
+    "student_response_passed": true
+   },
+   "outcome": "PASS",
+   "probe": "adaptive_request",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/adaptive_request-partial",
+   "detail": {},
+   "expected": {
+    "diagnosis": "partial",
+    "reason": "PARTIAL_ANSWER",
+    "step": "FOLLOW_UP",
+    "student_response_passed": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks the follow-up REQUEST is shaped by the student's last answer; whether the model's question targets the gap is NOT evaluated",
+   "observed": {
+    "diagnosis": "partial",
+    "reason": "PARTIAL_ANSWER",
+    "step": "FOLLOW_UP",
+    "student_response_passed": true
+   },
+   "outcome": "PASS",
+   "probe": "adaptive_request",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/false_accusation_fabricated_quote",
+   "detail": {
+    "stored_diagnosis": "unclear"
+   },
+   "expected": "NOT_ACCUSED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "quote not in the student's words",
+   "observed": "NOT_ACCUSED",
+   "outcome": "PASS",
+   "probe": "false_accusation_fabricated_quote",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/false_accusation_real_quote",
+   "detail": {
+    "stored_diagnosis": "misconception"
+   },
+   "expected": "NOT_ACCUSED",
+   "failure_class": "FALSE_ACCUSATION",
+   "known_structural_gap": true,
+   "note": "a quote that really is in the student's words passes every deterministic check; only a better model or human review can tell the model's claim is wrong",
+   "observed": "ACCUSED",
+   "outcome": "FAIL",
+   "probe": "false_accusation_real_quote",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/question-good_followup",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": {
+     "concept_overlap": 3,
+     "new_words": 5,
+     "novelty_jaccard": 0.125,
+     "novelty_overlap": 0.143,
+     "support": 1.0
+    },
+    "rejected_by_layer": null
+   },
+   "expected": "ACCEPT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "ACCEPT",
+   "outcome": "PASS",
+   "probe": "question_good_followup",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/question-good_transfer",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "RETRIEVAL"
+   },
+   "expected": "ACCEPT",
+   "failure_class": "GOOD_QUESTION_REJECTED",
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question citation is not a supplied source passage",
+   "observed": "REJECT",
+   "outcome": "FAIL",
+   "probe": "question_good_transfer",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/question-leaky",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: expected answer adds nothing beyond the question",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_leaky",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/question-off_concept",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "RETRIEVAL"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question citation is not a supplied source passage",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_off_concept",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/question-reworded",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question is a rewording of something already shown",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_reworded",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/question-unsupported_answer",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: expected answer is not supported by the cited passages",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_unsupported_answer",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-ECO1/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Economics",
+   "task": "AP-ECO1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN1/adaptive_request-correct",
+   "detail": {},
+   "expected": {
+    "diagnosis": "correct",
+    "reason": "CORRECT_ANSWER",
+    "step": "TRANSFER",
+    "student_response_passed": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks the follow-up REQUEST is shaped by the student's last answer; whether the model's question targets the gap is NOT evaluated",
+   "observed": {
+    "diagnosis": "correct",
+    "reason": "CORRECT_ANSWER",
+    "step": "TRANSFER",
+    "student_response_passed": true
+   },
+   "outcome": "PASS",
+   "probe": "adaptive_request",
+   "subject": "Finance",
+   "task": "AP-FIN1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN1/adaptive_request-partial",
+   "detail": {},
+   "expected": {
+    "diagnosis": "partial",
+    "reason": "PARTIAL_ANSWER",
+    "step": "FOLLOW_UP",
+    "student_response_passed": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks the follow-up REQUEST is shaped by the student's last answer; whether the model's question targets the gap is NOT evaluated",
+   "observed": {
+    "diagnosis": "partial",
+    "reason": "PARTIAL_ANSWER",
+    "step": "FOLLOW_UP",
+    "student_response_passed": true
+   },
+   "outcome": "PASS",
+   "probe": "adaptive_request",
+   "subject": "Finance",
+   "task": "AP-FIN1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN1/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Finance",
+   "task": "AP-FIN1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN1/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Finance",
+   "task": "AP-FIN1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN1/question-good_followup",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": {
+     "concept_overlap": 5,
+     "new_words": 4,
+     "novelty_jaccard": 0.375,
+     "novelty_overlap": 0.375,
+     "support": 1.0
+    },
+    "rejected_by_layer": null
+   },
+   "expected": "ACCEPT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "ACCEPT",
+   "outcome": "PASS",
+   "probe": "question_good_followup",
+   "subject": "Finance",
+   "task": "AP-FIN1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN1/question-good_transfer",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": {
+     "concept_overlap": 6,
+     "new_words": 9,
+     "novelty_jaccard": 0.2,
+     "novelty_overlap": 0.2,
+     "support": 0.867
+    },
+    "rejected_by_layer": null
+   },
+   "expected": "ACCEPT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "ACCEPT",
+   "outcome": "PASS",
+   "probe": "question_good_transfer",
+   "subject": "Finance",
+   "task": "AP-FIN1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN1/question-leaky",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question would reveal an earlier reference answer",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_leaky",
+   "subject": "Finance",
+   "task": "AP-FIN1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN1/question-off_concept",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": {
+     "concept_overlap": 2,
+     "new_words": 3,
+     "novelty_jaccard": 0.0,
+     "novelty_overlap": 0.0,
+     "support": 1.0
+    },
+    "rejected_by_layer": null
+   },
+   "expected": "REJECT",
+   "failure_class": "BAD_QUESTION_SHOWN",
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "ACCEPT",
+   "outcome": "FAIL",
+   "probe": "question_off_concept",
+   "subject": "Finance",
+   "task": "AP-FIN1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN1/question-reworded",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question is a rewording of something already shown",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_reworded",
+   "subject": "Finance",
+   "task": "AP-FIN1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN1/question-unsupported_answer",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: a computed answer needs a verified calculation: it states 8, which neither the question nor the cited passages state",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_unsupported_answer",
+   "subject": "Finance",
+   "task": "AP-FIN1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN1/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "AP-FIN1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN1/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "AP-FIN1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN1/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Finance",
+   "task": "AP-FIN1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN1/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "AP-FIN1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN1/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "AP-FIN1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN1/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Finance",
+   "task": "AP-FIN1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN2/adaptive_request-correct",
+   "detail": {},
+   "expected": {
+    "diagnosis": "correct",
+    "reason": "CORRECT_ANSWER",
+    "step": "TRANSFER",
+    "student_response_passed": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks the follow-up REQUEST is shaped by the student's last answer; whether the model's question targets the gap is NOT evaluated",
+   "observed": {
+    "diagnosis": "correct",
+    "reason": "CORRECT_ANSWER",
+    "step": "TRANSFER",
+    "student_response_passed": true
+   },
+   "outcome": "PASS",
+   "probe": "adaptive_request",
+   "subject": "Finance",
+   "task": "AP-FIN2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN2/adaptive_request-partial",
+   "detail": {},
+   "expected": {
+    "diagnosis": "partial",
+    "reason": "PARTIAL_ANSWER",
+    "step": "FOLLOW_UP",
+    "student_response_passed": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks the follow-up REQUEST is shaped by the student's last answer; whether the model's question targets the gap is NOT evaluated",
+   "observed": {
+    "diagnosis": "partial",
+    "reason": "PARTIAL_ANSWER",
+    "step": "FOLLOW_UP",
+    "student_response_passed": true
+   },
+   "outcome": "PASS",
+   "probe": "adaptive_request",
+   "subject": "Finance",
+   "task": "AP-FIN2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN2/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Finance",
+   "task": "AP-FIN2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN2/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Finance",
+   "task": "AP-FIN2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN2/question-good_followup",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": {
+     "concept_overlap": 2,
+     "new_words": 2,
+     "novelty_jaccard": 0.0,
+     "novelty_overlap": 0.0,
+     "support": 1.0
+    },
+    "rejected_by_layer": null
+   },
+   "expected": "ACCEPT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "ACCEPT",
+   "outcome": "PASS",
+   "probe": "question_good_followup",
+   "subject": "Finance",
+   "task": "AP-FIN2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN2/question-good_transfer",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "ACCEPT",
+   "failure_class": "GOOD_QUESTION_REJECTED",
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: a cited passage does not support the expected answer",
+   "observed": "REJECT",
+   "outcome": "FAIL",
+   "probe": "question_good_transfer",
+   "subject": "Finance",
+   "task": "AP-FIN2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN2/question-leaky",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question would reveal an earlier reference answer",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_leaky",
+   "subject": "Finance",
+   "task": "AP-FIN2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN2/question-off_concept",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "RETRIEVAL"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question citation is not a supplied source passage",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_off_concept",
+   "subject": "Finance",
+   "task": "AP-FIN2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN2/question-reworded",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question is a rewording of something already shown",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_reworded",
+   "subject": "Finance",
+   "task": "AP-FIN2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN2/question-unsupported_answer",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: expected answer is not supported by the cited passages",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_unsupported_answer",
+   "subject": "Finance",
+   "task": "AP-FIN2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN2/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "AP-FIN2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN2/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "AP-FIN2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN2/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Finance",
+   "task": "AP-FIN2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN2/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "AP-FIN2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN2/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "AP-FIN2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-FIN2/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Finance",
+   "task": "AP-FIN2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MGT1/adaptive_request-correct",
+   "detail": {},
+   "expected": {
+    "diagnosis": "correct",
+    "reason": "CORRECT_ANSWER",
+    "step": "TRANSFER",
+    "student_response_passed": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks the follow-up REQUEST is shaped by the student's last answer; whether the model's question targets the gap is NOT evaluated",
+   "observed": {
+    "diagnosis": "correct",
+    "reason": "CORRECT_ANSWER",
+    "step": "TRANSFER",
+    "student_response_passed": true
+   },
+   "outcome": "PASS",
+   "probe": "adaptive_request",
+   "subject": "Management",
+   "task": "AP-MGT1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MGT1/adaptive_request-partial",
+   "detail": {},
+   "expected": {
+    "diagnosis": "partial",
+    "reason": "PARTIAL_ANSWER",
+    "step": "FOLLOW_UP",
+    "student_response_passed": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks the follow-up REQUEST is shaped by the student's last answer; whether the model's question targets the gap is NOT evaluated",
+   "observed": {
+    "diagnosis": "partial",
+    "reason": "PARTIAL_ANSWER",
+    "step": "FOLLOW_UP",
+    "student_response_passed": true
+   },
+   "outcome": "PASS",
+   "probe": "adaptive_request",
+   "subject": "Management",
+   "task": "AP-MGT1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MGT1/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Management",
+   "task": "AP-MGT1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MGT1/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Management",
+   "task": "AP-MGT1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MGT1/question-good_followup",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": {
+     "concept_overlap": 3,
+     "new_words": 3,
+     "novelty_jaccard": 0.0,
+     "novelty_overlap": 0.0,
+     "support": 1.0
+    },
+    "rejected_by_layer": null
+   },
+   "expected": "ACCEPT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "ACCEPT",
+   "outcome": "PASS",
+   "probe": "question_good_followup",
+   "subject": "Management",
+   "task": "AP-MGT1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MGT1/question-good_transfer",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "RETRIEVAL"
+   },
+   "expected": "ACCEPT",
+   "failure_class": "GOOD_QUESTION_REJECTED",
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question citation is not a supplied source passage",
+   "observed": "REJECT",
+   "outcome": "FAIL",
+   "probe": "question_good_transfer",
+   "subject": "Management",
+   "task": "AP-MGT1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MGT1/question-leaky",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question would reveal an earlier reference answer",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_leaky",
+   "subject": "Management",
+   "task": "AP-MGT1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MGT1/question-off_concept",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "RETRIEVAL"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question citation is not a supplied source passage",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_off_concept",
+   "subject": "Management",
+   "task": "AP-MGT1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MGT1/question-reworded",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question is a rewording of something already shown",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_reworded",
+   "subject": "Management",
+   "task": "AP-MGT1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MGT1/question-unsupported_answer",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": {
+     "concept_overlap": 6,
+     "new_words": 3,
+     "novelty_jaccard": 0.25,
+     "novelty_overlap": 0.4,
+     "support": 0.75
+    },
+    "rejected_by_layer": null
+   },
+   "expected": "REJECT",
+   "failure_class": "BAD_QUESTION_SHOWN",
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "ACCEPT",
+   "outcome": "FAIL",
+   "probe": "question_unsupported_answer",
+   "subject": "Management",
+   "task": "AP-MGT1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MGT1/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Management",
+   "task": "AP-MGT1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MGT1/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Management",
+   "task": "AP-MGT1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MGT1/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Management",
+   "task": "AP-MGT1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MGT1/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Management",
+   "task": "AP-MGT1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MGT1/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Management",
+   "task": "AP-MGT1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MGT1/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Management",
+   "task": "AP-MGT1"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MKT2/adaptive_request-correct",
+   "detail": {},
+   "expected": {
+    "diagnosis": "correct",
+    "reason": "CORRECT_ANSWER",
+    "step": "TRANSFER",
+    "student_response_passed": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks the follow-up REQUEST is shaped by the student's last answer; whether the model's question targets the gap is NOT evaluated",
+   "observed": {
+    "diagnosis": "correct",
+    "reason": "CORRECT_ANSWER",
+    "step": "TRANSFER",
+    "student_response_passed": true
+   },
+   "outcome": "PASS",
+   "probe": "adaptive_request",
+   "subject": "Marketing",
+   "task": "AP-MKT2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MKT2/adaptive_request-partial",
+   "detail": {},
+   "expected": {
+    "diagnosis": "partial",
+    "reason": "PARTIAL_ANSWER",
+    "step": "FOLLOW_UP",
+    "student_response_passed": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks the follow-up REQUEST is shaped by the student's last answer; whether the model's question targets the gap is NOT evaluated",
+   "observed": {
+    "diagnosis": "partial",
+    "reason": "PARTIAL_ANSWER",
+    "step": "FOLLOW_UP",
+    "student_response_passed": true
+   },
+   "outcome": "PASS",
+   "probe": "adaptive_request",
+   "subject": "Marketing",
+   "task": "AP-MKT2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MKT2/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Marketing",
+   "task": "AP-MKT2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MKT2/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Marketing",
+   "task": "AP-MKT2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MKT2/question-good_followup",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "ACCEPT",
+   "failure_class": "GOOD_QUESTION_REJECTED",
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question is not tied to the original concept",
+   "observed": "REJECT",
+   "outcome": "FAIL",
+   "probe": "question_good_followup",
+   "subject": "Marketing",
+   "task": "AP-MKT2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MKT2/question-good_transfer",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "RETRIEVAL"
+   },
+   "expected": "ACCEPT",
+   "failure_class": "GOOD_QUESTION_REJECTED",
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question citation is not a supplied source passage",
+   "observed": "REJECT",
+   "outcome": "FAIL",
+   "probe": "question_good_transfer",
+   "subject": "Marketing",
+   "task": "AP-MKT2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MKT2/question-leaky",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question would reveal an earlier reference answer",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_leaky",
+   "subject": "Marketing",
+   "task": "AP-MKT2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MKT2/question-off_concept",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "RETRIEVAL"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question citation is not a supplied source passage",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_off_concept",
+   "subject": "Marketing",
+   "task": "AP-MKT2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MKT2/question-reworded",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: question is a rewording of something already shown",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_reworded",
+   "subject": "Marketing",
+   "task": "AP-MKT2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MKT2/question-unsupported_answer",
+   "detail": {
+    "lexical_diagnostics_not_quality_scores": null,
+    "rejected_by_layer": "VALIDATION"
+   },
+   "expected": "REJECT",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Generated question rejected: a computed answer needs a verified calculation: it states 10, which neither the question nor the cited passages state",
+   "observed": "REJECT",
+   "outcome": "PASS",
+   "probe": "question_unsupported_answer",
+   "subject": "Marketing",
+   "task": "AP-MKT2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MKT2/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Marketing",
+   "task": "AP-MKT2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MKT2/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Marketing",
+   "task": "AP-MKT2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MKT2/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Marketing",
+   "task": "AP-MKT2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MKT2/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Marketing",
+   "task": "AP-MKT2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MKT2/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Marketing",
+   "task": "AP-MKT2"
+  },
+  {
+   "capability": "ASSESSMENT_PREPARATION",
+   "case_id": "AP-MKT2/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Marketing",
+   "task": "AP-MKT2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ACC1/citation_to_unsupplied_page",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks that citations point at supplied pages; does NOT check that a claim is true of the cited page",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "citation_to_unsupplied_page",
+   "subject": "Accounting",
+   "task": "CS-ACC1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ACC1/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Accounting",
+   "task": "CS-ACC1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ACC1/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Accounting",
+   "task": "CS-ACC1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ACC1/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "CS-ACC1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ACC1/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "CS-ACC1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ACC1/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Accounting",
+   "task": "CS-ACC1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ACC1/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "CS-ACC1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ACC1/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "CS-ACC1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ACC1/r3-off_topic/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "CS-ACC1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ACC1/r3-off_topic/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "off_target",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "RESTATE",
+    "non_answer": false,
+    "plan_reason": "OFF_TARGET",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "off_target",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "RESTATE",
+    "non_answer": false,
+    "plan_reason": "OFF_TARGET",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "CS-ACC1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ACC1/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Accounting",
+   "task": "CS-ACC1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ECO2/citation_to_unsupplied_page",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks that citations point at supplied pages; does NOT check that a claim is true of the cited page",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "citation_to_unsupplied_page",
+   "subject": "Economics",
+   "task": "CS-ECO2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ECO2/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Economics",
+   "task": "CS-ECO2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ECO2/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Economics",
+   "task": "CS-ECO2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ECO2/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Economics",
+   "task": "CS-ECO2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ECO2/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Economics",
+   "task": "CS-ECO2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ECO2/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Economics",
+   "task": "CS-ECO2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ECO2/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Economics",
+   "task": "CS-ECO2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ECO2/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Economics",
+   "task": "CS-ECO2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ECO2/r3-correct_hedged/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": true,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": true,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Economics",
+   "task": "CS-ECO2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ECO2/r3-correct_hedged/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CHECK_REASONING",
+    "non_answer": false,
+    "plan_reason": "REASONING_CHECK",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CHECK_REASONING",
+    "non_answer": false,
+    "plan_reason": "REASONING_CHECK",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Economics",
+   "task": "CS-ECO2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-ECO2/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Economics",
+   "task": "CS-ECO2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-FIN2/citation_to_unsupplied_page",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks that citations point at supplied pages; does NOT check that a claim is true of the cited page",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "citation_to_unsupplied_page",
+   "subject": "Finance",
+   "task": "CS-FIN2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-FIN2/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Finance",
+   "task": "CS-FIN2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-FIN2/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Finance",
+   "task": "CS-FIN2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-FIN2/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "CS-FIN2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-FIN2/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "CS-FIN2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-FIN2/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Finance",
+   "task": "CS-FIN2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-FIN2/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "CS-FIN2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-FIN2/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "CS-FIN2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-FIN2/r3-dont_know/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": true,
+    "non_answer": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": true,
+    "non_answer": true
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "CS-FIN2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-FIN2/r3-dont_know/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "unclear",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": false,
+    "next_action": "OFFER_HINT",
+    "non_answer": true,
+    "plan_reason": "NEEDS_CLARITY",
+    "plan_step": "NONE"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "unclear",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": false,
+    "next_action": "OFFER_HINT",
+    "non_answer": true,
+    "plan_reason": "NEEDS_CLARITY",
+    "plan_step": "NONE"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "CS-FIN2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-FIN2/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Finance",
+   "task": "CS-FIN2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MGT1/citation_to_unsupplied_page",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks that citations point at supplied pages; does NOT check that a claim is true of the cited page",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "citation_to_unsupplied_page",
+   "subject": "Management",
+   "task": "CS-MGT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MGT1/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Management",
+   "task": "CS-MGT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MGT1/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Management",
+   "task": "CS-MGT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MGT1/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Management",
+   "task": "CS-MGT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MGT1/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Management",
+   "task": "CS-MGT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MGT1/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Management",
+   "task": "CS-MGT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MGT1/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Management",
+   "task": "CS-MGT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MGT1/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Management",
+   "task": "CS-MGT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MGT1/r3-dont_know/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": true,
+    "non_answer": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": true,
+    "non_answer": true
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Management",
+   "task": "CS-MGT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MGT1/r3-dont_know/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "unclear",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": false,
+    "next_action": "OFFER_HINT",
+    "non_answer": true,
+    "plan_reason": "NEEDS_CLARITY",
+    "plan_step": "NONE"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "unclear",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": false,
+    "next_action": "OFFER_HINT",
+    "non_answer": true,
+    "plan_reason": "NEEDS_CLARITY",
+    "plan_step": "NONE"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Management",
+   "task": "CS-MGT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MGT1/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Management",
+   "task": "CS-MGT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT1/citation_to_unsupplied_page",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks that citations point at supplied pages; does NOT check that a claim is true of the cited page",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "citation_to_unsupplied_page",
+   "subject": "Marketing",
+   "task": "CS-MKT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT1/false_accusation_fabricated_quote",
+   "detail": {
+    "stored_diagnosis": "unclear"
+   },
+   "expected": "NOT_ACCUSED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "quote not in the student's words",
+   "observed": "NOT_ACCUSED",
+   "outcome": "PASS",
+   "probe": "false_accusation_fabricated_quote",
+   "subject": "Marketing",
+   "task": "CS-MKT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT1/false_accusation_real_quote",
+   "detail": {
+    "stored_diagnosis": "misconception"
+   },
+   "expected": "NOT_ACCUSED",
+   "failure_class": "FALSE_ACCUSATION",
+   "known_structural_gap": true,
+   "note": "a quote that really is in the student's words passes every deterministic check; only a better model or human review can tell the model's claim is wrong",
+   "observed": "ACCUSED",
+   "outcome": "FAIL",
+   "probe": "false_accusation_real_quote",
+   "subject": "Marketing",
+   "task": "CS-MKT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT1/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Marketing",
+   "task": "CS-MKT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT1/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Marketing",
+   "task": "CS-MKT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT1/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Marketing",
+   "task": "CS-MKT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT1/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Marketing",
+   "task": "CS-MKT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT1/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Marketing",
+   "task": "CS-MKT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT1/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Marketing",
+   "task": "CS-MKT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT1/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Marketing",
+   "task": "CS-MKT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT1/r3-off_topic/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Marketing",
+   "task": "CS-MKT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT1/r3-off_topic/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "off_target",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "RESTATE",
+    "non_answer": false,
+    "plan_reason": "OFF_TARGET",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "off_target",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "RESTATE",
+    "non_answer": false,
+    "plan_reason": "OFF_TARGET",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Marketing",
+   "task": "CS-MKT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT1/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Marketing",
+   "task": "CS-MKT1"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT2/citation_to_unsupplied_page",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "checks that citations point at supplied pages; does NOT check that a claim is true of the cited page",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "citation_to_unsupplied_page",
+   "subject": "Marketing",
+   "task": "CS-MKT2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT2/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Marketing",
+   "task": "CS-MKT2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT2/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Marketing",
+   "task": "CS-MKT2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT2/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Marketing",
+   "task": "CS-MKT2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT2/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Marketing",
+   "task": "CS-MKT2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT2/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Marketing",
+   "task": "CS-MKT2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT2/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Marketing",
+   "task": "CS-MKT2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT2/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Marketing",
+   "task": "CS-MKT2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT2/r3-off_topic/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Marketing",
+   "task": "CS-MKT2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT2/r3-off_topic/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "off_target",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "RESTATE",
+    "non_answer": false,
+    "plan_reason": "OFF_TARGET",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "off_target",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "RESTATE",
+    "non_answer": false,
+    "plan_reason": "OFF_TARGET",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Marketing",
+   "task": "CS-MKT2"
+  },
+  {
+   "capability": "CASE_STUDY_APPLICATION",
+   "case_id": "CS-MKT2/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Marketing",
+   "task": "CS-MKT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC1/false_accusation_fabricated_quote",
+   "detail": {
+    "stored_diagnosis": "unclear"
+   },
+   "expected": "NOT_ACCUSED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "quote not in the student's words",
+   "observed": "NOT_ACCUSED",
+   "outcome": "PASS",
+   "probe": "false_accusation_fabricated_quote",
+   "subject": "Accounting",
+   "task": "CT-ACC1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC1/false_accusation_real_quote",
+   "detail": {
+    "stored_diagnosis": "misconception"
+   },
+   "expected": "NOT_ACCUSED",
+   "failure_class": "FALSE_ACCUSATION",
+   "known_structural_gap": true,
+   "note": "a quote that really is in the student's words passes every deterministic check; only a better model or human review can tell the model's claim is wrong",
+   "observed": "ACCUSED",
+   "outcome": "FAIL",
+   "probe": "false_accusation_real_quote",
+   "subject": "Accounting",
+   "task": "CT-ACC1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC1/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Accounting",
+   "task": "CT-ACC1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC1/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Accounting",
+   "task": "CT-ACC1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC1/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "CT-ACC1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC1/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "CT-ACC1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC1/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Accounting",
+   "task": "CT-ACC1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC1/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "CT-ACC1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC1/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "CT-ACC1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC1/r3-off_topic/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "CT-ACC1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC1/r3-off_topic/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "off_target",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "RESTATE",
+    "non_answer": false,
+    "plan_reason": "OFF_TARGET",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "off_target",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "RESTATE",
+    "non_answer": false,
+    "plan_reason": "OFF_TARGET",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "CT-ACC1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC1/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Accounting",
+   "task": "CT-ACC1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC2/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Accounting",
+   "task": "CT-ACC2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC2/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Accounting",
+   "task": "CT-ACC2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC2/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "CT-ACC2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC2/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "CT-ACC2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC2/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Accounting",
+   "task": "CT-ACC2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC2/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "CT-ACC2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC2/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "CT-ACC2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC2/r3-off_topic/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "CT-ACC2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC2/r3-off_topic/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "off_target",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "RESTATE",
+    "non_answer": false,
+    "plan_reason": "OFF_TARGET",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "off_target",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "RESTATE",
+    "non_answer": false,
+    "plan_reason": "OFF_TARGET",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "CT-ACC2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ACC2/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Accounting",
+   "task": "CT-ACC2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ECO2/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Economics",
+   "task": "CT-ECO2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ECO2/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Economics",
+   "task": "CT-ECO2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ECO2/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Economics",
+   "task": "CT-ECO2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ECO2/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Economics",
+   "task": "CT-ECO2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ECO2/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Economics",
+   "task": "CT-ECO2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ECO2/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Economics",
+   "task": "CT-ECO2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ECO2/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Economics",
+   "task": "CT-ECO2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ECO2/r3-off_topic/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Economics",
+   "task": "CT-ECO2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ECO2/r3-off_topic/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "off_target",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "RESTATE",
+    "non_answer": false,
+    "plan_reason": "OFF_TARGET",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "off_target",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "RESTATE",
+    "non_answer": false,
+    "plan_reason": "OFF_TARGET",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Economics",
+   "task": "CT-ECO2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-ECO2/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Economics",
+   "task": "CT-ECO2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-FIN1/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Finance",
+   "task": "CT-FIN1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-FIN1/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Finance",
+   "task": "CT-FIN1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-FIN1/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "CT-FIN1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-FIN1/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "CT-FIN1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-FIN1/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Finance",
+   "task": "CT-FIN1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-FIN1/r2-correct_hedged/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": true,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": true,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "CT-FIN1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-FIN1/r2-correct_hedged/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CHECK_REASONING",
+    "non_answer": false,
+    "plan_reason": "REASONING_CHECK",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CHECK_REASONING",
+    "non_answer": false,
+    "plan_reason": "REASONING_CHECK",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "CT-FIN1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-FIN1/r3-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "CT-FIN1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-FIN1/r3-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "CT-FIN1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-FIN1/r4-dont_know/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": true,
+    "non_answer": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": true,
+    "non_answer": true
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "CT-FIN1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-FIN1/r4-dont_know/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "unclear",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": false,
+    "next_action": "OFFER_HINT",
+    "non_answer": true,
+    "plan_reason": "NEEDS_CLARITY",
+    "plan_step": "NONE"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "unclear",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": false,
+    "next_action": "OFFER_HINT",
+    "non_answer": true,
+    "plan_reason": "NEEDS_CLARITY",
+    "plan_step": "NONE"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "CT-FIN1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-FIN1/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Finance",
+   "task": "CT-FIN1"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MGT2/false_accusation_fabricated_quote",
+   "detail": {
+    "stored_diagnosis": "unclear"
+   },
+   "expected": "NOT_ACCUSED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "quote not in the student's words",
+   "observed": "NOT_ACCUSED",
+   "outcome": "PASS",
+   "probe": "false_accusation_fabricated_quote",
+   "subject": "Management",
+   "task": "CT-MGT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MGT2/false_accusation_real_quote",
+   "detail": {
+    "stored_diagnosis": "misconception"
+   },
+   "expected": "NOT_ACCUSED",
+   "failure_class": "FALSE_ACCUSATION",
+   "known_structural_gap": true,
+   "note": "a quote that really is in the student's words passes every deterministic check; only a better model or human review can tell the model's claim is wrong",
+   "observed": "ACCUSED",
+   "outcome": "FAIL",
+   "probe": "false_accusation_real_quote",
+   "subject": "Management",
+   "task": "CT-MGT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MGT2/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Management",
+   "task": "CT-MGT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MGT2/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Management",
+   "task": "CT-MGT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MGT2/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Management",
+   "task": "CT-MGT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MGT2/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Management",
+   "task": "CT-MGT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MGT2/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Management",
+   "task": "CT-MGT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MGT2/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Management",
+   "task": "CT-MGT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MGT2/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Management",
+   "task": "CT-MGT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MGT2/r3-off_topic/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Management",
+   "task": "CT-MGT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MGT2/r3-off_topic/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "off_target",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "RESTATE",
+    "non_answer": false,
+    "plan_reason": "OFF_TARGET",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "off_target",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "RESTATE",
+    "non_answer": false,
+    "plan_reason": "OFF_TARGET",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Management",
+   "task": "CT-MGT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MGT2/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Management",
+   "task": "CT-MGT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MKT2/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Marketing",
+   "task": "CT-MKT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MKT2/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Marketing",
+   "task": "CT-MKT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MKT2/r1-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Marketing",
+   "task": "CT-MKT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MKT2/r1-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Marketing",
+   "task": "CT-MKT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MKT2/r1-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Marketing",
+   "task": "CT-MKT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MKT2/r2-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Marketing",
+   "task": "CT-MKT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MKT2/r2-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Marketing",
+   "task": "CT-MKT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MKT2/r3-dont_know/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": true,
+    "non_answer": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": true,
+    "non_answer": true
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Marketing",
+   "task": "CT-MKT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MKT2/r3-dont_know/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "unclear",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": false,
+    "next_action": "OFFER_HINT",
+    "non_answer": true,
+    "plan_reason": "NEEDS_CLARITY",
+    "plan_step": "NONE"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "unclear",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": false,
+    "next_action": "OFFER_HINT",
+    "non_answer": true,
+    "plan_reason": "NEEDS_CLARITY",
+    "plan_step": "NONE"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Marketing",
+   "task": "CT-MKT2"
+  },
+  {
+   "capability": "CONCEPTUAL_TEACHING",
+   "case_id": "CT-MKT2/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Marketing",
+   "task": "CT-MKT2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC1/corrective_guidance_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "authored non-leaking corrective guidance should pass the leak check; whether it is GOOD guidance is not evaluated",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Accounting",
+   "task": "MD-ACC1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC1/leak_paraphrase_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": "ANSWER_LEAK",
+   "known_structural_gap": true,
+   "note": "paraphrase leaks in different vocabulary are a documented limit of lexical screening",
+   "observed": "LEAKED",
+   "outcome": "FAIL",
+   "probe": "leak_paraphrase",
+   "subject": "Accounting",
+   "task": "MD-ACC1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC1/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Accounting",
+   "task": "MD-ACC1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC1/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Accounting",
+   "task": "MD-ACC1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC1/r1-misconception/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "MD-ACC1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC1/r1-misconception/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "misconception",
+    "hedged": false,
+    "misconception_kept": true,
+    "model_called": true,
+    "next_action": "REVIEW_SOURCE",
+    "non_answer": false,
+    "plan_reason": "MISCONCEPTION",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "misconception",
+    "hedged": false,
+    "misconception_kept": true,
+    "model_called": true,
+    "next_action": "REVIEW_SOURCE",
+    "non_answer": false,
+    "plan_reason": "MISCONCEPTION",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "MD-ACC1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC1/r2-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "MD-ACC1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC1/r2-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "MD-ACC1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC1/r2-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Accounting",
+   "task": "MD-ACC1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC1/r3-dont_know/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": true,
+    "non_answer": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": true,
+    "non_answer": true
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "MD-ACC1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC1/r3-dont_know/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "unclear",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": false,
+    "next_action": "OFFER_HINT",
+    "non_answer": true,
+    "plan_reason": "NEEDS_CLARITY",
+    "plan_step": "NONE"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "unclear",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": false,
+    "next_action": "OFFER_HINT",
+    "non_answer": true,
+    "plan_reason": "NEEDS_CLARITY",
+    "plan_step": "NONE"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "MD-ACC1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC1/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Accounting",
+   "task": "MD-ACC1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC2/corrective_guidance_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "authored non-leaking corrective guidance should pass the leak check; whether it is GOOD guidance is not evaluated",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Accounting",
+   "task": "MD-ACC2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC2/leak_paraphrase_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": "ANSWER_LEAK",
+   "known_structural_gap": true,
+   "note": "paraphrase leaks in different vocabulary are a documented limit of lexical screening",
+   "observed": "LEAKED",
+   "outcome": "FAIL",
+   "probe": "leak_paraphrase",
+   "subject": "Accounting",
+   "task": "MD-ACC2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC2/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Accounting",
+   "task": "MD-ACC2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC2/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Accounting",
+   "task": "MD-ACC2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC2/r1-misconception/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "MD-ACC2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC2/r1-misconception/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "misconception",
+    "hedged": false,
+    "misconception_kept": true,
+    "model_called": true,
+    "next_action": "REVIEW_SOURCE",
+    "non_answer": false,
+    "plan_reason": "MISCONCEPTION",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "misconception",
+    "hedged": false,
+    "misconception_kept": true,
+    "model_called": true,
+    "next_action": "REVIEW_SOURCE",
+    "non_answer": false,
+    "plan_reason": "MISCONCEPTION",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "MD-ACC2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC2/r2-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "MD-ACC2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC2/r2-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "MD-ACC2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC2/r2-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Accounting",
+   "task": "MD-ACC2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC2/r3-correct_hedged/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": true,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": true,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Accounting",
+   "task": "MD-ACC2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC2/r3-correct_hedged/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CHECK_REASONING",
+    "non_answer": false,
+    "plan_reason": "REASONING_CHECK",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CHECK_REASONING",
+    "non_answer": false,
+    "plan_reason": "REASONING_CHECK",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Accounting",
+   "task": "MD-ACC2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ACC2/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Accounting",
+   "task": "MD-ACC2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO1/corrective_guidance_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "authored non-leaking corrective guidance should pass the leak check; whether it is GOOD guidance is not evaluated",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Economics",
+   "task": "MD-ECO1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO1/leak_paraphrase_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": "ANSWER_LEAK",
+   "known_structural_gap": true,
+   "note": "paraphrase leaks in different vocabulary are a documented limit of lexical screening",
+   "observed": "LEAKED",
+   "outcome": "FAIL",
+   "probe": "leak_paraphrase",
+   "subject": "Economics",
+   "task": "MD-ECO1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO1/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Economics",
+   "task": "MD-ECO1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO1/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Economics",
+   "task": "MD-ECO1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO1/r1-misconception/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Economics",
+   "task": "MD-ECO1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO1/r1-misconception/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "misconception",
+    "hedged": false,
+    "misconception_kept": true,
+    "model_called": true,
+    "next_action": "REVIEW_SOURCE",
+    "non_answer": false,
+    "plan_reason": "MISCONCEPTION",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "misconception",
+    "hedged": false,
+    "misconception_kept": true,
+    "model_called": true,
+    "next_action": "REVIEW_SOURCE",
+    "non_answer": false,
+    "plan_reason": "MISCONCEPTION",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Economics",
+   "task": "MD-ECO1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO1/r2-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Economics",
+   "task": "MD-ECO1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO1/r2-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Economics",
+   "task": "MD-ECO1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO1/r2-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Economics",
+   "task": "MD-ECO1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO1/r3-correct_hedged/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": true,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": true,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Economics",
+   "task": "MD-ECO1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO1/r3-correct_hedged/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CHECK_REASONING",
+    "non_answer": false,
+    "plan_reason": "REASONING_CHECK",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CHECK_REASONING",
+    "non_answer": false,
+    "plan_reason": "REASONING_CHECK",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Economics",
+   "task": "MD-ECO1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO1/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Economics",
+   "task": "MD-ECO1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO2/corrective_guidance_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "authored non-leaking corrective guidance should pass the leak check; whether it is GOOD guidance is not evaluated",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Economics",
+   "task": "MD-ECO2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO2/leak_paraphrase_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": "ANSWER_LEAK",
+   "known_structural_gap": true,
+   "note": "paraphrase leaks in different vocabulary are a documented limit of lexical screening",
+   "observed": "LEAKED",
+   "outcome": "FAIL",
+   "probe": "leak_paraphrase",
+   "subject": "Economics",
+   "task": "MD-ECO2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO2/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Economics",
+   "task": "MD-ECO2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO2/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Economics",
+   "task": "MD-ECO2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO2/r1-misconception/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Economics",
+   "task": "MD-ECO2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO2/r1-misconception/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "misconception",
+    "hedged": false,
+    "misconception_kept": true,
+    "model_called": true,
+    "next_action": "REVIEW_SOURCE",
+    "non_answer": false,
+    "plan_reason": "MISCONCEPTION",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "misconception",
+    "hedged": false,
+    "misconception_kept": true,
+    "model_called": true,
+    "next_action": "REVIEW_SOURCE",
+    "non_answer": false,
+    "plan_reason": "MISCONCEPTION",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Economics",
+   "task": "MD-ECO2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO2/r2-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Economics",
+   "task": "MD-ECO2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO2/r2-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Economics",
+   "task": "MD-ECO2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO2/r2-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Economics",
+   "task": "MD-ECO2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO2/r3-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Economics",
+   "task": "MD-ECO2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO2/r3-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Economics",
+   "task": "MD-ECO2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-ECO2/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Economics",
+   "task": "MD-ECO2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN1/corrective_guidance_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "authored non-leaking corrective guidance should pass the leak check; whether it is GOOD guidance is not evaluated",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Finance",
+   "task": "MD-FIN1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN1/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Finance",
+   "task": "MD-FIN1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN1/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Finance",
+   "task": "MD-FIN1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN1/r1-misconception/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "MD-FIN1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN1/r1-misconception/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "misconception",
+    "hedged": false,
+    "misconception_kept": true,
+    "model_called": true,
+    "next_action": "REVIEW_SOURCE",
+    "non_answer": false,
+    "plan_reason": "MISCONCEPTION",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "misconception",
+    "hedged": false,
+    "misconception_kept": true,
+    "model_called": true,
+    "next_action": "REVIEW_SOURCE",
+    "non_answer": false,
+    "plan_reason": "MISCONCEPTION",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "MD-FIN1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN1/r2-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "MD-FIN1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN1/r2-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "MD-FIN1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN1/r2-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Finance",
+   "task": "MD-FIN1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN1/r3-dont_know/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": true,
+    "non_answer": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": true,
+    "non_answer": true
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "MD-FIN1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN1/r3-dont_know/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "unclear",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": false,
+    "next_action": "OFFER_HINT",
+    "non_answer": true,
+    "plan_reason": "NEEDS_CLARITY",
+    "plan_step": "NONE"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "unclear",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": false,
+    "next_action": "OFFER_HINT",
+    "non_answer": true,
+    "plan_reason": "NEEDS_CLARITY",
+    "plan_step": "NONE"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "MD-FIN1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN1/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Finance",
+   "task": "MD-FIN1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN2/corrective_guidance_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "authored non-leaking corrective guidance should pass the leak check; whether it is GOOD guidance is not evaluated",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Finance",
+   "task": "MD-FIN2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN2/false_accusation_fabricated_quote",
+   "detail": {
+    "stored_diagnosis": "unclear"
+   },
+   "expected": "NOT_ACCUSED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "quote not in the student's words",
+   "observed": "NOT_ACCUSED",
+   "outcome": "PASS",
+   "probe": "false_accusation_fabricated_quote",
+   "subject": "Finance",
+   "task": "MD-FIN2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN2/false_accusation_real_quote",
+   "detail": {
+    "stored_diagnosis": "misconception"
+   },
+   "expected": "NOT_ACCUSED",
+   "failure_class": "FALSE_ACCUSATION",
+   "known_structural_gap": true,
+   "note": "a quote that really is in the student's words passes every deterministic check; only a better model or human review can tell the model's claim is wrong",
+   "observed": "ACCUSED",
+   "outcome": "FAIL",
+   "probe": "false_accusation_real_quote",
+   "subject": "Finance",
+   "task": "MD-FIN2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN2/leak_paraphrase_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": "ANSWER_LEAK",
+   "known_structural_gap": true,
+   "note": "paraphrase leaks in different vocabulary are a documented limit of lexical screening",
+   "observed": "LEAKED",
+   "outcome": "FAIL",
+   "probe": "leak_paraphrase",
+   "subject": "Finance",
+   "task": "MD-FIN2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN2/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Finance",
+   "task": "MD-FIN2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN2/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Finance",
+   "task": "MD-FIN2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN2/r1-misconception/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "MD-FIN2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN2/r1-misconception/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "misconception",
+    "hedged": false,
+    "misconception_kept": true,
+    "model_called": true,
+    "next_action": "REVIEW_SOURCE",
+    "non_answer": false,
+    "plan_reason": "MISCONCEPTION",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "misconception",
+    "hedged": false,
+    "misconception_kept": true,
+    "model_called": true,
+    "next_action": "REVIEW_SOURCE",
+    "non_answer": false,
+    "plan_reason": "MISCONCEPTION",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "MD-FIN2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN2/r2-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "MD-FIN2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN2/r2-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "MD-FIN2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN2/r2-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Finance",
+   "task": "MD-FIN2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN2/r3-partial/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "MD-FIN2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN2/r3-partial/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "partial",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "FOLLOW_UP",
+    "non_answer": false,
+    "plan_reason": "PARTIAL_ANSWER",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "MD-FIN2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN2/r4-dont_know/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": true,
+    "non_answer": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": true,
+    "non_answer": true
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Finance",
+   "task": "MD-FIN2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN2/r4-dont_know/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "unclear",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": false,
+    "next_action": "OFFER_HINT",
+    "non_answer": true,
+    "plan_reason": "NEEDS_CLARITY",
+    "plan_step": "NONE"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "unclear",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": false,
+    "next_action": "OFFER_HINT",
+    "non_answer": true,
+    "plan_reason": "NEEDS_CLARITY",
+    "plan_step": "NONE"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Finance",
+   "task": "MD-FIN2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-FIN2/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Finance",
+   "task": "MD-FIN2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MGT2/corrective_guidance_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "authored non-leaking corrective guidance should pass the leak check; whether it is GOOD guidance is not evaluated",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Management",
+   "task": "MD-MGT2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MGT2/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Management",
+   "task": "MD-MGT2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MGT2/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Management",
+   "task": "MD-MGT2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MGT2/r1-misconception/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Management",
+   "task": "MD-MGT2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MGT2/r1-misconception/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "misconception",
+    "hedged": false,
+    "misconception_kept": true,
+    "model_called": true,
+    "next_action": "REVIEW_SOURCE",
+    "non_answer": false,
+    "plan_reason": "MISCONCEPTION",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "misconception",
+    "hedged": false,
+    "misconception_kept": true,
+    "model_called": true,
+    "next_action": "REVIEW_SOURCE",
+    "non_answer": false,
+    "plan_reason": "MISCONCEPTION",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Management",
+   "task": "MD-MGT2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MGT2/r2-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Management",
+   "task": "MD-MGT2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MGT2/r2-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Management",
+   "task": "MD-MGT2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MGT2/r2-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Management",
+   "task": "MD-MGT2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MGT2/r3-dont_know/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": true,
+    "non_answer": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": true,
+    "non_answer": true
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Management",
+   "task": "MD-MGT2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MGT2/r3-dont_know/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "unclear",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": false,
+    "next_action": "OFFER_HINT",
+    "non_answer": true,
+    "plan_reason": "NEEDS_CLARITY",
+    "plan_step": "NONE"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "unclear",
+    "hedged": true,
+    "misconception_kept": null,
+    "model_called": false,
+    "next_action": "OFFER_HINT",
+    "non_answer": true,
+    "plan_reason": "NEEDS_CLARITY",
+    "plan_step": "NONE"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Management",
+   "task": "MD-MGT2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MGT2/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Management",
+   "task": "MD-MGT2"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MKT1/corrective_guidance_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "authored non-leaking corrective guidance should pass the leak check; whether it is GOOD guidance is not evaluated",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Marketing",
+   "task": "MD-MKT1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MKT1/leak_verbatim_explanation",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim_explanation",
+   "subject": "Marketing",
+   "task": "MD-MKT1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MKT1/leak_verbatim_feedback",
+   "detail": {},
+   "expected": "BLOCKED",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "BLOCKED",
+   "outcome": "PASS",
+   "probe": "leak_verbatim",
+   "subject": "Marketing",
+   "task": "MD-MKT1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MKT1/r1-misconception/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Marketing",
+   "task": "MD-MKT1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MKT1/r1-misconception/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "misconception",
+    "hedged": false,
+    "misconception_kept": true,
+    "model_called": true,
+    "next_action": "REVIEW_SOURCE",
+    "non_answer": false,
+    "plan_reason": "MISCONCEPTION",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "misconception",
+    "hedged": false,
+    "misconception_kept": true,
+    "model_called": true,
+    "next_action": "REVIEW_SOURCE",
+    "non_answer": false,
+    "plan_reason": "MISCONCEPTION",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Marketing",
+   "task": "MD-MKT1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MKT1/r2-correct/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Marketing",
+   "task": "MD-MKT1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MKT1/r2-correct/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "correct",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "CONSOLIDATE",
+    "non_answer": false,
+    "plan_reason": "CORRECT_ANSWER",
+    "plan_step": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Marketing",
+   "task": "MD-MKT1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MKT1/r2-correct/student_echo_not_blocked",
+   "detail": {},
+   "expected": "SHOWN",
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": "SHOWN",
+   "outcome": "PASS",
+   "probe": "legit_feedback_shown",
+   "subject": "Marketing",
+   "task": "MD-MKT1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MKT1/r3-off_topic/hedge_detect",
+   "detail": {},
+   "expected": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "",
+   "observed": {
+    "hedged": false,
+    "non_answer": false
+   },
+   "outcome": "PASS",
+   "probe": "hedge_detect",
+   "subject": "Marketing",
+   "task": "MD-MKT1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MKT1/r3-off_topic/pipeline",
+   "detail": {
+    "mismatched": []
+   },
+   "expected": {
+    "diagnosis": "off_target",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "RESTATE",
+    "non_answer": false,
+    "plan_reason": "OFF_TARGET",
+    "plan_step": "FOLLOW_UP"
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "diagnosis is the scripted gold label returned by the provider: this checks routing, not diagnostic skill",
+   "observed": {
+    "diagnosis": "off_target",
+    "hedged": false,
+    "misconception_kept": null,
+    "model_called": true,
+    "next_action": "RESTATE",
+    "non_answer": false,
+    "plan_reason": "OFF_TARGET",
+    "plan_step": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "probe": "pipeline",
+   "subject": "Marketing",
+   "task": "MD-MKT1"
+  },
+  {
+   "capability": "MISCONCEPTION_DIAGNOSIS",
+   "case_id": "MD-MKT1/teach_me_opens",
+   "detail": {},
+   "expected": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "failure_class": null,
+   "known_structural_gap": false,
+   "note": "explanation text is scripted: its accuracy and level are NOT evaluated",
+   "observed": {
+    "cited_supplied_pages": true,
+    "explain_called": true,
+    "explanation_turn": true,
+    "session": true
+   },
+   "outcome": "PASS",
+   "probe": "teach_me_opens",
+   "subject": "Marketing",
+   "task": "MD-MKT1"
+  }
+ ],
+ "coverage": {
+  "packs": 10,
+  "responses_by_kind": {
+   "correct": 26,
+   "correct_hedged": 4,
+   "dont_know": 8,
+   "misconception": 8,
+   "off_topic": 8,
+   "partial": 20
+  },
+  "scripted_generated_questions": 36,
+  "scripted_student_responses": 74,
+  "tasks": 26,
+  "tasks_by_subject_and_capability": {
+   "Accounting": {
+    "ASSESSMENT_PREPARATION": 1,
+    "CASE_STUDY_APPLICATION": 1,
+    "CONCEPTUAL_TEACHING": 2,
+    "MISCONCEPTION_DIAGNOSIS": 2
+   },
+   "Economics": {
+    "ASSESSMENT_PREPARATION": 1,
+    "CASE_STUDY_APPLICATION": 1,
+    "CONCEPTUAL_TEACHING": 1,
+    "MISCONCEPTION_DIAGNOSIS": 2
+   },
+   "Finance": {
+    "ASSESSMENT_PREPARATION": 2,
+    "CASE_STUDY_APPLICATION": 1,
+    "CONCEPTUAL_TEACHING": 1,
+    "MISCONCEPTION_DIAGNOSIS": 2
+   },
+   "Management": {
+    "ASSESSMENT_PREPARATION": 1,
+    "CASE_STUDY_APPLICATION": 1,
+    "CONCEPTUAL_TEACHING": 1,
+    "MISCONCEPTION_DIAGNOSIS": 1
+   },
+   "Marketing": {
+    "ASSESSMENT_PREPARATION": 1,
+    "CASE_STUDY_APPLICATION": 2,
+    "CONCEPTUAL_TEACHING": 1,
+    "MISCONCEPTION_DIAGNOSIS": 1
+   }
+  }
+ },
+ "failures_by_class": {
+  "ANSWER_LEAK": 5,
+  "BAD_QUESTION_SHOWN": 2,
+  "FALSE_ACCUSATION": 5,
+  "GOOD_QUESTION_REJECTED": 6
+ },
+ "fingerprints": {
+  "frozen_inputs_sha256": "c2c885dd154ffe5ee265f9ec31d03e243830e081dd383a0a6d4d7cb9f0231bdc",
+  "frozen_inputs_unchanged_since_freeze": true,
+  "production_code_sha256": "85eb741a5698d576f203d0046cb477d84c52cf6552d17e91376c9c218c58b588"
+ },
+ "label": "OFFLINE SCRIPTED-PROVIDER RUN -- tests production safeguards and behaviour, NOT teaching quality",
+ "not_yet_evaluated": {
+  "ASSESSMENT_PREPARATION": {
+   "dimension_judgements_pending": 30,
+   "dimensions": [
+    "adaptive_followup",
+    "difficulty",
+    "feedback_by_outcome",
+    "novelty",
+    "relevance_answerability"
+   ],
+   "hard_fails": [
+    "asks a question whose reference answer is not in the supplied material",
+    "question text gives away its own answer"
+   ],
+   "needs": "human reviewer (primary); live model judge secondary",
+   "status": "NOT YET EVALUATED",
+   "tasks": 6
+  },
+  "CASE_STUDY_APPLICATION": {
+   "dimension_judgements_pending": 24,
+   "dimensions": [
+    "framework_application",
+    "missing_steps",
+    "no_unsupported_claims",
+    "reasoning_over_memory"
+   ],
+   "hard_fails": [
+    "asserts a business fact, figure or outcome not in the supplied material"
+   ],
+   "needs": "human reviewer (primary); live model judge secondary",
+   "status": "NOT YET EVALUATED",
+   "tasks": 6
+  },
+  "CONCEPTUAL_TEACHING": {
+   "dimension_judgements_pending": 24,
+   "dimensions": [
+    "accuracy",
+    "feedback_usefulness",
+    "grounding",
+    "level"
+   ],
+   "hard_fails": [
+    "states a false fact as true",
+    "reproduces the reference answer before the student has answered or asked to reveal"
+   ],
+   "needs": "human reviewer (primary); live model judge only as a secondary, calibrated against human scores",
+   "status": "NOT YET EVALUATED",
+   "tasks": 6
+  },
+  "MISCONCEPTION_DIAGNOSIS": {
+   "dimension_judgements_pending": 32,
+   "dimensions": [
+    "corrective_guidance",
+    "diagnosis_accuracy",
+    "misconception_precision",
+    "no_false_accusation"
+   ],
+   "hard_fails": [
+    "accuses a correct answer of a misconception",
+    "reveals the reference answer in the corrective guidance"
+   ],
+   "needs": "human reviewer (primary); live model judge secondary",
+   "status": "NOT YET EVALUATED",
+   "tasks": 8
+  }
+ },
+ "tallies": {
+  "capability:ASSESSMENT_PREPARATION": {
+   "FAIL": 9,
+   "PASS": 89
+  },
+  "capability:CASE_STUDY_APPLICATION": {
+   "FAIL": 1,
+   "PASS": 67
+  },
+  "capability:CONCEPTUAL_TEACHING": {
+   "FAIL": 2,
+   "PASS": 64
+  },
+  "capability:MISCONCEPTION_DIAGNOSIS": {
+   "FAIL": 6,
+   "PASS": 91
+  },
+  "probe:adaptive_request": {
+   "PASS": 12
+  },
+  "probe:citation_to_unsupplied_page": {
+   "PASS": 6
+  },
+  "probe:false_accusation_fabricated_quote": {
+   "PASS": 5
+  },
+  "probe:false_accusation_real_quote": {
+   "FAIL": 5
+  },
+  "probe:hedge_detect": {
+   "PASS": 74
+  },
+  "probe:leak_paraphrase": {
+   "FAIL": 5
+  },
+  "probe:leak_verbatim": {
+   "PASS": 26
+  },
+  "probe:leak_verbatim_explanation": {
+   "PASS": 26
+  },
+  "probe:legit_feedback_shown": {
+   "PASS": 34
+  },
+  "probe:pipeline": {
+   "PASS": 74
+  },
+  "probe:question_good_followup": {
+   "FAIL": 1,
+   "PASS": 5
+  },
+  "probe:question_good_transfer": {
+   "FAIL": 5,
+   "PASS": 1
+  },
+  "probe:question_leaky": {
+   "PASS": 6
+  },
+  "probe:question_off_concept": {
+   "FAIL": 1,
+   "PASS": 5
+  },
+  "probe:question_reworded": {
+   "PASS": 6
+  },
+  "probe:question_unsupported_answer": {
+   "FAIL": 1,
+   "PASS": 5
+  },
+  "probe:teach_me_opens": {
+   "PASS": 26
+  },
+  "subject:Accounting": {
+   "FAIL": 4,
+   "PASS": 69
+  },
+  "subject:Economics": {
+   "FAIL": 4,
+   "PASS": 59
+  },
+  "subject:Finance": {
+   "FAIL": 4,
+   "PASS": 78
+  },
+  "subject:Management": {
+   "FAIL": 3,
+   "PASS": 47
+  },
+  "subject:Marketing": {
+   "FAIL": 3,
+   "PASS": 58
+  }
+ },
+ "totals": {
+  "cases": 329,
+  "fail": 18,
+  "fail_known_structural_gap": 10,
+  "pass": 311
+ }
+}

@@ -67,6 +67,10 @@ def normalise(text: str | None) -> str:
 
 
 # --- hedge / uncertainty -------------------------------------------------------
+# Courtesy and disfluency words carry no answer content. They only matter after a hedge: "idk, sorry" is still
+# a non-answer, while "sorry" on its own is left alone (no hedge, so it is sent on like any other short reply).
+_COURTESY = re.compile(r"\b(?:sorry|sry|thanks|thank|thx|ty|please|pls|plz|lol|haha|hmm|hm|um|umm|uh|ok|okay)\b")
+
 
 def detect_hedge(text: str | None) -> dict[str, bool]:
     """``hedged``: the reply signals uncertainty. ``non_answer``: nothing is left once it is removed.
@@ -76,7 +80,7 @@ def detect_hedge(text: str | None) -> dict[str, bool]:
     """
     raw = (text or "").lower().replace("’", "'")
     hedged = bool(_HEDGE_PATTERN.search(raw))
-    remainder = _HEDGE_PATTERN.sub(" ", raw)
+    remainder = _COURTESY.sub(" ", _HEDGE_PATTERN.sub(" ", raw)) if hedged else raw
     non_answer = (hedged and not tokenize(remainder)) or not _WORDS.search(raw)
     return {"hedged": hedged, "non_answer": non_answer}
 

@@ -1,0 +1,616 @@
+{
+ "calls": [
+  {
+   "action": "EXPLAIN",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "fin1-src"
+     }
+    ],
+    "diagnosis": "none",
+    "message": "EXPLAIN reply (scripted)"
+   },
+   "tag": "CT-FIN1/teach",
+   "usage": {
+    "input_tokens": 423,
+    "output_tokens": 29,
+    "total_tokens": 452
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "fin1-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "CT-FIN1/r1-correct",
+   "usage": {
+    "input_tokens": 501,
+    "output_tokens": 30,
+    "total_tokens": 531
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "fin1-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "CT-FIN1/r2-correct_hedged",
+   "usage": {
+    "input_tokens": 503,
+    "output_tokens": 30,
+    "total_tokens": 533
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "fin1-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "CT-FIN1/r3-partial",
+   "usage": {
+    "input_tokens": 464,
+    "output_tokens": 30,
+    "total_tokens": 494
+   }
+  },
+  {
+   "action": "EXPLAIN",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "mgt2-src"
+     }
+    ],
+    "diagnosis": "none",
+    "message": "EXPLAIN reply (scripted)"
+   },
+   "tag": "CT-MGT2/teach",
+   "usage": {
+    "input_tokens": 445,
+    "output_tokens": 29,
+    "total_tokens": 474
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "mgt2-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "CT-MGT2/r1-correct",
+   "usage": {
+    "input_tokens": 528,
+    "output_tokens": 30,
+    "total_tokens": 558
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "mgt2-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "CT-MGT2/r2-partial",
+   "usage": {
+    "input_tokens": 489,
+    "output_tokens": 30,
+    "total_tokens": 519
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "mgt2-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "CT-MGT2/r3-off_topic",
+   "usage": {
+    "input_tokens": 486,
+    "output_tokens": 30,
+    "total_tokens": 516
+   }
+  },
+  {
+   "action": "EXPLAIN",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "fin2-src"
+     }
+    ],
+    "diagnosis": "none",
+    "message": "EXPLAIN reply (scripted)"
+   },
+   "tag": "MD-FIN2/teach",
+   "usage": {
+    "input_tokens": 403,
+    "output_tokens": 29,
+    "total_tokens": 432
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "fin2-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "MD-FIN2/r1-misconception",
+   "usage": {
+    "input_tokens": 454,
+    "output_tokens": 30,
+    "total_tokens": 484
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "fin2-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "MD-FIN2/r2-correct",
+   "usage": {
+    "input_tokens": 464,
+    "output_tokens": 30,
+    "total_tokens": 494
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "fin2-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "MD-FIN2/r3-partial",
+   "usage": {
+    "input_tokens": 441,
+    "output_tokens": 30,
+    "total_tokens": 471
+   }
+  },
+  {
+   "action": "EXPLAIN",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "eco1-src"
+     }
+    ],
+    "diagnosis": "none",
+    "message": "EXPLAIN reply (scripted)"
+   },
+   "tag": "MD-ECO1/teach",
+   "usage": {
+    "input_tokens": 463,
+    "output_tokens": 29,
+    "total_tokens": 492
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "eco1-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "MD-ECO1/r1-misconception",
+   "usage": {
+    "input_tokens": 506,
+    "output_tokens": 30,
+    "total_tokens": 536
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "eco1-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "MD-ECO1/r2-correct",
+   "usage": {
+    "input_tokens": 515,
+    "output_tokens": 30,
+    "total_tokens": 545
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "eco1-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "MD-ECO1/r3-correct_hedged",
+   "usage": {
+    "input_tokens": 508,
+    "output_tokens": 30,
+    "total_tokens": 538
+   }
+  },
+  {
+   "action": "EXPLAIN",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "acc1-src"
+     }
+    ],
+    "diagnosis": "none",
+    "message": "EXPLAIN reply (scripted)"
+   },
+   "tag": "CS-ACC1/teach",
+   "usage": {
+    "input_tokens": 586,
+    "output_tokens": 29,
+    "total_tokens": 615
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "acc1-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "CS-ACC1/r1-correct",
+   "usage": {
+    "input_tokens": 682,
+    "output_tokens": 30,
+    "total_tokens": 712
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "acc1-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "CS-ACC1/r2-partial",
+   "usage": {
+    "input_tokens": 658,
+    "output_tokens": 30,
+    "total_tokens": 688
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "acc1-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "CS-ACC1/r3-off_topic",
+   "usage": {
+    "input_tokens": 663,
+    "output_tokens": 30,
+    "total_tokens": 693
+   }
+  },
+  {
+   "action": "EXPLAIN",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "mgt1-src"
+     }
+    ],
+    "diagnosis": "none",
+    "message": "EXPLAIN reply (scripted)"
+   },
+   "tag": "CS-MGT1/teach",
+   "usage": {
+    "input_tokens": 615,
+    "output_tokens": 29,
+    "total_tokens": 644
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "mgt1-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "CS-MGT1/r1-correct",
+   "usage": {
+    "input_tokens": 711,
+    "output_tokens": 30,
+    "total_tokens": 741
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "mgt1-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "CS-MGT1/r2-partial",
+   "usage": {
+    "input_tokens": 662,
+    "output_tokens": 30,
+    "total_tokens": 692
+   }
+  },
+  {
+   "action": "EXPLAIN",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "acc2-src"
+     }
+    ],
+    "diagnosis": "none",
+    "message": "EXPLAIN reply (scripted)"
+   },
+   "tag": "AP-ACC2/teach",
+   "usage": {
+    "input_tokens": 450,
+    "output_tokens": 29,
+    "total_tokens": 479
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "acc2-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "AP-ACC2/r1-correct",
+   "usage": {
+    "input_tokens": 497,
+    "output_tokens": 30,
+    "total_tokens": 527
+   }
+  },
+  {
+   "action": "NEXT_QUESTION",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "acc2-src"
+     }
+    ],
+    "expected_answer": "Placeholder.",
+    "question": "Placeholder question for the dry run?"
+   },
+   "tag": "AP-ACC2/r1-correct",
+   "usage": {
+    "input_tokens": 547,
+    "output_tokens": 36,
+    "total_tokens": 583
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "acc2-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "AP-ACC2/r2-partial",
+   "usage": {
+    "input_tokens": 475,
+    "output_tokens": 30,
+    "total_tokens": 505
+   }
+  },
+  {
+   "action": "EXPLAIN",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "mkt2-src"
+     }
+    ],
+    "diagnosis": "none",
+    "message": "EXPLAIN reply (scripted)"
+   },
+   "tag": "AP-MKT2/teach",
+   "usage": {
+    "input_tokens": 374,
+    "output_tokens": 29,
+    "total_tokens": 403
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "mkt2-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "AP-MKT2/r1-correct",
+   "usage": {
+    "input_tokens": 421,
+    "output_tokens": 30,
+    "total_tokens": 451
+   }
+  },
+  {
+   "action": "NEXT_QUESTION",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "mkt2-src"
+     }
+    ],
+    "expected_answer": "Placeholder.",
+    "question": "Placeholder question for the dry run?"
+   },
+   "tag": "AP-MKT2/r1-correct",
+   "usage": {
+    "input_tokens": 477,
+    "output_tokens": 36,
+    "total_tokens": 513
+   }
+  },
+  {
+   "action": "FEEDBACK",
+   "raw_reply": {
+    "citations": [
+     {
+      "pdf_page": 1,
+      "source_id": "mkt2-src"
+     }
+    ],
+    "diagnosis": "correct",
+    "message": "FEEDBACK reply (scripted)"
+   },
+   "tag": "AP-MKT2/r2-partial",
+   "usage": {
+    "input_tokens": 405,
+    "output_tokens": 30,
+    "total_tokens": 435
+   }
+  }
+ ],
+ "summary": {
+  "calls": 31,
+  "halted": [],
+  "input_tokens": 15816,
+  "mode": "DRY RUN (scripted; synthetic token counts, not real usage)",
+  "model": null,
+  "output_tokens": 934,
+  "tasks": [
+   "CT-FIN1",
+   "CT-MGT2",
+   "MD-ECO1",
+   "MD-FIN2",
+   "CS-ACC1",
+   "CS-MGT1",
+   "AP-MKT2",
+   "AP-ACC2"
+  ],
+  "token_cap": 600000,
+  "total_tokens": 16750,
+  "unmeasured_calls": 0,
+  "usd": null,
+  "usd_cap": 5.0
+ }
+}

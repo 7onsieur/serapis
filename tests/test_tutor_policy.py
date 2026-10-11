@@ -32,6 +32,17 @@ class HedgeTests(unittest.TestCase):
             with self.subTest(text=text):
                 self.assertTrue(tp.detect_hedge(text)["non_answer"], text)
 
+    def test_courtesy_after_a_hedge_is_still_a_non_answer(self):
+        for text in ("I don't know, sorry.", "idk sorry", "not sure, thanks", "maybe lol", "um, no idea, please"):
+            with self.subTest(text=text):
+                self.assertEqual(tp.detect_hedge(text), {"hedged": True, "non_answer": True})
+
+    def test_courtesy_never_hides_real_content(self):
+        for text in ("sorry, I think it is the cell wall", "I guess thanks to the membrane it is selective"):
+            with self.subTest(text=text):
+                self.assertFalse(tp.detect_hedge(text)["non_answer"], text)
+        self.assertEqual(tp.detect_hedge("sorry"), {"hedged": False, "non_answer": False})
+
     def test_hedged_but_real_answers_are_still_answers(self):
         result = tp.detect_hedge("I think cells are the basic unit")
         self.assertEqual(result, {"hedged": True, "non_answer": False})
