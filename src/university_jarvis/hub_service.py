@@ -59,6 +59,7 @@ from .reasoning import (
 from .reconcile import CHANGED, METADATA_CHANGED, MISSING_SINCE_LAST_CHECK, NEW, UNCHANGED
 from .locking import record_lock
 from .state import StateError, load_state
+from .tutor_policy import reference_problem
 from .university import check_university
 from .workflows import build_assignment_context, build_week_context
 from .workspace import (capture_after_lecture, materialize_week_workspace, teach_week,
@@ -66,6 +67,7 @@ from .workspace import (capture_after_lecture, materialize_week_workspace, teach
                         _workspace_paths, _write_record, LEARNING_CAPABILITIES, task_exposure_keys,
                         exposed_task_hashes, task_text_hash, effective_outcome)
 from .reasoning import ReasoningError, supplied_units
+import json
 import re
 from datetime import datetime, timezone
 
@@ -421,9 +423,54 @@ def _learning_task_candidates(record: dict[str, Any], capability: str) -> list[d
     return [c for c in candidates if task_text_hash(c.get("task")) not in spent_wording]
 
 
+MAX_UNVERIFIED_GENERATED = 2  # unverifiable generated tasks per capability before generation is refused
+
+
+def _ref_fingerprints(task: dict[str, Any]) -> list[Any]:
+    return sorted((str(r.get("source_id")), json.dumps(r.get("fingerprint"), sort_keys=True))
+                  for r in task.get("source_references") or [])
+
+
+def _unverified_entries(record: dict[str, Any]) -> list[dict[str, Any]]:
+    return record.get("learning", {}).get("unverified_tasks", [])
+
+
+def reject_unverified_task(module_code: str, week_number: int, task: dict[str, Any], reason: str, *,
+                           workspace_root: Path | None = None) -> None:
+    """Remember that a task's reference answer failed verification so it is not recommended again.
+
+    Only a marker is stored: the task, its attempts and every other piece of evidence are untouched, and
+    the marker stops applying if the task's cited sources change (the reference may then verify).
+    """
+    _, record_path, _, _ = _learning_record(module_code, week_number, workspace_root)
+    with record_lock(record_path):
+        record, record_path, _, _ = _learning_record(module_code, week_number, workspace_root)
+        entries = record["learning"].setdefault("unverified_tasks", [])
+        fingerprints = [list(f) for f in _ref_fingerprints(task)]
+        if any(e.get("origin") == task["origin"] and e.get("fingerprints") == fingerprints for e in entries):
+            return
+        entries.append({"origin": task["origin"], "capability": task.get("capability"),
+                        "task_text_hash": task_text_hash(task.get("task")), "reason": reason,
+                        "fingerprints": fingerprints,
+                        "rejected_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat()})
+        _write_record(record, record_path)
+
+
+def _is_rejected(entries: list[dict[str, Any]], task: dict[str, Any]) -> bool:
+    fingerprints = [list(f) for f in _ref_fingerprints(task)]
+    return any((e.get("origin") == task.get("origin") or e.get("task_text_hash") == task_text_hash(task.get("task")))
+               and e.get("fingerprints") == fingerprints for e in entries)
+
+
 def continue_learning_task(module_code: str, week_number: int, *, state: dict[str, Any],
-                           provider: ReasoningProvider, workspace_root: Path | None = None) -> dict[str, Any]:
-    """Fulfil the deterministic recommendation; only this explicit POST may generate a task."""
+                           provider: ReasoningProvider, workspace_root: Path | None = None,
+                           allow_generation: bool = True) -> dict[str, Any]:
+    """Fulfil the deterministic recommendation; only this explicit POST may generate a task.
+
+    A task whose reference answer was rejected as unverifiable (``reject_unverified_task``) is skipped while
+    its sources are unchanged. ``allow_generation=False`` never calls the model, and generation is refused
+    once ``MAX_UNVERIFIED_GENERATED`` generated tasks for this capability have already failed verification.
+    """
     record, record_path, study_pack_path, notebooklm_path = _learning_record(module_code, week_number, workspace_root)
     recommendation = select_next_study_task(record["learning"].get("evidence", []), record.get("sources", []))
     capability = recommendation.get("capability", "")
@@ -439,8 +486,18 @@ def continue_learning_task(module_code: str, week_number: int, *, state: dict[st
     # For a requested unaided retest, discard TEACH checks and any task with recorded assistance.
     if recommendation["mode"] == "UNAIDED_RETEST":
         candidates = [task for task in candidates if task["assistance_status"] == "UNAIDED" and not task["prompt_help"]]
+    rejected = _unverified_entries(record)
+    candidates = [task for task in candidates if not _is_rejected(rejected, task)]
     if candidates:
         return {"recommendation": recommendation, "task": candidates[0], "generated": False}
+    failed_generated = sum(1 for e in rejected if e.get("capability") == capability
+                           and str(e.get("origin", "")).startswith("GENERATED:")
+                           and all(current_fingerprints.get(sid) is not None
+                                   and json.dumps(current_fingerprints[sid], sort_keys=True) == fp
+                                   for sid, fp in e.get("fingerprints", [])))
+    if not allow_generation or failed_generated >= MAX_UNVERIFIED_GENERATED:
+        return {"recommendation": recommendation, "task": None, "generated": False,
+                "reason": "NO_VERIFIABLE_TASK"}
 
     context = build_week_context(state, module_code, week_number, "LEARNING_TASK")
     if not context.get("source_contexts"):
@@ -541,6 +598,13 @@ def evaluate_learning_attempt(module_code: str, week_number: int, attempt_id: st
     if any(c.get("retrieval", {}).get("status", "matched") != "matched" for c in context["source_contexts"]):
         evaluation = {"outcome": "UNCLEAR", "reason": "No supporting source passage could be retrieved for this task, so the response cannot be judged against the sources.",
                       "evidence_references": [], "basis": "NO_EVIDENCE_RETRIEVED", "provider": None,
+                      "evaluated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat()}
+        return save_learning_evaluation(module_code, week_number, attempt_id, evaluation, root=workspace_root)
+    if (problem := reference_problem(attempt["expected_answer"], refs, context["source_contexts"])):
+        # An unverified reference is never sent to the model or used to judge; the response stays as saved.
+        evaluation = {"outcome": "UNCLEAR", "reason": "The reference answer for this task could not be verified against "
+                      f"the supplied sources ({problem}), so the response was not judged against it.",
+                      "evidence_references": [], "basis": "REFERENCE_NOT_SUPPORTED", "provider": None,
                       "evaluated_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat()}
         return save_learning_evaluation(module_code, week_number, attempt_id, evaluation, root=workspace_root)
     bounded = {"task": attempt["task"], "expected_answer_or_rubric": attempt["expected_answer"],

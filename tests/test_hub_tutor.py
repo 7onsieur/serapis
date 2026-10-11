@@ -103,7 +103,7 @@ class HubTutorTests(unittest.TestCase):
         return {"module": {"code": module_code}, "week": {"number": week_number},
                 "sources": [{"id": "s1", "extraction": {"fingerprint": FP}}],
                 "source_contexts": [{"source_id": "s1", "retrieval": {"status": "matched" if self.matched else "no_match"},
-                                     "excerpts": [{"pdf_page": 1, "text": "Grounded passage"}]}]}
+                                     "excerpts": [{"pdf_page": 1, "text": SECRET + ". Nucleus stores DNA. Grounded passage."}]}]}
 
     # helpers
     def snapshot(self):

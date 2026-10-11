@@ -1,0 +1,135 @@
+# Diagnostic Slice 0 -- generated summary
+
+Baseline: {"git_head": "c65b97e", "git_dirty_tracked_files": [], "python": "3.14.6", "source_sha256": {"hub_service.py": "cb6a4803fdbe67c3", "reasoning.py": "725cc758a2bdd458", "retrieval.py": "73ad5cc78cf8cc39", "tutor_policy.py": "f27ec6222d71f150", "tutoring.py": "a33d2d6dfd451d6f"}}
+
+## Outcomes by category
+
+- root_reference: FALSE_ACCEPT=35, TRUE_ACCEPT=10, TRUE_REJECT=5
+- citation: FALSE_ACCEPT=18, FALSE_REJECT=1, TRUE_ACCEPT=4, TRUE_REJECT=12
+- quantitative: FALSE_ACCEPT=4, TRUE_ACCEPT=3, TRUE_REJECT=2
+- leakage: MISSED_LEAK=12, TRUE_BLOCK=10, TRUE_PASS=15
+- hedge: FAIL=13, PASS=20
+
+## Outcomes by subtype
+
+- citation/contradicted_claim: FALSE_ACCEPT=4, TRUE_REJECT=1
+- citation/decoy_concept_answer: FALSE_ACCEPT=5
+- citation/decoy_page: FALSE_ACCEPT=2, TRUE_REJECT=3
+- citation/extra_decoy_page_cited: FALSE_ACCEPT=4, TRUE_REJECT=1
+- citation/irrelevant_page: TRUE_REJECT=5
+- citation/unsupported_claim: FALSE_ACCEPT=3, TRUE_REJECT=2
+- citation/valid: FALSE_REJECT=1, TRUE_ACCEPT=4
+- hedge/confident_control: PASS=5
+- hedge/hedge_phrase_as_content: FAIL=3
+- hedge/i_believe_correct: FAIL=5
+- hedge/i_think_correct: PASS=5
+- hedge/idk: PASS=5
+- hedge/perhaps_mid_correct: PASS=5
+- hedge/unsure_what_asked: FAIL=5
+- leakage/clean_hint: TRUE_PASS=5
+- leakage/paraphrase: MISSED_LEAK=5
+- leakage/short_clean: TRUE_PASS=5
+- leakage/short_leak: MISSED_LEAK=5
+- leakage/short_numeric_paraphrase: MISSED_LEAK=2
+- leakage/student_partial_plus_leak: TRUE_BLOCK=5
+- leakage/student_quote_full: TRUE_PASS=5
+- leakage/verbatim: TRUE_BLOCK=5
+- quantitative/valid: TRUE_ACCEPT=3
+- quantitative/wrong_arith: FALSE_ACCEPT=3
+- quantitative/wrong_formula: FALSE_ACCEPT=1, TRUE_REJECT=2
+- root_reference/contradicted: FALSE_ACCEPT=5
+- root_reference/generated_contradicted: FALSE_ACCEPT=5
+- root_reference/generated_supported: TRUE_ACCEPT=5
+- root_reference/generated_unsupported: FALSE_ACCEPT=5
+- root_reference/generated_wrong_page: FALSE_ACCEPT=5
+- root_reference/missing_citation: TRUE_REJECT=5
+- root_reference/supported: TRUE_ACCEPT=5
+- root_reference/unsupported: FALSE_ACCEPT=5
+- root_reference/wrong_page_decoy: FALSE_ACCEPT=5
+- root_reference/wrong_page_irrelevant: FALSE_ACCEPT=5
+
+## Failed cases (83)
+
+- ROOT-mar-unsupported [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-mar-contradicted [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-mar-wrong_page_irrelevant [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-mar-wrong_page_decoy [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-mar-generated_unsupported [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-mar-generated_contradicted [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-mar-generated_wrong_page [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-eco-unsupported [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-eco-contradicted [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-eco-wrong_page_irrelevant [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-eco-wrong_page_decoy [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-eco-generated_unsupported [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-eco-generated_contradicted [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-eco-generated_wrong_page [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-sta-unsupported [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-sta-contradicted [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-sta-wrong_page_irrelevant [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-sta-wrong_page_decoy [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-sta-generated_unsupported [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-sta-generated_contradicted [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-sta-generated_wrong_page [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-fin-unsupported [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-fin-contradicted [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-fin-wrong_page_irrelevant [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-fin-wrong_page_decoy [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-fin-generated_unsupported [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-fin-generated_contradicted [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-fin-generated_wrong_page [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-psy-unsupported [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-psy-contradicted [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-psy-wrong_page_irrelevant [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-psy-wrong_page_decoy [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-psy-generated_unsupported [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-psy-generated_contradicted [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- ROOT-psy-generated_wrong_page [CRITICAL] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-mar-valid [MEDIUM] FALSE_REJECT gold="ACCEPT" observed="REJECT" question gives away its own answer
+- CITE-mar-decoy_concept_answer [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-eco-unsupported_claim [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-eco-contradicted_claim [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-eco-decoy_concept_answer [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-eco-extra_decoy_page_cited [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-sta-decoy_page [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-sta-contradicted_claim [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-sta-decoy_concept_answer [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-sta-extra_decoy_page_cited [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-fin-decoy_page [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-fin-unsupported_claim [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-fin-contradicted_claim [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-fin-decoy_concept_answer [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-fin-extra_decoy_page_cited [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-psy-unsupported_claim [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-psy-contradicted_claim [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-psy-decoy_concept_answer [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- CITE-psy-extra_decoy_page_cited [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- QUANT-eco-wrong_arith [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- QUANT-eco-wrong_formula [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- QUANT-sta-wrong_arith [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- QUANT-fin-wrong_arith [HIGH] FALSE_ACCEPT gold="REJECT" observed="ACCEPT" 
+- LEAK-mar-paraphrase [HIGH] MISSED_LEAK gold="LEAK" observed="PASSED" 
+- LEAK-mar-short_leak [MEDIUM] MISSED_LEAK gold="LEAK" observed="PASSED" 
+- LEAK-eco-paraphrase [HIGH] MISSED_LEAK gold="LEAK" observed="PASSED" 
+- LEAK-eco-short_leak [MEDIUM] MISSED_LEAK gold="LEAK" observed="PASSED" 
+- LEAK-eco-short_numeric_paraphrase [MEDIUM] MISSED_LEAK gold="LEAK" observed="PASSED" 
+- LEAK-sta-paraphrase [HIGH] MISSED_LEAK gold="LEAK" observed="PASSED" 
+- LEAK-sta-short_leak [MEDIUM] MISSED_LEAK gold="LEAK" observed="PASSED" 
+- LEAK-fin-paraphrase [HIGH] MISSED_LEAK gold="LEAK" observed="PASSED" 
+- LEAK-fin-short_leak [MEDIUM] MISSED_LEAK gold="LEAK" observed="PASSED" 
+- LEAK-fin-short_numeric_paraphrase [MEDIUM] MISSED_LEAK gold="LEAK" observed="PASSED" 
+- LEAK-psy-paraphrase [HIGH] MISSED_LEAK gold="LEAK" observed="PASSED" 
+- LEAK-psy-short_leak [MEDIUM] MISSED_LEAK gold="LEAK" observed="PASSED" 
+- HEDGE-mar-i_believe_correct [LOW] FAIL gold={"hedged": true, "non_answer": false, "model_judged": true, "diagnosis_preserved": "correc observed={"hedged": false, "non_answer": false, "model_judged": true, "diagnosis_preserved": "corre failed checks: hedged
+- HEDGE-mar-unsure_what_asked [MEDIUM] FAIL gold={"hedged": true, "non_answer": true, "model_judged": false, "diagnosis_preserved": "unclea observed={"hedged": true, "non_answer": false, "model_judged": true, "diagnosis_preserved": "unclea failed checks: non_answer, model_judged
+- HEDGE-eco-i_believe_correct [LOW] FAIL gold={"hedged": true, "non_answer": false, "model_judged": true, "diagnosis_preserved": "correc observed={"hedged": false, "non_answer": false, "model_judged": true, "diagnosis_preserved": "corre failed checks: hedged
+- HEDGE-eco-unsure_what_asked [MEDIUM] FAIL gold={"hedged": true, "non_answer": true, "model_judged": false, "diagnosis_preserved": "unclea observed={"hedged": true, "non_answer": false, "model_judged": true, "diagnosis_preserved": "unclea failed checks: non_answer, model_judged
+- HEDGE-sta-i_believe_correct [LOW] FAIL gold={"hedged": true, "non_answer": false, "model_judged": true, "diagnosis_preserved": "correc observed={"hedged": false, "non_answer": false, "model_judged": true, "diagnosis_preserved": "corre failed checks: hedged
+- HEDGE-sta-unsure_what_asked [MEDIUM] FAIL gold={"hedged": true, "non_answer": true, "model_judged": false, "diagnosis_preserved": "unclea observed={"hedged": true, "non_answer": false, "model_judged": true, "diagnosis_preserved": "unclea failed checks: non_answer, model_judged
+- HEDGE-sta-hedge_phrase_as_content [MEDIUM] FAIL gold={"hedged": false, "non_answer": false, "model_judged": true, "diagnosis_preserved": "corre observed={"hedged": true, "non_answer": false, "model_judged": true, "diagnosis_preserved": "correc failed checks: hedged, progression
+- HEDGE-fin-i_believe_correct [LOW] FAIL gold={"hedged": true, "non_answer": false, "model_judged": true, "diagnosis_preserved": "correc observed={"hedged": false, "non_answer": false, "model_judged": true, "diagnosis_preserved": "corre failed checks: hedged
+- HEDGE-fin-unsure_what_asked [MEDIUM] FAIL gold={"hedged": true, "non_answer": true, "model_judged": false, "diagnosis_preserved": "unclea observed={"hedged": true, "non_answer": false, "model_judged": true, "diagnosis_preserved": "unclea failed checks: non_answer, model_judged
+- HEDGE-fin-hedge_phrase_as_content [MEDIUM] FAIL gold={"hedged": false, "non_answer": false, "model_judged": true, "diagnosis_preserved": "corre observed={"hedged": true, "non_answer": false, "model_judged": true, "diagnosis_preserved": "correc failed checks: hedged, progression
+- HEDGE-psy-i_believe_correct [LOW] FAIL gold={"hedged": true, "non_answer": false, "model_judged": true, "diagnosis_preserved": "correc observed={"hedged": false, "non_answer": false, "model_judged": true, "diagnosis_preserved": "corre failed checks: hedged
+- HEDGE-psy-unsure_what_asked [MEDIUM] FAIL gold={"hedged": true, "non_answer": true, "model_judged": false, "diagnosis_preserved": "unclea observed={"hedged": true, "non_answer": false, "model_judged": true, "diagnosis_preserved": "unclea failed checks: non_answer, model_judged
+- HEDGE-psy-hedge_phrase_as_content [MEDIUM] FAIL gold={"hedged": false, "non_answer": false, "model_judged": true, "diagnosis_preserved": "corre observed={"hedged": true, "non_answer": false, "model_judged": true, "diagnosis_preserved": "correc failed checks: hedged, progression

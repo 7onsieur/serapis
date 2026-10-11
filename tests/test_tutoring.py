@@ -87,7 +87,7 @@ class TutoringTests(unittest.TestCase):
         return {"module": {"code": module_code}, "week": {"number": week_number},
                 "sources": [{"id": "s1", "extraction": {"fingerprint": self.fingerprint}}],
                 "source_contexts": [{"source_id": "s1", "retrieval": retrieval,
-                                     "excerpts": [{"pdf_page": 1, "text": "Grounded passage"}]}]}
+                                     "excerpts": [{"pdf_page": 1, "text": ANSWER_TEXT + ". Second. Grounded passage."}]}]}
 
     # helpers
     def create(self, intention="TEST_ME", request="req-1", provider=None):

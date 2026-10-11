@@ -186,7 +186,7 @@ class EvaluationTests(unittest.TestCase):
 
     def test_cited_slide_and_fingerprint_survive_even_if_query_misses(self) -> None:
         provider = _EvalProvider()
-        attempt = self._attempt(task="Explain the idea in your own words.", expected="An idea.")
+        attempt = self._attempt(task="Explain the idea in your own words.")
         _, error, builder = self._evaluate(attempt, provider)
         self.assertIsNone(error)
         context = provider.calls[0]["source_contexts"][0]

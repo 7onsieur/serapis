@@ -375,6 +375,96 @@ def answer_support(expected: str | None, passage_text: str) -> float:
     return len(stems & set(tokenize(passage_text))) / len(stems) if stems else 0.0
 
 
+# --- reference-answer support (root and generated) ---------------------------------------
+
+REFERENCE_PAGE_MARGIN = 0.1  # an uncited page this much better supported than the cited ones is a mis-citation
+_OPPOSITES = (("positive", "negative"), ("upward", "downward"), ("higher", "lower"), ("larger", "smaller"),
+              ("increase", "decrease"), ("increases", "decreases"), ("above", "below"),
+              ("multiply", "divide"), ("multiplied", "divided"), ("multiplying", "dividing"),
+              ("elastic", "inelastic"), ("equivalent", "different"))
+_OPPOSITE_OF = {a: b for a, b in _OPPOSITES} | {b: a for a, b in _OPPOSITES}
+_ABSOLUTES = frozenset({"only", "always", "never", "cannot", "guarantee", "guarantees", "proves", "exactly"})
+
+
+def reference_unsupported(reference: str | None, cited_pages: list[str], other_pages: Iterable[str] = ()) -> str | None:
+    """Why ``reference`` cannot be treated as backed by ``cited_pages`` (one text per cited page), or None.
+
+    Lexical screening only. It rejects a reference that is thin, mostly absent from the cited text, cited to
+    a page that adds nothing, cited to a page when an uncited page supports it clearly better, flips a known
+    direction word the passage uses the other way, or asserts an absolute the passage never states.
+    It does NOT prove the reference is true: a contradiction that reuses the passage's vocabulary in a
+    different relation (for example swapping numerator and denominator) passes, and so does a derived number.
+    """
+    stems = set(tokenize(reference or ""))
+    if not stems or not cited_pages:
+        return "the reference has no checkable content or no cited page text"
+    cited_stems = [set(tokenize(page)) for page in cited_pages]
+    union = set().union(*cited_stems)
+    support = len(stems & union) / len(stems)
+    if support < SUPPORT_MIN:
+        return "the reference is not supported by the cited passages"
+    if any(not (stems & page) for page in cited_stems):
+        return "a cited page does not support the reference"
+    for other in other_pages:
+        if len(stems & set(tokenize(other))) / len(stems) > support + REFERENCE_PAGE_MARGIN:
+            return "the reference is better supported by a page that was not cited"
+    ref_words, passage_words = set(words(reference)), set(words(" ".join(cited_pages)))
+    for word in sorted(ref_words):
+        if word in _OPPOSITE_OF and word not in passage_words and _OPPOSITE_OF[word] in passage_words:
+            return f"the reference says '{word}' where the passage says '{_OPPOSITE_OF[word]}'"
+        if word in _ABSOLUTES and word not in passage_words:
+            return f"the reference claims '{word}' which the passage does not"
+    return None
+
+
+def reference_problem(reference: str | None, source_references: Any, source_contexts: list[dict[str, Any]]) -> str | None:
+    """Why a stored reference answer must not be graded against, revealed, hinted from or explained; else None.
+
+    The one gate every use of a stored reference goes through. A task with no reference has nothing to verify.
+    Otherwise every citation needs a source id, a source fingerprint and an integer page that was actually
+    supplied, and the cited pages must support the reference (``reference_unsupported``).
+    """
+    if not reference:
+        return None
+    refs = source_references or []
+    if not refs or not all(isinstance(r, dict) and r.get("source_id") and r.get("fingerprint") is not None
+                           and isinstance(r.get("pdf_page"), int) and not isinstance(r.get("pdf_page"), bool)
+                           for r in refs):
+        return "the reference has no page-level citation with a source fingerprint"
+    cited = {(r["source_id"], r["pdf_page"]) for r in refs}
+    pages = {(sc.get("source_id"), e.get("pdf_page")): e.get("text", "")
+             for sc in source_contexts or [] for e in sc.get("excerpts", []) or []}
+    if any(key not in pages for key in cited):
+        return "a cited page was not among the supplied passages"
+    return reference_unsupported(reference, [pages[k] for k in sorted(cited)],
+                                 [text for key, text in pages.items() if key not in cited])
+
+
+HINT_TERMS_MIN, HINT_TERMS_MAX = 2, 4
+
+
+def source_only_hint(task_text: str | None, cited_pages: list[str]) -> str | None:
+    """A deterministic level-2 hint built from the question and the cited passages alone, or None.
+
+    Used when the stored reference cannot be verified: the reference is neither read nor sent anywhere.
+    The hint only repeats the question's own content words that the cited pages also use, and points the
+    student back at how the passage relates them. It states nothing the question did not already say,
+    so it cannot leak an answer. Fewer than ``HINT_TERMS_MIN`` shared terms means no safe hint exists.
+    """
+    page_stems = set().union(*(set(tokenize(page)) for page in cited_pages)) if cited_pages else set()
+    terms: list[str] = []
+    for word in words(task_text):
+        stem = tokenize(word)
+        if stem and stem[0] in page_stems and word not in terms:
+            terms.append(word)
+    if len(terms) < HINT_TERMS_MIN:
+        return None
+    shown = terms[:HINT_TERMS_MAX]
+    return ("Hint 2: in the passage you were pointed to, find where it talks about "
+            + ", ".join(f"'{t}'" for t in shown[:-1]) + f" and '{shown[-1]}'. Ask yourself how the passage "
+            "connects them, and put that connection in your own words.")
+
+
 # --- evidence classification --------------------------------------------------------
 
 def classify_evidence(attempt: dict[str, Any]) -> str:

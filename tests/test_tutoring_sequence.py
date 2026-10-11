@@ -29,7 +29,7 @@ from university_jarvis.state import StateError  # noqa: E402
 CITE = [{"source_id": "s1", "pdf_page": 1}]
 PASSAGE = ("Cells are the basic structural and functional unit of all living organisms. The cell membrane is a "
            "selectively permeable barrier that controls what enters and leaves the cell. Mitochondria release "
-           "usable energy from nutrients in the cell through respiration.")
+           "usable energy from nutrients in the cell through respiration. Second.")
 FOLLOW = {"question": "Which part of a living organism controls what enters and leaves a cell?",
           "expected_answer": "The cell membrane is a selectively permeable barrier that controls what enters and leaves the cell.",
           "citations": CITE}

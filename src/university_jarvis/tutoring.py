@@ -56,7 +56,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Callable
 
-from .hub_service import continue_learning_task
+from .hub_service import continue_learning_task, reject_unverified_task
 from .locking import record_lock
 from .reasoning import (
     ReasoningError,
@@ -70,8 +70,6 @@ from .state import StateError
 from .tutor_policy import (
     MAX_QUESTIONS,
     MIN_CALLS_FOR_NEXT,
-    SUPPORT_MIN,
-    answer_support,
     SELF_CONFIDENCE,
     STEP_REASONS,
     classify_evidence,
@@ -80,7 +78,9 @@ from .tutor_policy import (
     normalise,
     novelty_check,
     plan_next,
+    reference_problem,
     reveals_reference,
+    source_only_hint,
     validate_misconception,
     validate_question,
 )
@@ -121,6 +121,14 @@ FALLBACK_FEEDBACK = ("Your answer is saved, but I couldn't produce feedback on i
                      "so I'm not going to guess. Re-read the sources for this week, ask for a hint, or end the "
                      "session and try again later. Nothing here counts against you.")
 FALLBACK_HINT = "I can't build a safe hint for this task right now. Re-read this week's sources, or end the session."
+REFERENCE_UNVERIFIED_REPLY = ("I can't verify the reference answer for this task against your sources, so I won't "
+                              "show it or use it. Your answers are saved. Re-read the cited material or choose "
+                              "another task.")
+MAX_TASK_CHOICES = 3  # tasks tried when opening a TEACH_ME session before giving up
+NO_VERIFIABLE_TASK = ("Serapis can't explain a task right now: none of the available tasks has a reference answer it "
+                      "can verify against your sources. Nothing has been saved or counted against you. You can start "
+                      "a TEST_ME session instead, re-read the cited material, or add or refresh this week's sources "
+                      "and try again.")
 NON_ANSWER_REPLY = ("That's okay -- not knowing yet is useful to know. Ask for a hint, or tell me the part you "
                     "do understand and we'll start there. Nothing here counts against you.")
 DISPUTE_REPLY = ("Thanks for telling me. I've set that reading aside: your answer is unchanged, it is not "
@@ -479,15 +487,20 @@ def _source_titles(record: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return {s.get("source_id"): s for s in record.get("sources", [])}
 
 
-def _prepare(state: dict[str, Any], module_code: str, week_number: int, task: dict[str, Any]) -> tuple[str, dict[str, Any]]:
-    """Bounded, retrieved context for the task: ('OK'|'SOURCE_CHANGED'|'NO_MATCH', context)."""
+def _prepare(state: dict[str, Any], module_code: str, week_number: int, task: dict[str, Any], *,
+             use_reference: bool = True) -> tuple[str, dict[str, Any]]:
+    """Bounded, retrieved context for the task: ('OK'|'SOURCE_CHANGED'|'NO_MATCH', context).
+
+    ``use_reference=False`` keeps the stored reference answer out of the retrieval query, so an
+    unverified reference cannot steer which passages are retrieved.
+    """
     refs = task.get("source_references") or []
     ids = [r["source_id"] for r in refs if r.get("source_id")]
     context = build_week_context(
         state, module_code, week_number, "TUTOR_TURN",
         # As in evaluation, the student's reply is kept out of the query so a wrong
         # answer cannot pull in text that echoes it or hide text that contradicts it.
-        query=" ".join(str(task.get(k) or "") for k in ("task", "expected_answer")),
+        query=" ".join(str(task.get(k) or "") for k in (("task", "expected_answer") if use_reference else ("task",))),
         source_ids=ids,
         pinned=[(r["source_id"], r["pdf_page"]) for r in refs if r.get("source_id") and isinstance(r.get("pdf_page"), int)],
     )
@@ -625,16 +638,21 @@ def create_session(state: dict[str, Any], module_code: str, week_number: int, *,
 
     if (view := existing_view()) is not None:
         return view
-    task = (continue_learning_task(module_code, week_number, state=state, provider=provider,
-                                   workspace_root=workspace_root) or {}).get("task")
-    if not task:
-        raise TutorSessionError("No source-grounded task is available to tutor on yet")
-    task = {k: deepcopy(task.get(k)) for k in
-            ("task_id", "task", "capability", "origin", "expected_answer", "source_references",
-             "assistance_status", "prompt_help")}
-    task["task_key"] = task["origin"]
-    explanation = usage = None
-    if intention == "TEACH_ME":
+    task, explanation, usage, generated, rejected = None, None, None, False, False
+    for _ in range(MAX_TASK_CHOICES if intention == "TEACH_ME" else 1):
+        chosen = continue_learning_task(module_code, week_number, state=state, provider=provider,
+                                        workspace_root=workspace_root, allow_generation=not (generated or rejected)) or {}
+        task = chosen.get("task")
+        if not task:
+            rejected = rejected or chosen.get("reason") == "NO_VERIFIABLE_TASK"
+            break
+        generated = generated or bool(task["origin"].startswith("GENERATED:"))
+        task = {k: deepcopy(task.get(k)) for k in
+                ("task_id", "task", "capability", "origin", "expected_answer", "source_references",
+                 "assistance_status", "prompt_help")}
+        task["task_key"] = task["origin"]
+        if intention != "TEACH_ME":
+            break
         status, context = _prepare(state, module_code, week_number, task)
         if status != "OK":
             raise TutorSessionError(
@@ -642,8 +660,18 @@ def create_session(state: dict[str, Any], module_code: str, week_number: int, *,
                 + ("the task's source has changed." if status == "SOURCE_CHANGED"
                    else "no passage in this week's sources matches the task.")
             )
+        if (problem := _reference_problem(task, context)):
+            # Never explain from, or offer again, a task whose reference cannot be verified. Only a marker is
+            # stored; the model has not been called and no session, exposure or evidence is touched.
+            reject_unverified_task(module_code, week_number, task, problem, workspace_root=workspace_root)
+            task, rejected = None, True
+            continue
         explanation, usage = _ask_model(provider, action="EXPLAIN", task=task, context=context,
                                         intention=intention, hint_level=0, response=None, recent=[])
+        break
+    if not task:
+        raise TutorSessionError(NO_VERIFIABLE_TASK if rejected else
+                                "No source-grounded task is available to tutor on yet")
     session_id = f"tutor-{uuid.uuid4().hex[:12]}"
     path = _session_path(module_code, week_number, session_id, workspace_root)
     _private_dir(directory)
@@ -947,6 +975,13 @@ def _execute(state, module_code, week_number, path, session, turn, task, provide
                     reply={"kind": "NOTE", "text": DISPUTE_REPLY, "citations": [], "hint_level": session["hint_level"]})
 
     if action == "REVEAL":
+        # Showing a reference is the strongest claim it can make: verify it first, fail closed.
+        status, context = _prepare(state, module_code, week_number, task)
+        problem = "its sources changed or no longer match" if status != "OK" else _reference_problem(task, context)
+        if problem:
+            return done(status="COMPLETE", usage=None, fields={"reference_problem": problem},
+                        reply={"kind": "NOTE", "text": REFERENCE_UNVERIFIED_REPLY, "citations": [],
+                               "hint_level": session["hint_level"]})
         expose("REVEAL")
         return done(status="COMPLETE", usage=None, session_updates={"revealed": True},
                     fields={"assistance_status": "REVEALED"},
@@ -982,6 +1017,18 @@ def _execute(state, module_code, week_number, path, session, turn, task, provide
             return done(status="COMPLETE", usage=None, fields={}, reply={
                 "kind": "HINT", "text": FALLBACK_HINT if status == "OK" else "I can't build a source-grounded hint for this task right now.",
                 "citations": [], "hint_level": session["hint_level"]})
+        if (problem := _reference_problem(task, context)):
+            # The reference is neither read nor sent. Offer only deterministic guidance from the cited
+            # passages; with none to give, keep the neutral refusal and record no help.
+            hint = _source_only_hint(task, context)
+            if hint is None:
+                return done(status="COMPLETE", usage=None, fields={"reference_problem": problem}, reply={
+                    "kind": "NOTE", "text": REFERENCE_UNVERIFIED_REPLY, "citations": [],
+                    "hint_level": session["hint_level"]})
+            expose("HINT", 2)
+            return done(status="COMPLETE", usage=None, session_updates={"hint_level": 2},
+                        fields={"reference_problem": problem, "hint_basis": "SOURCE_ONLY"},
+                        reply={"kind": "HINT", "text": hint, "citations": task["source_references"], "hint_level": 2})
         reply, usage = _ask_model(provider, action="HINT", task=task, context=context, intention=session["intention"],
                                   hint_level=2, response=None, recent=recent)
         expose("HINT", 2)
@@ -1000,7 +1047,7 @@ def _execute(state, module_code, week_number, path, session, turn, task, provide
                                 "judge it. End this session and start a new one."})
     evaluated_at = _now()
     hedge = detect_hedge(turn["text"])
-    misconception, dropped, model_diagnosis = None, None, None
+    misconception, dropped, model_diagnosis, unsupported = None, None, None, None
     if hedge["non_answer"]:
         # "I don't know" is an evidence gap, not a wrong answer: no model call, no help given.
         diagnosis, outcome, basis = "unclear", "UNCLEAR", "STUDENT_UNCERTAIN"
@@ -1011,9 +1058,9 @@ def _execute(state, module_code, week_number, path, session, turn, task, provide
         diagnosis, outcome, basis = "unclear", "UNCLEAR", "TUTOR_REPLY_REJECTED"
         reply, usage = {"message": FALLBACK_FEEDBACK, "citations": []}, None
         hedge = {**hedge, "non_answer": True}  # advice only: offer a hint or an end, not "say more"
-    elif _generated_reference_unsupported(session, task, context):
-        # A generated question's reference answer must still be backed by the passages it cites.
-        # If not, judging against it would be judging against an unsupported reference: don't.
+    elif status == "OK" and (unsupported := _reference_problem(task, context)):
+        # Any reference answer (root or generated) must be backed by the passages it cites. If not, judging
+        # against it would be judging against an unsupported reference: don't. The answer is already saved.
         diagnosis, outcome, basis = "unclear", "UNCLEAR", "REFERENCE_NOT_SUPPORTED"
         reply, usage = {"message": "I can't check your answer against a reference I can verify in your sources, so I "
                                    "won't judge it. Your answer is saved.", "citations": []}, None
@@ -1054,19 +1101,27 @@ def _execute(state, module_code, week_number, path, session, turn, task, provide
                 fields={**fields, "diagnosis": diagnosis, "next_action": suggestion,
                         "hedged": hedge["hedged"], "non_answer": hedge["non_answer"],
                         **({"model_diagnosis": model_diagnosis} if model_diagnosis not in (None, diagnosis) else {}),
+                        **({"reference_problem": unsupported} if basis == "REFERENCE_NOT_SUPPORTED" else {}),
                         **({"misconception_dropped": dropped} if dropped else {}),
                         **({"misconception": {**misconception, "status": "SUSPECTED"}} if misconception else {})},
                 reply={"kind": "FEEDBACK", "text": reply["message"], "citations": reply["citations"],
                        "hint_level": turn["hint_level"], "next_action": suggestion})
 
 
-def _generated_reference_unsupported(session: dict[str, Any], task: dict[str, Any], context: dict[str, Any]) -> bool:
-    question = _current_question(session)
-    if not question.get("generated"):
-        return False
-    cited = _passage_text(context, [{"source_id": r["source_id"], "pdf_page": r["pdf_page"]}
-                                    for r in task["source_references"] if isinstance(r.get("pdf_page"), int)])
-    return answer_support(task.get("expected_answer"), cited) < SUPPORT_MIN
+def _reference_problem(task: dict[str, Any], context: dict[str, Any]) -> str | None:
+    """Gate for every use of a task's stored reference (grading, reveal, hint, explanation, follow-ups)."""
+    return reference_problem(task.get("expected_answer"), task.get("source_references"),
+                             context.get("source_contexts", []))
+
+
+def _source_only_hint(task: dict[str, Any], context: dict[str, Any]) -> str | None:
+    refs = task.get("source_references") or []
+    if not refs or not all(isinstance(r.get("pdf_page"), int) and not isinstance(r.get("pdf_page"), bool) for r in refs):
+        return None
+    cited = [_passage_text(context, [{"source_id": r["source_id"], "pdf_page": r["pdf_page"]}]) for r in refs]
+    if not all(cited):
+        return None
+    return source_only_hint(task.get("task"), cited)
 
 
 def _passage_text(context: dict[str, Any], citations: list[dict[str, Any]]) -> str:
@@ -1075,17 +1130,24 @@ def _passage_text(context: dict[str, Any], citations: list[dict[str, Any]]) -> s
                     if (sc.get("source_id"), e.get("pdf_page")) in wanted)
 
 
-def _generate_question(provider: ReasoningProvider, session: dict[str, Any], plan: dict[str, str],
-                       context: dict[str, Any], module_code: str, week_number: int, root_path: Path | None) -> tuple[dict[str, Any], dict[str, Any] | None]:
+def _generate_question(state: dict[str, Any], provider: ReasoningProvider, session: dict[str, Any], plan: dict[str, str],
+                       context: dict[str, Any], module_code: str, week_number: int, root_path: Path | None, *,
+                       root_reference_ok: bool) -> tuple[dict[str, Any], dict[str, Any] | None]:
     """One model call for a follow-up/different question, then every check in ``validate_question``."""
     root, current = session["questions"][0], _current_question(session)
     latest = next(iter(reversed(_judged_answers(session, current["question_id"]))), None)
     misconception = (latest or {}).get("misconception") or {}
+    # The parent's reference is passed on only if the parent's own cited pages (not the root's) support it.
+    parent_status, parent_context = (("OK", context) if current is root else
+                                     _prepare(state, module_code, week_number, current["task"]))
+    parent_reference = (current["task"].get("expected_answer")
+                        if parent_status == "OK" and _reference_problem(current["task"], parent_context) is None
+                        else None)
     bounded = {
         "workflow": "TUTOR_TURN", "prompt_version": TUTOR_QUESTION_PROMPT_VERSION, "action": "NEXT_QUESTION",
         "step": plan["step"], "reason": plan["reason"], "intention": session["intention"],
         "concept_question": root["task"]["task"], "parent_question": current["task"]["task"],
-        "parent_expected_answer_or_rubric": current["task"].get("expected_answer"),
+        "parent_expected_answer_or_rubric": parent_reference,
         "previous_questions": [{"role": q["role"], "text": q["task"]["task"]} for q in session["questions"]],
         "student_response": latest["text"] if latest else None, "diagnosis": latest["diagnosis"] if latest else None,
         "misconception_label": misconception.get("label") if misconception.get("status") == "SUSPECTED" else None,
@@ -1112,7 +1174,8 @@ def _generate_question(provider: ReasoningProvider, session: dict[str, Any], pla
         prior_answers=[q["task"]["expected_answer"] for q in questions if q["task"].get("expected_answer")],
         unrevealed_answers=[q["task"]["expected_answer"] for q in questions
                             if q["task"].get("expected_answer") and not q["revealed"]],
-        concept_text=" ".join([root["task"]["task"], root["task"].get("expected_answer") or ""]))
+        concept_text=" ".join([root["task"]["task"], (root["task"].get("expected_answer") or "")
+                               if root_reference_ok else ""]))
     if clean is None:
         raise ReplyRejected(f"Generated question rejected: {reason}")
     return clean, usage
@@ -1134,7 +1197,16 @@ def _open_next_question(state, module_code, week_number, session, turn, provider
     if status != "OK":
         return fallback("I can't build a new question from this week's sources right now"
                         + (" because they changed." if status == "SOURCE_CHANGED" else " because no passage matches."))
-    clean, usage = _generate_question(provider, session, plan, context, module_code, week_number, root_path)
+    # Independence: an unverified root or parent reference must not reach the new question through the
+    # retrieval query, the prompt or the overlap checks. Retrieve again without it; if that fails, stop.
+    root_reference_ok = _reference_problem(root["task"], context) is None
+    if not root_reference_ok:
+        status, context = _prepare(state, module_code, week_number, root["task"], use_reference=False)
+        if status != "OK":
+            return fallback("I can't build a new question from this week's sources right now because they "
+                            "do not match the task independently of its reference answer.")
+    clean, usage = _generate_question(state, provider, session, plan, context, module_code, week_number, root_path,
+                                      root_reference_ok=root_reference_ok)
     current = _current_question(session)
     question_id, session_id = f"q{len(session['questions'])+1}", session["session_id"]
     current_sources = {s["id"]: s for s in context["sources"]}
@@ -1144,6 +1216,9 @@ def _open_next_question(state, module_code, week_number, session, turn, provider
         # Without a fingerprint a later source change could not be detected, so the reference answer
         # could not be kept honest. Fail safely instead of judging against it.
         raise ReplyRejected("Generated question rejected: its source has no fingerprint to pin the reference answer to")
+    if (problem := _reference_problem({"expected_answer": clean["expected_answer"], "source_references": refs}, context)):
+        # A new question must start with a reference answer its own citations support.
+        raise ReplyRejected(f"Generated question rejected: its reference answer is not supported ({problem})")
     task = {"task_id": f"{session_id}-{question_id}", "task": clean["question"], "capability": root["task"]["capability"],
             "origin": f"TUTOR:{session_id}:{question_id}", "task_key": f"TUTOR:{session_id}:{question_id}",
             "expected_answer": clean["expected_answer"], "source_references": refs, "assistance_status": None,
