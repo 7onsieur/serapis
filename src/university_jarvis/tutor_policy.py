@@ -22,6 +22,7 @@ claims mastery -- every result is a provisional, task-level reading.
 from __future__ import annotations
 
 import re
+from decimal import Decimal
 from typing import Any, Callable, Iterable
 
 from .retrieval import tokenize
@@ -39,6 +40,8 @@ NOVELTY_JACCARD_LIMIT = 0.6
 LEAK_WINDOW = 6
 LEAK_MIN_WORDS = 4
 LEAK_SUBSTRING_CHARS = 25
+LEAK_STEM_MIN = 8      # a reordered or lightly reworded reference: this many content stems ...
+LEAK_STEM_SHARE = 0.85  # ... of which this share appear together in the message
 
 _WORDS = re.compile(r"[a-z0-9]+")
 _HEDGES = (
@@ -127,29 +130,122 @@ def validate_misconception(raw: Any, student_response: str, diagnosis: str, *,
 
 # --- answer leak ------------------------------------------------------------------
 
+_SMALL = {"zero": 0, "one": 1, "two": 2, "three": 3, "four": 4, "five": 5, "six": 6, "seven": 7, "eight": 8,
+          "nine": 9, "ten": 10, "eleven": 11, "twelve": 12, "thirteen": 13, "fourteen": 14, "fifteen": 15,
+          "sixteen": 16, "seventeen": 17, "eighteen": 18, "nineteen": 19}
+_TENS = {"twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90}
+_SCALES = {"hundred": 100, "thousand": 1000, "million": 1_000_000}
+_NEGATORS = frozenset({"minus", "negative"})
+# A number that follows one of these names a place in the material ("page 2"), not a value.
+_LOCATORS = frozenset({"page", "pages", "p", "pp", "slide", "slides", "section", "chapter", "week", "figure", "fig",
+                       "table", "step", "question", "q", "paragraph", "line", "lecture", "example", "part", "item"})
+# Not followed by a letter: "2nd", "10x" and "3rd" are ordinals and labels, not the value 2, 10 or 3.
+_NUMBER = re.compile(r"(?<![\w.])([-+\u2212])?(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(?![a-z])")
+_TOKENS = re.compile(r"[a-z]+|[^\sa-z]")
+_GENERIC_SHORT = frozenset({"yes", "no", "true", "false", "correct", "incorrect", "none", "both", "all", "neither"})
+
+
+def _number_words(tokens: list[str]) -> list[tuple[int, Decimal, bool]]:
+    """(index, value, negative) for each run of English number words ("minus two", "one thousand").
+
+    A lone "one" is not a number: it is far more often a pronoun ("one plus the rate").
+    """
+    found, i = [], 0
+    while i < len(tokens):
+        negative = tokens[i] in _NEGATORS
+        j = i + 1 if negative else i
+        total, current, used, start = Decimal(0), Decimal(0), 0, j
+        while j < len(tokens) and (tokens[j] in _SMALL or tokens[j] in _TENS or tokens[j] in _SCALES):
+            word = tokens[j]
+            if word in _SMALL:
+                current += _SMALL[word]
+            elif word in _TENS:
+                current += _TENS[word]
+            elif word == "hundred":
+                current = (current or 1) * 100
+            else:
+                total += (current or 1) * _SCALES[word]
+                current = Decimal(0)
+            used += 1
+            j += 1
+        if used and not (used == 1 and tokens[start] == "one" and not negative):
+            found.append((i, total + current, negative))
+            i = j
+        else:
+            i += 1
+    return found
+
+
+def numbers_in(text: str | None) -> list[tuple[Decimal, bool]]:
+    """Numeric values stated in ``text`` as (signed value, is_locator): "-2", "minus two", "1,000", "one thousand".
+
+    Digits and number words are folded to one value so wording does not hide a number. A leading sign is
+    kept ("-2" is not "2"). A percent sign is ignored (50% and 50 are the same value; 50% and 0.5 are not
+    folded together). Values after "page", "step" and the like are marked as locators.
+    """
+    lowered = (text or "").lower().replace("\u2212", "-")
+    out: list[tuple[Decimal, bool]] = []
+    for match in _NUMBER.finditer(lowered):
+        sign, whole, fraction = match.groups()
+        value = Decimal(whole.replace(",", "") + (fraction or ""))
+        before = lowered[:match.start()].rstrip()
+        previous = _WORDS.findall(before[-24:])
+        negative = sign in ("-", "\u2212") or (previous[-1:] and previous[-1] in _NEGATORS)
+        locator = bool(previous) and previous[-1] in _LOCATORS
+        out.append((-value if negative else value, locator))
+    tokens = _TOKENS.findall(_NUMBER.sub(" # ", lowered))  # punctuation and digits break a run of number words
+    for index, value, negative in _number_words(tokens):
+        out.append((-value if negative else value, bool(index) and tokens[index - 1] in _LOCATORS))
+    return out
+
+
+def _short_leak(msg_words: list[str], message: str, ref_words: list[str], reference: str,
+                allowed: list[list[str]], allowed_raw: list[str]) -> bool:
+    """A reference under LEAK_MIN_WORDS words is a name or a number, so it is tested as one.
+
+    A number matches by value ("-2", "minus two", "1,000", "one thousand"); a name must appear as whole words.
+    Neither counts when the student or the question already said it, and a number after "page"/"step" is a place.
+    """
+    ref_numbers = {v for v, _ in numbers_in(reference)}
+    if ref_numbers:
+        said = {v for text in allowed_raw for v, _ in numbers_in(text)}
+        return any(v in ref_numbers and v not in said and not locator for v, locator in numbers_in(message))
+    if not tokenize(reference) or all(w in _GENERIC_SHORT for w in ref_words):
+        return False
+    return _contains_run(msg_words, ref_words) and not any(_contains_run(a, ref_words) for a in allowed)
+
+
 def reveals_reference(message: str | None, reference: str | None, *, allowed_text: Iterable[str] = ()) -> bool:
     """True when ``message`` reproduces the stored reference answer / rubric.
 
-    Two tests: the whole normalised reference (25+ characters) appearing inside the
-    message, or a run of 6 consecutive reference words (the whole reference if it has
-    4-5) that the student or the question did not already say. Echoing the student's
-    own words is not a leak. References under 4 words cannot be tested this way.
+    Tests, each ignoring what the student or the question already said:
+    - the whole normalised reference (25+ characters) inside the message;
+    - a run of 6 consecutive reference words (the whole reference if it has 4-5);
+    - a short reference (under 4 words): the name as whole words, or the number by value in any common
+      spelling (see ``_short_leak``);
+    - a close reordering: at least ``LEAK_STEM_SHARE`` of 8+ content stems of the reference present together.
+    This is lexical. A paraphrase in different vocabulary is NOT detected, and an unrelated message that
+    happens to contain a short reference's number or name is blocked (a false block, not a leak).
     """
     ref_words, msg_words = words(reference), words(message)
     if not ref_words or not msg_words:
         return False
     ref_text, msg_text = " ".join(ref_words), " ".join(msg_words)
-    allowed = [words(a) for a in allowed_text if a]
+    allowed_raw = [a for a in allowed_text if a]
+    allowed = [words(a) for a in allowed_raw]
     if len(ref_text) >= LEAK_SUBSTRING_CHARS and ref_text in msg_text:
         return not any(_contains_run(a, ref_words) for a in allowed)
     if len(ref_words) < LEAK_MIN_WORDS:
-        return False
+        return _short_leak(msg_words, message or "", ref_words, reference or "", allowed, allowed_raw)
     window = min(LEAK_WINDOW, len(ref_words))
     for i in range(len(ref_words) - window + 1):
         run = ref_words[i:i + window]
         if _contains_run(msg_words, run) and not any(_contains_run(a, run) for a in allowed):
             return True
-    return False
+    known = set().union(*(set(tokenize(a)) for a in allowed_raw)) if allowed_raw else set()
+    ref_stems = set(tokenize(reference or "")) - known
+    return len(ref_stems) >= LEAK_STEM_MIN and \
+        len(ref_stems & set(tokenize(message or ""))) / len(ref_stems) >= LEAK_STEM_SHARE
 
 
 # --- question novelty ----------------------------------------------------------------
@@ -298,7 +394,7 @@ NEW_WORDS_MIN = {"FOLLOW_UP": 1, "TRANSFER": 2}
 def validate_question(raw: Any, *, step: str, citations_ok: Callable[[list[dict[str, Any]]], None],
                       cited_text: Callable[[list[dict[str, Any]]], str], shown: Iterable[str],
                       prior_questions: Iterable[str], prior_answers: Iterable[str],
-                      unrevealed_answers: Iterable[str], concept_text: str,
+                      unrevealed_answers: Iterable[str], concept_text: str, other_pages: Iterable[str] = (),
                       ) -> tuple[dict[str, Any] | None, str | None]:
     """Return ``(clean_question, None)`` or ``(None, reason_it_was_rejected)``.
 
@@ -306,6 +402,11 @@ def validate_question(raw: Any, *, step: str, citations_ok: Callable[[list[dict[
     support its own expected answer, tied to the original concept, new rather than a rewording
     (stricter for a different/transfer question), and reproduces no reference answer that is
     still private. Lexical checks only: they reject rewordings and leaks, they do not prove depth.
+
+    ``other_pages`` are the supplied passages the question did NOT cite. They let two relevance checks run:
+    the question must not be clearly better supported by an uncited page (the answer would then address a
+    different concept), and a cited page that only repeats what the other cited pages already support, and
+    matches the question clearly worse than they do, is a decoy citation. Neither proves the answer is right.
     """
     if step not in NEW_WORDS_MIN:
         return None, "unknown question step"
@@ -343,6 +444,9 @@ def validate_question(raw: Any, *, step: str, citations_ok: Callable[[list[dict[
         return None, "expected answer is not supported by the cited passages"
     if any(not (answer_words & set(tokenize(cited_text([c])))) for c in citations):
         return None, "a cited passage does not support the expected answer"
+    if (relevance := _citation_relevance(question, answer_words, [cited_text([c]) for c in citations],
+                                         list(other_pages))):
+        return None, relevance
     own = set(tokenize(question)) | expected_stems
     concept_overlap = len(own & set(tokenize(concept_text)))
     if concept_overlap < CONCEPT_OVERLAP_MIN:
@@ -367,6 +471,36 @@ def validate_question(raw: Any, *, step: str, citations_ok: Callable[[list[dict[
             "checks": {"support": round(support, 3), "concept_overlap": concept_overlap,
                        "novelty_overlap": novelty["overlap"], "novelty_jaccard": novelty["jaccard"],
                        "new_words": new_words}}, None
+
+
+QUESTION_PAGE_MARGIN = 0.15  # how much better one page must match the question than another to count
+QUESTION_OTHER_MIN = 0.5     # an uncited page must itself cover this share of the question to outrank the cited
+
+
+def _citation_relevance(question: str, answer_words: set[str], cited: list[str], others: list[str]) -> str | None:
+    """Reason a generated question's citations are clearly irrelevant to it, or None.
+
+    Conservative on purpose: vocabulary shared with a decoy page is not enough. The margins mean a valid
+    question whose cited page only matches the question slightly worse than another is never rejected.
+    """
+    q = set(tokenize(question))
+    if not q:
+        return None
+    share = lambda stems: len(q & stems) / len(q)  # noqa: E731
+    pages = [set(tokenize(text)) for text in cited]
+    cited_share = share(set().union(*pages))
+    for text in others:
+        other = share(set(tokenize(text)))
+        if other >= QUESTION_OTHER_MIN and other > cited_share + QUESTION_PAGE_MARGIN:
+            return "the question is better supported by a page that was not cited"
+    if len(pages) > 1 and answer_words:
+        for i, page in enumerate(pages):
+            rest = [p for j, p in enumerate(pages) if j != i]
+            rest_cover = answer_words & set().union(*rest)
+            if (answer_words & page) <= rest_cover and len(rest_cover) / len(answer_words) >= SUPPORT_MIN \
+                    and share(page) <= max(share(p) for p in rest) - QUESTION_PAGE_MARGIN:
+                return "a cited passage adds nothing to the expected answer"
+    return None
 
 
 def answer_support(expected: str | None, passage_text: str) -> float:

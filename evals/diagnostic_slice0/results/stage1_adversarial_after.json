@@ -1,0 +1,270 @@
+[
+ {
+  "kind": "leak",
+  "case": "neg_digits_word",
+  "gold": "LEAK",
+  "validator_blocked": true,
+  "production_blocked": true,
+  "outcome": "TRUE_BLOCK"
+ },
+ {
+  "kind": "leak",
+  "case": "neg_minus_digit",
+  "gold": "LEAK",
+  "validator_blocked": true,
+  "production_blocked": true,
+  "outcome": "TRUE_BLOCK"
+ },
+ {
+  "kind": "leak",
+  "case": "neg_unicode_minus",
+  "gold": "LEAK",
+  "validator_blocked": true,
+  "production_blocked": true,
+  "outcome": "TRUE_BLOCK"
+ },
+ {
+  "kind": "leak",
+  "case": "neg_sign_only_hint",
+  "gold": "CLEAN",
+  "validator_blocked": false,
+  "production_blocked": false,
+  "outcome": "TRUE_PASS"
+ },
+ {
+  "kind": "leak",
+  "case": "neg_positive_two_is_not_negative_two",
+  "gold": "CLEAN",
+  "validator_blocked": false,
+  "production_blocked": false,
+  "outcome": "TRUE_PASS"
+ },
+ {
+  "kind": "leak",
+  "case": "student_said_it",
+  "gold": "CLEAN",
+  "validator_blocked": false,
+  "production_blocked": false,
+  "outcome": "TRUE_PASS"
+ },
+ {
+  "kind": "leak",
+  "case": "thousands_separator",
+  "gold": "LEAK",
+  "validator_blocked": true,
+  "production_blocked": true,
+  "outcome": "TRUE_BLOCK"
+ },
+ {
+  "kind": "leak",
+  "case": "number_words",
+  "gold": "LEAK",
+  "validator_blocked": true,
+  "production_blocked": true,
+  "outcome": "TRUE_BLOCK"
+ },
+ {
+  "kind": "leak",
+  "case": "trailing_zeros",
+  "gold": "LEAK",
+  "validator_blocked": true,
+  "production_blocked": true,
+  "outcome": "TRUE_BLOCK"
+ },
+ {
+  "kind": "leak",
+  "case": "compound_number_words",
+  "gold": "LEAK",
+  "validator_blocked": true,
+  "production_blocked": true,
+  "outcome": "TRUE_BLOCK"
+ },
+ {
+  "kind": "leak",
+  "case": "decimal_spelling",
+  "gold": "LEAK",
+  "validator_blocked": true,
+  "production_blocked": true,
+  "outcome": "TRUE_BLOCK"
+ },
+ {
+  "kind": "leak",
+  "case": "page_locator",
+  "gold": "CLEAN",
+  "validator_blocked": false,
+  "production_blocked": false,
+  "outcome": "TRUE_PASS"
+ },
+ {
+  "kind": "leak",
+  "case": "step_locator",
+  "gold": "CLEAN",
+  "validator_blocked": false,
+  "production_blocked": false,
+  "outcome": "TRUE_PASS"
+ },
+ {
+  "kind": "leak",
+  "case": "table_locator",
+  "gold": "CLEAN",
+  "validator_blocked": false,
+  "production_blocked": false,
+  "outcome": "TRUE_PASS"
+ },
+ {
+  "kind": "leak",
+  "case": "value_in_task_not_a_leak",
+  "gold": "CLEAN",
+  "validator_blocked": false,
+  "production_blocked": false,
+  "outcome": "TRUE_PASS"
+ },
+ {
+  "kind": "leak",
+  "case": "name_whole_word",
+  "gold": "LEAK",
+  "validator_blocked": true,
+  "production_blocked": true,
+  "outcome": "TRUE_BLOCK"
+ },
+ {
+  "kind": "leak",
+  "case": "name_not_a_substring",
+  "gold": "CLEAN",
+  "validator_blocked": false,
+  "production_blocked": false,
+  "outcome": "TRUE_PASS"
+ },
+ {
+  "kind": "leak",
+  "case": "name_said_by_student",
+  "gold": "CLEAN",
+  "validator_blocked": false,
+  "production_blocked": false,
+  "outcome": "TRUE_PASS"
+ },
+ {
+  "kind": "leak",
+  "case": "two_word_name",
+  "gold": "LEAK",
+  "validator_blocked": true,
+  "production_blocked": true,
+  "outcome": "TRUE_BLOCK"
+ },
+ {
+  "kind": "leak",
+  "case": "two_word_name_other_words",
+  "gold": "CLEAN",
+  "validator_blocked": false,
+  "production_blocked": false,
+  "outcome": "TRUE_PASS"
+ },
+ {
+  "kind": "leak",
+  "case": "generic_short_reference",
+  "gold": "CLEAN",
+  "validator_blocked": false,
+  "production_blocked": false,
+  "outcome": "TRUE_PASS"
+ },
+ {
+  "kind": "leak",
+  "case": "reordered_reword",
+  "gold": "LEAK",
+  "validator_blocked": true,
+  "production_blocked": true,
+  "outcome": "TRUE_BLOCK"
+ },
+ {
+  "kind": "leak",
+  "case": "discussing_the_topic_only",
+  "gold": "CLEAN",
+  "validator_blocked": false,
+  "production_blocked": false,
+  "outcome": "TRUE_PASS"
+ },
+ {
+  "kind": "leak",
+  "case": "paraphrase_other_vocabulary",
+  "gold": "KNOWN_MISS",
+  "validator_blocked": false,
+  "production_blocked": false,
+  "outcome": "KNOWN_MISS"
+ },
+ {
+  "kind": "leak",
+  "case": "number_as_fraction_word",
+  "gold": "KNOWN_MISS",
+  "validator_blocked": false,
+  "production_blocked": false,
+  "outcome": "KNOWN_MISS"
+ },
+ {
+  "kind": "leak",
+  "case": "percent_vs_decimal",
+  "gold": "KNOWN_MISS",
+  "validator_blocked": false,
+  "production_blocked": false,
+  "outcome": "KNOWN_MISS"
+ },
+ {
+  "kind": "generated",
+  "case": "valid_single_page_decoy_shares_vocabulary",
+  "gold": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "note": "",
+  "validator_with_pages": "ACCEPT",
+  "validator_outcome": "TRUE_ACCEPT"
+ },
+ {
+  "kind": "generated",
+  "case": "valid_page_two_topic_page_one_shares_words",
+  "gold": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "note": "",
+  "validator_with_pages": "ACCEPT",
+  "validator_outcome": "TRUE_ACCEPT"
+ },
+ {
+  "kind": "generated",
+  "case": "valid_two_pages_both_needed",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "Generated question rejected: question citation is not a supplied source passage",
+  "validator_with_pages": "ACCEPT",
+  "validator_outcome": "TRUE_ACCEPT"
+ },
+ {
+  "kind": "generated",
+  "case": "different_concept_answer",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: question citation is not a supplied source passage",
+  "validator_with_pages": "REJECT",
+  "validator_outcome": "TRUE_REJECT"
+ },
+ {
+  "kind": "generated",
+  "case": "legit_page_plus_irrelevant_third",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: question citation is not a supplied source passage",
+  "validator_with_pages": "REJECT",
+  "validator_outcome": "TRUE_REJECT"
+ },
+ {
+  "kind": "generated",
+  "case": "decoy_page_repeats_vocabulary_only",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: a cited passage adds nothing to the expected answer",
+  "validator_with_pages": "REJECT",
+  "validator_outcome": "TRUE_REJECT"
+ }
+]

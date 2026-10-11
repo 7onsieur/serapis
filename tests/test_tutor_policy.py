@@ -102,8 +102,11 @@ class LeakTests(unittest.TestCase):
         student = "Cells are the basic structural and functional unit of all living organisms"
         self.assertFalse(tp.reveals_reference(f"You wrote: {student}. Good.", ANSWER, allowed_text=[student]))
 
-    def test_very_short_references_cannot_be_tested(self):
-        self.assertFalse(tp.reveals_reference("The answer is nucleus", "nucleus"))
+    def test_a_very_short_reference_is_tested_as_a_whole_word_name_unless_already_said(self):
+        # Stage 1: this used to be untestable. A name is now matched as whole words.
+        self.assertTrue(tp.reveals_reference("The answer is nucleus", "nucleus"))
+        self.assertFalse(tp.reveals_reference("The answer is nucleus", "nucleus", allowed_text=["Is it the nucleus?"]))
+        self.assertFalse(tp.reveals_reference("Think about the nuclear envelope", "nucleus"))
 
 
 class NoveltyTests(unittest.TestCase):

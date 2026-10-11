@@ -129,6 +129,57 @@ def run_session(subject_key: str, *, ref: str | None, cite_page: int | None, stu
                 "result_status": result.get("status", None)}
 
 
+class ScriptedNext(Scripted):
+    """Returns one fixed generated question for the NEXT_QUESTION call (production question-generation path)."""
+
+    def __init__(self, question):
+        super().__init__()
+        self.question = question
+
+    def generate_structured_output(self, context, instructions, output_format):
+        if context.get("action") == "NEXT_QUESTION":
+            self.calls.append(context)
+            return json.loads(json.dumps(self.question))
+        return super().generate_structured_output(context, instructions, output_format)
+
+
+def run_next(subject_key: str, question: str, expected: str, cites: list[dict]) -> dict:
+    """PRODUCTION path for a generated follow-up: real retrieval, create_session -> skip -> next_question ->
+    _open_next_question -> _generate_question -> validate_question + reference gate. Observed ACCEPT == the question
+    was opened for the student. Only the model is scripted."""
+    subject = C.SUBJECTS[subject_key]
+    ctx = _context_factory(subject)
+    with tempfile.TemporaryDirectory() as tmp, \
+            patch("university_jarvis.hub_service.build_week_context", side_effect=ctx), \
+            patch("university_jarvis.tutoring.build_week_context", side_effect=ctx):
+        root = Path(tmp) / "ws"
+        _make_record(root, subject, subject["root_ref"], 1)
+        provider = ScriptedNext({"question": question, "expected_answer": expected, "citations": cites})
+        session = tutoring.create_session({}, C.MODULE, 1, intention="TEST_ME", client_request_id="eval-1",
+                                          provider=provider, workspace_root=root)
+        tutoring.skip_question({}, C.MODULE, 1, session["session_id"], client_turn_id="s1", provider=provider,
+                               workspace_root=root)
+        reason = ""
+        try:
+            tutoring.next_question({}, C.MODULE, 1, session["session_id"], client_turn_id="n1", provider=provider,
+                                   workspace_root=root)
+        except (tutoring.TutorSessionError, ReasoningError) as exc:
+            reason = str(exc)
+        view = tutoring.load_session(C.MODULE, 1, session["session_id"], workspace_root=root)
+        return {"observed": "ACCEPT" if len(view["questions"]) == 2 else "REJECT", "reason": reason,
+                "model_called": bool(provider.calls)}
+
+
+def _production(subject_key, question, expected, cites, gold):
+    obs = run_next(subject_key, question, expected, cites)
+    # A rejection because the cited page was never retrieved is a retrieval gap, not evidence that a validator
+    # recognised a bad question; the two are tallied apart.
+    layer = None if obs["observed"] == "ACCEPT" else (
+        "RETRIEVAL" if "not a supplied source passage" in obs["reason"] else "VALIDATION")
+    return {"observed": obs["observed"], "outcome": accept_outcome(gold, obs["observed"]), "note": obs["reason"],
+            "model_called": obs["model_called"], "rejected_by": layer}
+
+
 def _lead_lower(text: str) -> str:
     return text[0].lower() + text[1:]
 
@@ -180,7 +231,7 @@ def eval_root():
 
 
 # ---------------------------------------------------------------- 2/4. generated questions (citation + quantitative)
-def _validate(subject_key, question, expected, cites, *, prior_extra=()):
+def _validate(subject_key, question, expected, cites, *, prior_extra=(), with_uncited_pages=False):
     s = C.SUBJECTS[subject_key]
     sid = s["source_id"]
     ctx = {"sources": [{"id": sid}], "source_contexts": [{"source_id": sid, "retrieval": {"status": "matched"},
@@ -195,9 +246,20 @@ def _validate(subject_key, question, expected, cites, *, prior_extra=()):
     clean, reason = tp.validate_question(
         raw, step="FOLLOW_UP", citations_ok=citations_ok, cited_text=lambda c: tutoring._passage_text(ctx, c),
         shown=[s["root_task"]], prior_questions=[s["root_task"]], prior_answers=[s["root_ref"]],
-        unrevealed_answers=[s["root_ref"]], concept_text=" ".join([s["root_task"], s["root_ref"]]))
+        unrevealed_answers=[s["root_ref"]], concept_text=" ".join([s["root_task"], s["root_ref"]]),
+        # Only passed when asked, so the frozen call signature (and older code) still works.
+        **({"other_pages": [t for i, t in enumerate(s["pages"], 1) if i not in {c["pdf_page"] for c in cites}]}
+           if with_uncited_pages else {}))
     cited = tutoring._passage_text(ctx, cites)
     return ("ACCEPT" if clean else "REJECT"), reason, round(tp.answer_support(expected, cited), 3)
+
+
+def _validate_tolerant(*args):
+    """Validator with the uncited pages; code that predates ``other_pages`` is simply run without them."""
+    try:
+        return _validate(*args, with_uncited_pages=True)[0]
+    except TypeError:
+        return _validate(*args)[0]
 
 
 def eval_citation():
@@ -217,6 +279,9 @@ def eval_citation():
             observed, reason, support = _validate(key, s["fq"], expected, cites)
             record(f"CITE-{key[:3]}-{name}", "citation", name, key, gold, observed, accept_outcome(gold, observed),
                    note=reason or "", detail={"answer_support": support})
+            with_pages = _validate_tolerant(key, s["fq"], expected, cites)
+            RESULTS[-1]["validator_with_uncited_pages"] = {"observed": with_pages, "outcome": accept_outcome(gold, with_pages)}
+            RESULTS[-1]["production"] = _production(key, s["fq"], expected, cites, gold)
 
 
 def eval_quant():
@@ -229,6 +294,9 @@ def eval_quant():
                    accept_outcome(gold, observed), note=reason or "",
                    detail={"answer_support": support,
                            "blocked_at_judge_time": support < tp.SUPPORT_MIN})
+            with_pages = _validate_tolerant(key, q["question"], q[name], cites)
+            RESULTS[-1]["validator_with_uncited_pages"] = {"observed": with_pages, "outcome": accept_outcome(gold, with_pages)}
+            RESULTS[-1]["production"] = _production(key, q["question"], q[name], cites, gold)
 
 
 # ---------------------------------------------------------------- 3. answer leakage
@@ -266,18 +334,23 @@ def eval_leak():
             short_cases.append(("short_numeric_paraphrase", sh["numeric_para"], "LEAK"))
         for name, msg, student, gold in long_cases:
             res, why = _check(key, task, ref, msg, student)
-            _leak_record(key, name, gold, res, why)
+            _leak_record(key, name, gold, res, why, tp.reveals_reference(msg, ref, allowed_text=[task, student]))
         for name, msg, gold in short_cases:
             res, why = _check(key, sh["task"], sh["ref"], msg, "my answer")
-            _leak_record(key, name, gold, res, why)
+            _leak_record(key, name, gold, res, why,
+                         tp.reveals_reference(msg, sh["ref"], allowed_text=[sh["task"], "my answer"]))
 
 
-def _leak_record(key, name, gold, res, why):
+def _leak_record(key, name, gold, res, why, validator_blocked):
+    """``observed``/``outcome`` = production path (``_check_reply``, as in the frozen run);
+    ``validator`` = ``reveals_reference`` called directly."""
+    outcomes = {("LEAK", True): "TRUE_BLOCK", ("LEAK", False): "MISSED_LEAK",
+                ("CLEAN", True): "FALSE_BLOCK", ("CLEAN", False): "TRUE_PASS"}
     blocked = res == "BLOCKED_LEAK"
-    outcome = {("LEAK", True): "TRUE_BLOCK", ("LEAK", False): "MISSED_LEAK",
-               ("CLEAN", True): "FALSE_BLOCK", ("CLEAN", False): "TRUE_PASS"}[(gold, blocked)]
-    record(f"LEAK-{key[:3]}-{name}", "leakage", name, key, gold, "BLOCKED" if blocked else "PASSED", outcome,
-           note=why if res == "BLOCKED_OTHER" else "")
+    record(f"LEAK-{key[:3]}-{name}", "leakage", name, key, gold, "BLOCKED" if blocked else "PASSED",
+           outcomes[(gold, blocked)], note=why if res == "BLOCKED_OTHER" else "")
+    RESULTS[-1]["validator"] = {"observed": "BLOCKED" if validator_blocked else "PASSED",
+                                "outcome": outcomes[(gold, validator_blocked)]}
 
 
 # ---------------------------------------------------------------- 5. hedge handling
@@ -359,17 +432,54 @@ def baseline():
                                             "hub_service.py")}}
 
 
+def column_tallies(column):
+    """Outcome tallies for the cases that carry a second observation (``production`` or ``validator``)."""
+    tally = defaultdict(Counter)
+    for r in RESULTS:
+        if column in r:
+            tally[r["category"]][r[column]["outcome"]] += 1
+    return {c: dict(v) for c, v in tally.items()}
+
+
 def main():
+    out = HERE / "results"
+    if "--out" in sys.argv:  # e.g. --out stage1_after -> results/stage1_after/ (the default keeps the frozen layout)
+        out = HERE / "results" / sys.argv[sys.argv.index("--out") + 1]
     eval_root(); eval_citation(); eval_quant(); eval_leak(); eval_hedge()
     by_cat, by_sub, failures = summarise()
-    out = HERE / "results"
-    out.mkdir(exist_ok=True)
+    out.mkdir(parents=True, exist_ok=True)
     (out / "results.json").write_text(json.dumps(
-        {"baseline": baseline(), "totals": {c: dict(v) for c, v in by_cat.items()}, "cases": RESULTS}, indent=1))
+        {"baseline": baseline(), "totals": {c: dict(v) for c, v in by_cat.items()},
+         "production_path": column_tallies("production"), "validator_direct": column_tallies("validator"),
+         "validator_with_uncited_pages": column_tallies("validator_with_uncited_pages"),
+         "production_rejections_by_layer": {f"{c}/{o}/{l}": n for (c, o, l), n in sorted(Counter(
+             (r["category"], r["production"]["outcome"], r["production"]["rejected_by"])
+             for r in RESULTS if "production" in r and r["production"]["rejected_by"]).items())},
+         "cases": RESULTS}, indent=1))
     lines = ["# Diagnostic Slice 0 -- generated summary", "", f"Baseline: {json.dumps(baseline())}", "",
              "## Outcomes by category", ""]
     for c, cnt in by_cat.items():
         lines.append(f"- {c}: " + ", ".join(f"{k}={v}" for k, v in sorted(cnt.items())))
+    lines += ["", "## Production-path outcomes (citation and quantitative: create_session -> next_question; "
+              "leakage: _check_reply is already the production path)", ""]
+    for c, cnt in column_tallies("production").items():
+        lines.append(f"- {c} [production]: " + ", ".join(f"{k}={v}" for k, v in sorted(cnt.items())))
+    lines += ["", "## Validator with the uncited supplied pages passed in (citation and quantitative)", ""]
+    for c, cnt in column_tallies("validator_with_uncited_pages").items():
+        lines.append(f"- {c} [validator+pages]: " + ", ".join(f"{k}={v}" for k, v in sorted(cnt.items())))
+    lines += ["", "## Validator-direct outcomes (leakage: reveals_reference called directly)", ""]
+    for c, cnt in column_tallies("validator").items():
+        lines.append(f"- {c} [validator]: " + ", ".join(f"{k}={v}" for k, v in sorted(cnt.items())))
+    layers = Counter((r["category"], r["production"]["outcome"], r["production"]["rejected_by"])
+                      for r in RESULTS if "production" in r and r["production"]["rejected_by"])
+    lines += ["", "## Production-path rejections by layer (RETRIEVAL = cited page never supplied; "
+              "VALIDATION = a validator rejected it)", ""]
+    for (cat, outcome, layer), n in sorted(layers.items()):
+        lines.append(f"- {cat} {outcome} rejected_by={layer}: {n}")
+    lines += ["", "## Production-path failures", ""]
+    for r in RESULTS:
+        if "production" in r and r["production"]["outcome"] in ("FALSE_ACCEPT", "FALSE_REJECT"):
+            lines.append(f"- {r['case_id']} {r['production']['outcome']} {r['production']['note'][:100]}")
     lines += ["", "## Outcomes by subtype", ""]
     for (c, st), cnt in sorted(by_sub.items()):
         lines.append(f"- {c}/{st}: " + ", ".join(f"{k}={v}" for k, v in sorted(cnt.items())))

@@ -1124,6 +1124,11 @@ def _source_only_hint(task: dict[str, Any], context: dict[str, Any]) -> str | No
     return source_only_hint(task.get("task"), cited)
 
 
+def _cited_keys(raw: Any) -> set[tuple[Any, Any]]:
+    cites = raw.get("citations") if isinstance(raw, dict) else None
+    return {(c.get("source_id"), c.get("pdf_page")) for c in cites or [] if isinstance(c, dict)}
+
+
 def _passage_text(context: dict[str, Any], citations: list[dict[str, Any]]) -> str:
     wanted = {(c["source_id"], c["pdf_page"]) for c in citations}
     return " ".join(e.get("text", "") for sc in context["source_contexts"] for e in sc.get("excerpts", []) or []
@@ -1174,6 +1179,8 @@ def _generate_question(state: dict[str, Any], provider: ReasoningProvider, sessi
         prior_answers=[q["task"]["expected_answer"] for q in questions if q["task"].get("expected_answer")],
         unrevealed_answers=[q["task"]["expected_answer"] for q in questions
                             if q["task"].get("expected_answer") and not q["revealed"]],
+        other_pages=[e.get("text", "") for sc in context["source_contexts"] for e in sc.get("excerpts", []) or []
+                     if (sc.get("source_id"), e.get("pdf_page")) not in _cited_keys(raw)],
         concept_text=" ".join([root["task"]["task"], (root["task"].get("expected_answer") or "")
                                if root_reference_ok else ""]))
     if clean is None:
