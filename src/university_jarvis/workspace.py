@@ -1545,7 +1545,8 @@ def record_learning_attempt(module_code: str, week_number: int, *, capability: s
                             attempted_at: str | None = None, session_id: str | None = None,
                             turn_id: str | None = None, hint_level: int | None = None,
                             task_key: str | None = None,
-                            self_confidence: str | None = None) -> dict[str, Any]:
+                            self_confidence: str | None = None,
+                            lineage: dict[str, Any] | None = None) -> dict[str, Any]:
     """Append a raw student response before any evaluation is considered.
 
     With ``session_id`` and ``turn_id`` the call is idempotent: repeating it returns
@@ -1599,6 +1600,9 @@ def record_learning_attempt(module_code: str, week_number: int, *, capability: s
         if session_id is not None:
             attempt.update({"session_id": session_id, "turn_id": turn_id, "hint_level": hint_level,
                             "task_key": task_key})
+        if lineage is not None:
+            # Which question this was and what help came before it; classification is derived from it.
+            attempt["lineage"] = deepcopy(lineage)
         if self_confidence is not None:
             # Student self-report: kept for the record, never an input to any evaluation.
             attempt["self_reported_confidence"] = self_confidence

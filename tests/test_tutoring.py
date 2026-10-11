@@ -117,7 +117,7 @@ class TutoringTests(unittest.TestCase):
         session = self.create("TEST_ME")
         self.assertEqual([t["kind"] for t in session["turns"]], ["QUESTION"])
         self.assertEqual(self.provider.calls, [])
-        self.assertEqual(session["available_actions"], ["ANSWER", "HINT", "REVEAL", "END"])
+        self.assertEqual(session["available_actions"], ["ANSWER", "HINT", "REVEAL", "SKIP", "END"])
         result = self.answer(session)
         self.assertEqual(result["assistance_status"], "UNAIDED")
         attempt = self.learning()["evidence"][0]
@@ -331,7 +331,7 @@ class TutoringTests(unittest.TestCase):
         revealed = self.reveal(session)
         self.assertEqual(revealed["tutor"]["text"], ANSWER_TEXT)
         self.assertEqual(self.provider.calls, [])
-        self.assertEqual(self.session_available(session), ["ANSWER", "END"])
+        self.assertEqual(self.session_available(session), ["ANSWER", "NEXT", "END"])
         result = self.answer(session, "after-reveal", text=ANSWER_TEXT)
         self.assertEqual(result["assistance_status"], "REVEALED")
         # even a caller that claims UNAIDED is floored by the recorded exposure

@@ -8,7 +8,9 @@
 {% set base = "/modules/" ~ module.module_code ~ "/weeks/" ~ week.week %}
 {% set post = base ~ "/tutor/" ~ session.session_id %}
 {% set assist = {"UNAIDED": "Recorded as unaided", "PROMPTED": "Recorded as assisted", "REVEALED": "Recorded after the answer was shown"} %}
-{% set already_assisted = session.intention == "TEACH_ME" or (session.turns | selectattr("kind", "defined") | selectattr("kind", "equalto", "FEEDBACK") | selectattr("citations") | list | length > 0) or session.hint_level > 0 %}
+{% set already_assisted = session.sequence.current.assisted %}
+{% set roles = {"INITIAL": "opening question", "FOLLOW_UP": "follow-up question", "TRANSFER": "different question"} %}
+{% set evidence = {"UNAIDED_FIRST_CONTACT": "answered with no help", "NEW_QUESTION_AFTER_HELP": "a new question, answered after help on an earlier one", "ASSISTED": "answered with help", "REVEALED": "answered after the answer was shown", "UNAIDED_UNLINKED": "answered with no help"} %}
 {% set reads = {"correct": "looks correct", "partial": "partly correct", "misconception": "contains a misunderstanding", "off_target": "does not address the question", "unclear": "could not be judged"} %}
 {% set next_steps = {"OFFER_HINT": "ask for a hint, or tell me the part you do understand", "OFFER_REVEAL_OR_END": "review the sources, or end here and come back later",
   "OFFER_HINT_OR_END": "ask for a hint, or end here and come back later", "CLARIFY": "say a little more about what you mean", "RESTATE": "re-read the question and try again",
@@ -18,7 +20,7 @@
 {%- set r = [] -%}
 {%- if t.assistance_status == "REVEALED" %}{% set _ = r.append("the answer had been shown") %}
 {%- else -%}
-{%- if session.intention == "TEACH_ME" %}{% set _ = r.append("the tutor explained first") %}{% endif -%}
+{%- if session.intention == "TEACH_ME" and t.question_role == "INITIAL" %}{% set _ = r.append("the tutor explained first") %}{% endif -%}
 {%- if t.hint_level %}{% set _ = r.append("hint " ~ t.hint_level ~ " used") %}{% endif -%}
 {%- if not r %}{% set _ = r.append("help or feedback was already shown for this question") %}{% endif -%}
 {%- endif -%}
@@ -28,6 +30,7 @@
 <div class="page-head">
   <p class="eyebrow">Tutor &middot; {{ "Teach me" if session.intention == "TEACH_ME" else "Test me" }} &middot; {{ "in progress" if session.status == "ACTIVE" else "ended" }}</p>
   <h1>{{ session.task.task }}</h1>
+  <p class="note"><strong>Question {{ session.sequence.position }} of up to {{ session.sequence.max_questions }}</strong> &middot; {{ roles[session.sequence.current.role] }}{% if session.sequence.current.why %}<br>Why this question: {{ session.sequence.current.why }}{% endif %}</p>
 </div>
 <p class="section-note">Each AI turn sends the relevant excerpts from this week's sources and your messages to the configured AI provider. Judgements are provisional AI opinions, not grades. Answers after a hint, an explanation, feedback or a revealed answer are recorded as assisted &mdash; only an answer given with no help counts as unaided.</p>
 
@@ -36,13 +39,23 @@
 {% endif %}
 
 <div class="section">
-  <div class="section-head"><h2>Conversation</h2><span class="kicker">Hints used: {{ session.hint_level }} of 2</span></div>
+  <div class="section-head"><h2>Progress through this session</h2><span class="kicker">{{ session.sequence.asked }} of up to {{ session.sequence.max_questions }} questions</span></div>
+  <ol>
+  {% for q in session.summary.questions %}
+    <li{% if q.current %} aria-current="step"{% endif %}><strong>{{ roles[q.role] | capitalize }}</strong>{% if q.current %} (current){% endif %}: {{ q.text }}
+      <br><span class="note">{% if q.skipped %}Skipped.{% elif q.answers %}{{ q.answers }} answer{{ "s" if q.answers != 1 }}{% if q.evidence %} &mdash; last one {{ evidence[q.evidence] }}{% endif %}{% if q.diagnosis %}; tutor's provisional read: {{ reads[q.diagnosis] }}{% endif %}.{% else %}Not answered yet.{% endif %}{% if q.hints %} Hints used: {{ q.hints }}.{% endif %}{% if q.revealed %} Answer shown.{% endif %}</span></li>
+  {% endfor %}
+  </ol>
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>Conversation</h2><span class="kicker">Hints used: {{ session.hint_level }} of 2 on this question</span></div>
   {% for t in session.turns %}
     {% if t.role == "tutor" %}
     <div class="response-card">
       <div class="response-label"><span class="dot"></span>
         {% if t.kind == "EXPLANATION" %}Tutor &mdash; explanation
-        {% elif t.kind == "QUESTION" %}Tutor &mdash; question
+        {% elif t.kind == "QUESTION" %}Tutor &mdash; {{ {"FOLLOW_UP": "follow-up question", "TRANSFER": "different question"}[t.role_in_sequence] if t.role_in_sequence in ["FOLLOW_UP", "TRANSFER"] else "question" }}
         {% elif t.kind == "HINT" %}Tutor &mdash; hint {{ t.hint_level }}
         {% elif t.kind == "REVEAL" %}Reference answer (you asked to see it)
         {% elif t.kind == "NOTE" %}Tutor
@@ -56,6 +69,8 @@
       <p><strong>You</strong>
         {% if t.action == "HINT" %}asked for a hint
         {% elif t.action == "REVEAL" %}asked to see the answer
+        {% elif t.action == "SKIP" %}skipped this question
+        {% elif t.action == "NEXT" %}asked for the next question
         {% elif t.action == "DISPUTE" %}said a suspected misunderstanding is not what they meant
         {% endif %}</p>
       {% if t.text %}<pre class="rendered-output">{{ t.text }}</pre>{% endif %}
@@ -115,6 +130,15 @@
       </form>
     </div>
     {% endif %}
+    {% if "NEXT" in session.available_actions %}
+    <div class="action-form">
+      <h3>Next question</h3>
+      <p class="note">{{ session.sequence.plan.text }} Building it uses one AI call, and it is only shown if it is cited to your sources and checks as genuinely new. Asking for it never changes how earlier answers are recorded.</p>
+      <form method="post" action="{{ post }}/next"><input type="hidden" name="client_turn_id" value="{{ new_turn_id }}"><button type="submit">Ask for the next question</button></form>
+    </div>
+    {% elif session.sequence.plan and session.sequence.plan.step in ["END", "NONE"] %}
+    <p class="note">{{ session.sequence.plan.text }}</p>
+    {% endif %}
     <div class="action-grid">
       {% if "HINT" in session.available_actions %}
       <div class="action-form tutor-help">
@@ -139,11 +163,20 @@
   {% endif %}
   <div class="action-form">
     <h3>Finish</h3>
+    {% if "SKIP" in session.available_actions %}
+    <form method="post" action="{{ post }}/skip"><input type="hidden" name="client_turn_id" value="{{ new_turn_id }}"><button type="submit">Skip this question</button></form>
+    {% endif %}
     <form method="post" action="{{ post }}/end"><button type="submit">End session</button></form>
   </div>
 </div>
 {% else %}
-<div class="section"><div class="card"><p>This session has ended. You can <a href="{{ base }}#tutor">start a new one</a> from the week page.</p></div></div>
+<div class="section"><div class="card">
+  <h2>Session summary</h2>
+  <p>This session has ended.</p>
+  <p>Questions: {{ session.summary.asked }} &middot; answered: {{ session.summary.answered }} &middot; skipped: {{ session.summary.skipped }} &middot; answer shown: {{ session.summary.revealed }} &middot; hints used: {{ session.summary.hints }} &middot; AI calls: {{ session.summary.model_calls }}.</p>
+  <p class="note">{{ session.summary.caveat }}</p>
+  <p>You can <a href="{{ base }}#tutor">start a new session</a> from the week page.</p>
+</div></div>
 {% endif %}
 
 <div class="section">
