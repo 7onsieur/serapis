@@ -59,7 +59,7 @@ from .reasoning import (
 from .reconcile import CHANGED, METADATA_CHANGED, MISSING_SINCE_LAST_CHECK, NEW, UNCHANGED
 from .locking import record_lock
 from .state import StateError, load_state
-from .tutor_policy import reference_problem
+from .tutor_policy import reference_problem, requires_calculation
 from .university import check_university
 from .workflows import build_assignment_context, build_week_context
 from .workspace import (capture_after_lecture, materialize_week_workspace, teach_week,
@@ -509,6 +509,11 @@ def continue_learning_task(module_code: str, week_number: int, *, state: dict[st
     refs = raw.get("source_references", [])
     if not isinstance(raw.get("task"), str) or not raw["task"].strip() or not raw.get("expected_answer_or_rubric") or not refs or any(r.get("source_id") not in allowed for r in refs):
         raise ReasoningError("Generated learning task was incomplete or cited an unavailable source")
+    cited_pages = [e.get("text", "") for sc in context["source_contexts"] for e in sc.get("excerpts", []) or []
+                   if any(sc.get("source_id") == r.get("source_id") and e.get("pdf_page") == r.get("pdf_page") for r in refs)]
+    if (why := requires_calculation(raw["task"], str(raw["expected_answer_or_rubric"]), cited_pages)):
+        # This path has no way to carry a calculation, so a computed answer here could never be verified.
+        raise ReasoningError(f"Generated learning task needs a numerical computation that cannot be verified: {why}")
     # Reload under the lock: the model call may have been slow and the record
     # may have gained attempts or tasks in the meantime.
     with record_lock(record_path):

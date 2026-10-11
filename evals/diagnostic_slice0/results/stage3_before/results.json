@@ -1,0 +1,4082 @@
+{
+ "baseline": {
+  "git_head": "a06b3d5",
+  "git_dirty_tracked_files": [],
+  "python": "3.14.6",
+  "source_sha256": {
+   "hub_service.py": "aeb917edd70fda3b",
+   "reasoning.py": "725cc758a2bdd458",
+   "retrieval.py": "73ad5cc78cf8cc39",
+   "tutor_policy.py": "518581205328aa3f",
+   "tutoring.py": "e8b7bf73e36ee855"
+  }
+ },
+ "totals": {
+  "root_reference": {
+   "TRUE_ACCEPT": 10,
+   "TRUE_REJECT": 40
+  },
+  "citation": {
+   "FALSE_REJECT": 1,
+   "TRUE_REJECT": 19,
+   "FALSE_ACCEPT": 11,
+   "TRUE_ACCEPT": 4
+  },
+  "quantitative": {
+   "TRUE_ACCEPT": 3,
+   "FALSE_ACCEPT": 4,
+   "TRUE_REJECT": 2
+  },
+  "leakage": {
+   "TRUE_BLOCK": 17,
+   "MISSED_LEAK": 5,
+   "TRUE_PASS": 15
+  },
+  "hedge": {
+   "PASS": 20,
+   "FAIL": 13
+  }
+ },
+ "production_path": {
+  "citation": {
+   "FALSE_REJECT": 1,
+   "TRUE_REJECT": 30,
+   "TRUE_ACCEPT": 4
+  },
+  "quantitative": {
+   "TRUE_ACCEPT": 3,
+   "FALSE_ACCEPT": 3,
+   "TRUE_REJECT": 3
+  }
+ },
+ "validator_direct": {
+  "leakage": {
+   "TRUE_BLOCK": 17,
+   "MISSED_LEAK": 5,
+   "TRUE_PASS": 15
+  }
+ },
+ "validator_with_uncited_pages": {
+  "citation": {
+   "FALSE_REJECT": 1,
+   "TRUE_REJECT": 26,
+   "TRUE_ACCEPT": 4,
+   "FALSE_ACCEPT": 4
+  },
+  "quantitative": {
+   "TRUE_ACCEPT": 3,
+   "FALSE_ACCEPT": 4,
+   "TRUE_REJECT": 2
+  }
+ },
+ "production_rejections_by_layer": {
+  "citation/FALSE_REJECT/VALIDATION": 1,
+  "citation/TRUE_REJECT/RETRIEVAL": 14,
+  "citation/TRUE_REJECT/VALIDATION": 16,
+  "quantitative/TRUE_REJECT/VALIDATION": 3
+ },
+ "cases": [
+  {
+   "case_id": "ROOT-mar-supported",
+   "category": "root_reference",
+   "subtype": "supported",
+   "subject": "marketing",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": true,
+    "diagnosis": "correct",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CONSOLIDATE",
+    "plan_step": "TRANSFER",
+    "plan_reason": "CORRECT_ANSWER",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-mar-unsupported",
+   "category": "root_reference",
+   "subtype": "unsupported",
+   "subject": "marketing",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-mar-contradicted",
+   "category": "root_reference",
+   "subtype": "contradicted",
+   "subject": "marketing",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-mar-wrong_page_irrelevant",
+   "category": "root_reference",
+   "subtype": "wrong_page_irrelevant",
+   "subject": "marketing",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-mar-wrong_page_decoy",
+   "category": "root_reference",
+   "subtype": "wrong_page_decoy",
+   "subject": "marketing",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-mar-missing_citation",
+   "category": "root_reference",
+   "subtype": "missing_citation",
+   "subject": "marketing",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "scripted provider has no generated task",
+   "detail": {
+    "session_created": false,
+    "reason": "scripted provider has no generated task"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-mar-generated_supported",
+   "category": "root_reference",
+   "subtype": "generated_supported",
+   "subject": "marketing",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": true,
+    "diagnosis": "correct",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CONSOLIDATE",
+    "plan_step": "TRANSFER",
+    "plan_reason": "CORRECT_ANSWER",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-mar-generated_unsupported",
+   "category": "root_reference",
+   "subtype": "generated_unsupported",
+   "subject": "marketing",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-mar-generated_contradicted",
+   "category": "root_reference",
+   "subtype": "generated_contradicted",
+   "subject": "marketing",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-mar-generated_wrong_page",
+   "category": "root_reference",
+   "subtype": "generated_wrong_page",
+   "subject": "marketing",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-eco-supported",
+   "category": "root_reference",
+   "subtype": "supported",
+   "subject": "economics",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": true,
+    "diagnosis": "correct",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CONSOLIDATE",
+    "plan_step": "TRANSFER",
+    "plan_reason": "CORRECT_ANSWER",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-eco-unsupported",
+   "category": "root_reference",
+   "subtype": "unsupported",
+   "subject": "economics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-eco-contradicted",
+   "category": "root_reference",
+   "subtype": "contradicted",
+   "subject": "economics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-eco-wrong_page_irrelevant",
+   "category": "root_reference",
+   "subtype": "wrong_page_irrelevant",
+   "subject": "economics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-eco-wrong_page_decoy",
+   "category": "root_reference",
+   "subtype": "wrong_page_decoy",
+   "subject": "economics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-eco-missing_citation",
+   "category": "root_reference",
+   "subtype": "missing_citation",
+   "subject": "economics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "scripted provider has no generated task",
+   "detail": {
+    "session_created": false,
+    "reason": "scripted provider has no generated task"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-eco-generated_supported",
+   "category": "root_reference",
+   "subtype": "generated_supported",
+   "subject": "economics",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": true,
+    "diagnosis": "correct",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CONSOLIDATE",
+    "plan_step": "TRANSFER",
+    "plan_reason": "CORRECT_ANSWER",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-eco-generated_unsupported",
+   "category": "root_reference",
+   "subtype": "generated_unsupported",
+   "subject": "economics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-eco-generated_contradicted",
+   "category": "root_reference",
+   "subtype": "generated_contradicted",
+   "subject": "economics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-eco-generated_wrong_page",
+   "category": "root_reference",
+   "subtype": "generated_wrong_page",
+   "subject": "economics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-sta-supported",
+   "category": "root_reference",
+   "subtype": "supported",
+   "subject": "statistics",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": true,
+    "diagnosis": "correct",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CONSOLIDATE",
+    "plan_step": "TRANSFER",
+    "plan_reason": "CORRECT_ANSWER",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-sta-unsupported",
+   "category": "root_reference",
+   "subtype": "unsupported",
+   "subject": "statistics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-sta-contradicted",
+   "category": "root_reference",
+   "subtype": "contradicted",
+   "subject": "statistics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-sta-wrong_page_irrelevant",
+   "category": "root_reference",
+   "subtype": "wrong_page_irrelevant",
+   "subject": "statistics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-sta-wrong_page_decoy",
+   "category": "root_reference",
+   "subtype": "wrong_page_decoy",
+   "subject": "statistics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-sta-missing_citation",
+   "category": "root_reference",
+   "subtype": "missing_citation",
+   "subject": "statistics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "scripted provider has no generated task",
+   "detail": {
+    "session_created": false,
+    "reason": "scripted provider has no generated task"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-sta-generated_supported",
+   "category": "root_reference",
+   "subtype": "generated_supported",
+   "subject": "statistics",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": true,
+    "diagnosis": "correct",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CONSOLIDATE",
+    "plan_step": "TRANSFER",
+    "plan_reason": "CORRECT_ANSWER",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-sta-generated_unsupported",
+   "category": "root_reference",
+   "subtype": "generated_unsupported",
+   "subject": "statistics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-sta-generated_contradicted",
+   "category": "root_reference",
+   "subtype": "generated_contradicted",
+   "subject": "statistics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-sta-generated_wrong_page",
+   "category": "root_reference",
+   "subtype": "generated_wrong_page",
+   "subject": "statistics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-fin-supported",
+   "category": "root_reference",
+   "subtype": "supported",
+   "subject": "finance",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": true,
+    "diagnosis": "correct",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CONSOLIDATE",
+    "plan_step": "TRANSFER",
+    "plan_reason": "CORRECT_ANSWER",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-fin-unsupported",
+   "category": "root_reference",
+   "subtype": "unsupported",
+   "subject": "finance",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-fin-contradicted",
+   "category": "root_reference",
+   "subtype": "contradicted",
+   "subject": "finance",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-fin-wrong_page_irrelevant",
+   "category": "root_reference",
+   "subtype": "wrong_page_irrelevant",
+   "subject": "finance",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-fin-wrong_page_decoy",
+   "category": "root_reference",
+   "subtype": "wrong_page_decoy",
+   "subject": "finance",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-fin-missing_citation",
+   "category": "root_reference",
+   "subtype": "missing_citation",
+   "subject": "finance",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "scripted provider has no generated task",
+   "detail": {
+    "session_created": false,
+    "reason": "scripted provider has no generated task"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-fin-generated_supported",
+   "category": "root_reference",
+   "subtype": "generated_supported",
+   "subject": "finance",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": true,
+    "diagnosis": "correct",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CONSOLIDATE",
+    "plan_step": "TRANSFER",
+    "plan_reason": "CORRECT_ANSWER",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-fin-generated_unsupported",
+   "category": "root_reference",
+   "subtype": "generated_unsupported",
+   "subject": "finance",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-fin-generated_contradicted",
+   "category": "root_reference",
+   "subtype": "generated_contradicted",
+   "subject": "finance",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-fin-generated_wrong_page",
+   "category": "root_reference",
+   "subtype": "generated_wrong_page",
+   "subject": "finance",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-psy-supported",
+   "category": "root_reference",
+   "subtype": "supported",
+   "subject": "psychology",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": true,
+    "diagnosis": "correct",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CONSOLIDATE",
+    "plan_step": "TRANSFER",
+    "plan_reason": "CORRECT_ANSWER",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-psy-unsupported",
+   "category": "root_reference",
+   "subtype": "unsupported",
+   "subject": "psychology",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-psy-contradicted",
+   "category": "root_reference",
+   "subtype": "contradicted",
+   "subject": "psychology",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-psy-wrong_page_irrelevant",
+   "category": "root_reference",
+   "subtype": "wrong_page_irrelevant",
+   "subject": "psychology",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-psy-wrong_page_decoy",
+   "category": "root_reference",
+   "subtype": "wrong_page_decoy",
+   "subject": "psychology",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-psy-missing_citation",
+   "category": "root_reference",
+   "subtype": "missing_citation",
+   "subject": "psychology",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "scripted provider has no generated task",
+   "detail": {
+    "session_created": false,
+    "reason": "scripted provider has no generated task"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-psy-generated_supported",
+   "category": "root_reference",
+   "subtype": "generated_supported",
+   "subject": "psychology",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": true,
+    "diagnosis": "correct",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CONSOLIDATE",
+    "plan_step": "TRANSFER",
+    "plan_reason": "CORRECT_ANSWER",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-psy-generated_unsupported",
+   "category": "root_reference",
+   "subtype": "generated_unsupported",
+   "subject": "psychology",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-psy-generated_contradicted",
+   "category": "root_reference",
+   "subtype": "generated_contradicted",
+   "subject": "psychology",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "ROOT-psy-generated_wrong_page",
+   "category": "root_reference",
+   "subtype": "generated_wrong_page",
+   "subject": "psychology",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "",
+   "detail": {
+    "session_created": true,
+    "model_judged": false,
+    "diagnosis": "unclear",
+    "hedged": false,
+    "non_answer": false,
+    "next_action": "CLARIFY",
+    "plan_step": "NONE",
+    "plan_reason": "NEEDS_CLARITY",
+    "result_status": "COMPLETE"
+   },
+   "code_path": "tutoring.py _execute (L927) <- hub_service.continue_learning_task/_learning_task_candidates (no support check on a root expected_answer; only _generated_reference_unsupported L1063 for generated questions)",
+   "severity": null
+  },
+  {
+   "case_id": "CITE-mar-valid",
+   "category": "citation",
+   "subtype": "valid",
+   "subject": "marketing",
+   "gold": "ACCEPT",
+   "observed": "REJECT",
+   "outcome": "FALSE_REJECT",
+   "note": "question gives away its own answer",
+   "detail": {
+    "answer_support": 0.9
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "FALSE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "FALSE_REJECT",
+    "note": "Generated question rejected: question gives away its own answer",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": "MEDIUM"
+  },
+  {
+   "case_id": "CITE-mar-irrelevant_page",
+   "category": "citation",
+   "subtype": "irrelevant_page",
+   "subject": "marketing",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "question gives away its own answer",
+   "detail": {
+    "answer_support": 0.0
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question citation is not a supplied source passage",
+    "model_called": true,
+    "rejected_by": "RETRIEVAL"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-mar-decoy_page",
+   "category": "citation",
+   "subtype": "decoy_page",
+   "subject": "marketing",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "question gives away its own answer",
+   "detail": {
+    "answer_support": 0.1
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question citation is not a supplied source passage",
+    "model_called": true,
+    "rejected_by": "RETRIEVAL"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-mar-unsupported_claim",
+   "category": "citation",
+   "subtype": "unsupported_claim",
+   "subject": "marketing",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "question gives away its own answer",
+   "detail": {
+    "answer_support": 0.692
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question gives away its own answer",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-mar-contradicted_claim",
+   "category": "citation",
+   "subtype": "contradicted_claim",
+   "subject": "marketing",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "expected answer is not supported by the cited passages",
+   "detail": {
+    "answer_support": 0.545
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: expected answer is not supported by the cited passages",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-mar-decoy_concept_answer",
+   "category": "citation",
+   "subtype": "decoy_concept_answer",
+   "subject": "marketing",
+   "gold": "REJECT",
+   "observed": "ACCEPT",
+   "outcome": "FALSE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 1.0
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question citation is not a supplied source passage",
+    "model_called": true,
+    "rejected_by": "RETRIEVAL"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "CITE-mar-extra_decoy_page_cited",
+   "category": "citation",
+   "subtype": "extra_decoy_page_cited",
+   "subject": "marketing",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "question gives away its own answer",
+   "detail": {
+    "answer_support": 0.9
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question citation is not a supplied source passage",
+    "model_called": true,
+    "rejected_by": "RETRIEVAL"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-eco-valid",
+   "category": "citation",
+   "subtype": "valid",
+   "subject": "economics",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 1.0
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "ACCEPT",
+    "outcome": "TRUE_ACCEPT"
+   },
+   "production": {
+    "observed": "ACCEPT",
+    "outcome": "TRUE_ACCEPT",
+    "note": "",
+    "model_called": true,
+    "rejected_by": null
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-eco-irrelevant_page",
+   "category": "citation",
+   "subtype": "irrelevant_page",
+   "subject": "economics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "expected answer is not supported by the cited passages",
+   "detail": {
+    "answer_support": 0.1
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question citation is not a supplied source passage",
+    "model_called": true,
+    "rejected_by": "RETRIEVAL"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-eco-decoy_page",
+   "category": "citation",
+   "subtype": "decoy_page",
+   "subject": "economics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "expected answer is not supported by the cited passages",
+   "detail": {
+    "answer_support": 0.3
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: expected answer is not supported by the cited passages",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-eco-unsupported_claim",
+   "category": "citation",
+   "subtype": "unsupported_claim",
+   "subject": "economics",
+   "gold": "REJECT",
+   "observed": "ACCEPT",
+   "outcome": "FALSE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 0.714
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "ACCEPT",
+    "outcome": "FALSE_ACCEPT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: its reference answer is not supported (the reference claims 'always' which the passage does not)",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "CITE-eco-contradicted_claim",
+   "category": "citation",
+   "subtype": "contradicted_claim",
+   "subject": "economics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "question or expected answer contradicts the cited passages: its comparison relationship ('and demand is elastic when its absolute value is below one') contradicts the cited passage",
+   "detail": {
+    "answer_support": 0.7
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question or expected answer contradicts the cited passages: its comparison relationship ('and demand is elastic when its absolute value is below one') contradicts the cited passage",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-eco-decoy_concept_answer",
+   "category": "citation",
+   "subtype": "decoy_concept_answer",
+   "subject": "economics",
+   "gold": "REJECT",
+   "observed": "ACCEPT",
+   "outcome": "FALSE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 0.833
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: the question is better supported by a page that was not cited",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "CITE-eco-extra_decoy_page_cited",
+   "category": "citation",
+   "subtype": "extra_decoy_page_cited",
+   "subject": "economics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "a cited passage adds nothing to the expected answer",
+   "detail": {
+    "answer_support": 1.0
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: a cited passage adds nothing to the expected answer",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-sta-valid",
+   "category": "citation",
+   "subtype": "valid",
+   "subject": "statistics",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 1.0
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "ACCEPT",
+    "outcome": "TRUE_ACCEPT"
+   },
+   "production": {
+    "observed": "ACCEPT",
+    "outcome": "TRUE_ACCEPT",
+    "note": "",
+    "model_called": true,
+    "rejected_by": null
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-sta-irrelevant_page",
+   "category": "citation",
+   "subtype": "irrelevant_page",
+   "subject": "statistics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "expected answer is not supported by the cited passages",
+   "detail": {
+    "answer_support": 0.0
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question citation is not a supplied source passage",
+    "model_called": true,
+    "rejected_by": "RETRIEVAL"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-sta-decoy_page",
+   "category": "citation",
+   "subtype": "decoy_page",
+   "subject": "statistics",
+   "gold": "REJECT",
+   "observed": "ACCEPT",
+   "outcome": "FALSE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 0.667
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: the question is better supported by a page that was not cited",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "CITE-sta-unsupported_claim",
+   "category": "citation",
+   "subtype": "unsupported_claim",
+   "subject": "statistics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "expected answer is not supported by the cited passages",
+   "detail": {
+    "answer_support": 0.667
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: expected answer is not supported by the cited passages",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-sta-contradicted_claim",
+   "category": "citation",
+   "subtype": "contradicted_claim",
+   "subject": "statistics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "question or expected answer contradicts the cited passages: its direction relationship ('a larger sample gives a larger standard error') contradicts the cited passage",
+   "detail": {
+    "answer_support": 1.0
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question or expected answer contradicts the cited passages: its direction relationship ('a larger sample gives a larger standard error') contradicts the cited passage",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-sta-decoy_concept_answer",
+   "category": "citation",
+   "subtype": "decoy_concept_answer",
+   "subject": "statistics",
+   "gold": "REJECT",
+   "observed": "ACCEPT",
+   "outcome": "FALSE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 1.0
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: the question is better supported by a page that was not cited",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "CITE-sta-extra_decoy_page_cited",
+   "category": "citation",
+   "subtype": "extra_decoy_page_cited",
+   "subject": "statistics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "a cited passage adds nothing to the expected answer",
+   "detail": {
+    "answer_support": 1.0
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: a cited passage adds nothing to the expected answer",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-fin-valid",
+   "category": "citation",
+   "subtype": "valid",
+   "subject": "finance",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 1.0
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "ACCEPT",
+    "outcome": "TRUE_ACCEPT"
+   },
+   "production": {
+    "observed": "ACCEPT",
+    "outcome": "TRUE_ACCEPT",
+    "note": "",
+    "model_called": true,
+    "rejected_by": null
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-fin-irrelevant_page",
+   "category": "citation",
+   "subtype": "irrelevant_page",
+   "subject": "finance",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "expected answer is not supported by the cited passages",
+   "detail": {
+    "answer_support": 0.067
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question citation is not a supplied source passage",
+    "model_called": true,
+    "rejected_by": "RETRIEVAL"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-fin-decoy_page",
+   "category": "citation",
+   "subtype": "decoy_page",
+   "subject": "finance",
+   "gold": "REJECT",
+   "observed": "ACCEPT",
+   "outcome": "FALSE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 0.8
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question citation is not a supplied source passage",
+    "model_called": true,
+    "rejected_by": "RETRIEVAL"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "CITE-fin-unsupported_claim",
+   "category": "citation",
+   "subtype": "unsupported_claim",
+   "subject": "finance",
+   "gold": "REJECT",
+   "observed": "ACCEPT",
+   "outcome": "FALSE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 0.882
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "ACCEPT",
+    "outcome": "FALSE_ACCEPT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: its reference answer is not supported (the reference claims 'always' which the passage does not)",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "CITE-fin-contradicted_claim",
+   "category": "citation",
+   "subtype": "contradicted_claim",
+   "subject": "finance",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "question or expected answer contradicts the cited passages: its arithmetic relationship ('it equals the future value multiplied by one plus the discount rate') contradicts the cited passage",
+   "detail": {
+    "answer_support": 0.929
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question or expected answer contradicts the cited passages: its arithmetic relationship ('it equals the future value multiplied by one plus the discount rate') contradicts the cited passage",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-fin-decoy_concept_answer",
+   "category": "citation",
+   "subtype": "decoy_concept_answer",
+   "subject": "finance",
+   "gold": "REJECT",
+   "observed": "ACCEPT",
+   "outcome": "FALSE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 1.0
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question citation is not a supplied source passage",
+    "model_called": true,
+    "rejected_by": "RETRIEVAL"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "CITE-fin-extra_decoy_page_cited",
+   "category": "citation",
+   "subtype": "extra_decoy_page_cited",
+   "subject": "finance",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "a cited passage adds nothing to the expected answer",
+   "detail": {
+    "answer_support": 1.0
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question citation is not a supplied source passage",
+    "model_called": true,
+    "rejected_by": "RETRIEVAL"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-psy-valid",
+   "category": "citation",
+   "subtype": "valid",
+   "subject": "psychology",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 1.0
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "ACCEPT",
+    "outcome": "TRUE_ACCEPT"
+   },
+   "production": {
+    "observed": "ACCEPT",
+    "outcome": "TRUE_ACCEPT",
+    "note": "",
+    "model_called": true,
+    "rejected_by": null
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-psy-irrelevant_page",
+   "category": "citation",
+   "subtype": "irrelevant_page",
+   "subject": "psychology",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "expected answer is not supported by the cited passages",
+   "detail": {
+    "answer_support": 0.0
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question citation is not a supplied source passage",
+    "model_called": true,
+    "rejected_by": "RETRIEVAL"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-psy-decoy_page",
+   "category": "citation",
+   "subtype": "decoy_page",
+   "subject": "psychology",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "expected answer is not supported by the cited passages",
+   "detail": {
+    "answer_support": 0.1
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question citation is not a supplied source passage",
+    "model_called": true,
+    "rejected_by": "RETRIEVAL"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "CITE-psy-unsupported_claim",
+   "category": "citation",
+   "subtype": "unsupported_claim",
+   "subject": "psychology",
+   "gold": "REJECT",
+   "observed": "ACCEPT",
+   "outcome": "FALSE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 0.75
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "ACCEPT",
+    "outcome": "FALSE_ACCEPT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: its reference answer is not supported (the reference claims 'guarantees' which the passage does not)",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "CITE-psy-contradicted_claim",
+   "category": "citation",
+   "subtype": "contradicted_claim",
+   "subject": "psychology",
+   "gold": "REJECT",
+   "observed": "ACCEPT",
+   "outcome": "FALSE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 0.8
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "ACCEPT",
+    "outcome": "FALSE_ACCEPT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: its reference answer is not supported (the reference says 'different' where the passage says 'equivalent')",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "CITE-psy-decoy_concept_answer",
+   "category": "citation",
+   "subtype": "decoy_concept_answer",
+   "subject": "psychology",
+   "gold": "REJECT",
+   "observed": "ACCEPT",
+   "outcome": "FALSE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 1.0
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question citation is not a supplied source passage",
+    "model_called": true,
+    "rejected_by": "RETRIEVAL"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "CITE-psy-extra_decoy_page_cited",
+   "category": "citation",
+   "subtype": "extra_decoy_page_cited",
+   "subject": "psychology",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "a cited passage adds nothing to the expected answer",
+   "detail": {
+    "answer_support": 1.0
+   },
+   "code_path": "tutor_policy.validate_question (L298)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: question citation is not a supplied source passage",
+    "model_called": true,
+    "rejected_by": "RETRIEVAL"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "QUANT-eco-valid",
+   "category": "quantitative",
+   "subtype": "valid",
+   "subject": "economics",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 0.667,
+    "blocked_at_judge_time": false
+   },
+   "code_path": "tutor_policy.validate_question (L298) + tutoring._generated_reference_unsupported (L1063)",
+   "validator_with_uncited_pages": {
+    "observed": "ACCEPT",
+    "outcome": "TRUE_ACCEPT"
+   },
+   "production": {
+    "observed": "ACCEPT",
+    "outcome": "TRUE_ACCEPT",
+    "note": "",
+    "model_called": true,
+    "rejected_by": null
+   },
+   "severity": null
+  },
+  {
+   "case_id": "QUANT-eco-wrong_arith",
+   "category": "quantitative",
+   "subtype": "wrong_arith",
+   "subject": "economics",
+   "gold": "REJECT",
+   "observed": "ACCEPT",
+   "outcome": "FALSE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 0.615,
+    "blocked_at_judge_time": false
+   },
+   "code_path": "tutor_policy.validate_question (L298) + tutoring._generated_reference_unsupported (L1063)",
+   "validator_with_uncited_pages": {
+    "observed": "ACCEPT",
+    "outcome": "FALSE_ACCEPT"
+   },
+   "production": {
+    "observed": "ACCEPT",
+    "outcome": "FALSE_ACCEPT",
+    "note": "",
+    "model_called": true,
+    "rejected_by": null
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "QUANT-eco-wrong_formula",
+   "category": "quantitative",
+   "subtype": "wrong_formula",
+   "subject": "economics",
+   "gold": "REJECT",
+   "observed": "ACCEPT",
+   "outcome": "FALSE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 0.6,
+    "blocked_at_judge_time": false
+   },
+   "code_path": "tutor_policy.validate_question (L298) + tutoring._generated_reference_unsupported (L1063)",
+   "validator_with_uncited_pages": {
+    "observed": "ACCEPT",
+    "outcome": "FALSE_ACCEPT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: its reference answer is not supported (the reference says 'multiplied' where the passage says 'divided')",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "QUANT-sta-valid",
+   "category": "quantitative",
+   "subtype": "valid",
+   "subject": "statistics",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 0.727,
+    "blocked_at_judge_time": false
+   },
+   "code_path": "tutor_policy.validate_question (L298) + tutoring._generated_reference_unsupported (L1063)",
+   "validator_with_uncited_pages": {
+    "observed": "ACCEPT",
+    "outcome": "TRUE_ACCEPT"
+   },
+   "production": {
+    "observed": "ACCEPT",
+    "outcome": "TRUE_ACCEPT",
+    "note": "",
+    "model_called": true,
+    "rejected_by": null
+   },
+   "severity": null
+  },
+  {
+   "case_id": "QUANT-sta-wrong_arith",
+   "category": "quantitative",
+   "subtype": "wrong_arith",
+   "subject": "statistics",
+   "gold": "REJECT",
+   "observed": "ACCEPT",
+   "outcome": "FALSE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 0.667,
+    "blocked_at_judge_time": false
+   },
+   "code_path": "tutor_policy.validate_question (L298) + tutoring._generated_reference_unsupported (L1063)",
+   "validator_with_uncited_pages": {
+    "observed": "ACCEPT",
+    "outcome": "FALSE_ACCEPT"
+   },
+   "production": {
+    "observed": "ACCEPT",
+    "outcome": "FALSE_ACCEPT",
+    "note": "",
+    "model_called": true,
+    "rejected_by": null
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "QUANT-sta-wrong_formula",
+   "category": "quantitative",
+   "subtype": "wrong_formula",
+   "subject": "statistics",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "expected answer is not supported by the cited passages",
+   "detail": {
+    "answer_support": 0.636,
+    "blocked_at_judge_time": false
+   },
+   "code_path": "tutor_policy.validate_question (L298) + tutoring._generated_reference_unsupported (L1063)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: expected answer is not supported by the cited passages",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "QUANT-fin-valid",
+   "category": "quantitative",
+   "subtype": "valid",
+   "subject": "finance",
+   "gold": "ACCEPT",
+   "observed": "ACCEPT",
+   "outcome": "TRUE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 0.692,
+    "blocked_at_judge_time": false
+   },
+   "code_path": "tutor_policy.validate_question (L298) + tutoring._generated_reference_unsupported (L1063)",
+   "validator_with_uncited_pages": {
+    "observed": "ACCEPT",
+    "outcome": "TRUE_ACCEPT"
+   },
+   "production": {
+    "observed": "ACCEPT",
+    "outcome": "TRUE_ACCEPT",
+    "note": "",
+    "model_called": true,
+    "rejected_by": null
+   },
+   "severity": null
+  },
+  {
+   "case_id": "QUANT-fin-wrong_arith",
+   "category": "quantitative",
+   "subtype": "wrong_arith",
+   "subject": "finance",
+   "gold": "REJECT",
+   "observed": "ACCEPT",
+   "outcome": "FALSE_ACCEPT",
+   "note": "",
+   "detail": {
+    "answer_support": 0.75,
+    "blocked_at_judge_time": false
+   },
+   "code_path": "tutor_policy.validate_question (L298) + tutoring._generated_reference_unsupported (L1063)",
+   "validator_with_uncited_pages": {
+    "observed": "ACCEPT",
+    "outcome": "FALSE_ACCEPT"
+   },
+   "production": {
+    "observed": "ACCEPT",
+    "outcome": "FALSE_ACCEPT",
+    "note": "",
+    "model_called": true,
+    "rejected_by": null
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "QUANT-fin-wrong_formula",
+   "category": "quantitative",
+   "subtype": "wrong_formula",
+   "subject": "finance",
+   "gold": "REJECT",
+   "observed": "REJECT",
+   "outcome": "TRUE_REJECT",
+   "note": "expected answer is not supported by the cited passages",
+   "detail": {
+    "answer_support": 0.615,
+    "blocked_at_judge_time": false
+   },
+   "code_path": "tutor_policy.validate_question (L298) + tutoring._generated_reference_unsupported (L1063)",
+   "validator_with_uncited_pages": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT"
+   },
+   "production": {
+    "observed": "REJECT",
+    "outcome": "TRUE_REJECT",
+    "note": "Generated question rejected: expected answer is not supported by the cited passages",
+    "model_called": true,
+    "rejected_by": "VALIDATION"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-mar-verbatim",
+   "category": "leakage",
+   "subtype": "verbatim",
+   "subject": "marketing",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-mar-paraphrase",
+   "category": "leakage",
+   "subtype": "paraphrase",
+   "subject": "marketing",
+   "gold": "LEAK",
+   "observed": "PASSED",
+   "outcome": "MISSED_LEAK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "MISSED_LEAK"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "LEAK-mar-student_quote_full",
+   "category": "leakage",
+   "subtype": "student_quote_full",
+   "subject": "marketing",
+   "gold": "CLEAN",
+   "observed": "PASSED",
+   "outcome": "TRUE_PASS",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "TRUE_PASS"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-mar-student_partial_plus_leak",
+   "category": "leakage",
+   "subtype": "student_partial_plus_leak",
+   "subject": "marketing",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-mar-clean_hint",
+   "category": "leakage",
+   "subtype": "clean_hint",
+   "subject": "marketing",
+   "gold": "CLEAN",
+   "observed": "PASSED",
+   "outcome": "TRUE_PASS",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "TRUE_PASS"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-mar-short_leak",
+   "category": "leakage",
+   "subtype": "short_leak",
+   "subject": "marketing",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-mar-short_clean",
+   "category": "leakage",
+   "subtype": "short_clean",
+   "subject": "marketing",
+   "gold": "CLEAN",
+   "observed": "PASSED",
+   "outcome": "TRUE_PASS",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "TRUE_PASS"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-eco-verbatim",
+   "category": "leakage",
+   "subtype": "verbatim",
+   "subject": "economics",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-eco-paraphrase",
+   "category": "leakage",
+   "subtype": "paraphrase",
+   "subject": "economics",
+   "gold": "LEAK",
+   "observed": "PASSED",
+   "outcome": "MISSED_LEAK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "MISSED_LEAK"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "LEAK-eco-student_quote_full",
+   "category": "leakage",
+   "subtype": "student_quote_full",
+   "subject": "economics",
+   "gold": "CLEAN",
+   "observed": "PASSED",
+   "outcome": "TRUE_PASS",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "TRUE_PASS"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-eco-student_partial_plus_leak",
+   "category": "leakage",
+   "subtype": "student_partial_plus_leak",
+   "subject": "economics",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-eco-clean_hint",
+   "category": "leakage",
+   "subtype": "clean_hint",
+   "subject": "economics",
+   "gold": "CLEAN",
+   "observed": "PASSED",
+   "outcome": "TRUE_PASS",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "TRUE_PASS"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-eco-short_leak",
+   "category": "leakage",
+   "subtype": "short_leak",
+   "subject": "economics",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-eco-short_clean",
+   "category": "leakage",
+   "subtype": "short_clean",
+   "subject": "economics",
+   "gold": "CLEAN",
+   "observed": "PASSED",
+   "outcome": "TRUE_PASS",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "TRUE_PASS"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-eco-short_numeric_paraphrase",
+   "category": "leakage",
+   "subtype": "short_numeric_paraphrase",
+   "subject": "economics",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-sta-verbatim",
+   "category": "leakage",
+   "subtype": "verbatim",
+   "subject": "statistics",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-sta-paraphrase",
+   "category": "leakage",
+   "subtype": "paraphrase",
+   "subject": "statistics",
+   "gold": "LEAK",
+   "observed": "PASSED",
+   "outcome": "MISSED_LEAK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "MISSED_LEAK"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "LEAK-sta-student_quote_full",
+   "category": "leakage",
+   "subtype": "student_quote_full",
+   "subject": "statistics",
+   "gold": "CLEAN",
+   "observed": "PASSED",
+   "outcome": "TRUE_PASS",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "TRUE_PASS"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-sta-student_partial_plus_leak",
+   "category": "leakage",
+   "subtype": "student_partial_plus_leak",
+   "subject": "statistics",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-sta-clean_hint",
+   "category": "leakage",
+   "subtype": "clean_hint",
+   "subject": "statistics",
+   "gold": "CLEAN",
+   "observed": "PASSED",
+   "outcome": "TRUE_PASS",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "TRUE_PASS"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-sta-short_leak",
+   "category": "leakage",
+   "subtype": "short_leak",
+   "subject": "statistics",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-sta-short_clean",
+   "category": "leakage",
+   "subtype": "short_clean",
+   "subject": "statistics",
+   "gold": "CLEAN",
+   "observed": "PASSED",
+   "outcome": "TRUE_PASS",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "TRUE_PASS"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-fin-verbatim",
+   "category": "leakage",
+   "subtype": "verbatim",
+   "subject": "finance",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-fin-paraphrase",
+   "category": "leakage",
+   "subtype": "paraphrase",
+   "subject": "finance",
+   "gold": "LEAK",
+   "observed": "PASSED",
+   "outcome": "MISSED_LEAK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "MISSED_LEAK"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "LEAK-fin-student_quote_full",
+   "category": "leakage",
+   "subtype": "student_quote_full",
+   "subject": "finance",
+   "gold": "CLEAN",
+   "observed": "PASSED",
+   "outcome": "TRUE_PASS",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "TRUE_PASS"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-fin-student_partial_plus_leak",
+   "category": "leakage",
+   "subtype": "student_partial_plus_leak",
+   "subject": "finance",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-fin-clean_hint",
+   "category": "leakage",
+   "subtype": "clean_hint",
+   "subject": "finance",
+   "gold": "CLEAN",
+   "observed": "PASSED",
+   "outcome": "TRUE_PASS",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "TRUE_PASS"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-fin-short_leak",
+   "category": "leakage",
+   "subtype": "short_leak",
+   "subject": "finance",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-fin-short_clean",
+   "category": "leakage",
+   "subtype": "short_clean",
+   "subject": "finance",
+   "gold": "CLEAN",
+   "observed": "PASSED",
+   "outcome": "TRUE_PASS",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "TRUE_PASS"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-fin-short_numeric_paraphrase",
+   "category": "leakage",
+   "subtype": "short_numeric_paraphrase",
+   "subject": "finance",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-psy-verbatim",
+   "category": "leakage",
+   "subtype": "verbatim",
+   "subject": "psychology",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-psy-paraphrase",
+   "category": "leakage",
+   "subtype": "paraphrase",
+   "subject": "psychology",
+   "gold": "LEAK",
+   "observed": "PASSED",
+   "outcome": "MISSED_LEAK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "MISSED_LEAK"
+   },
+   "severity": "HIGH"
+  },
+  {
+   "case_id": "LEAK-psy-student_quote_full",
+   "category": "leakage",
+   "subtype": "student_quote_full",
+   "subject": "psychology",
+   "gold": "CLEAN",
+   "observed": "PASSED",
+   "outcome": "TRUE_PASS",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "TRUE_PASS"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-psy-student_partial_plus_leak",
+   "category": "leakage",
+   "subtype": "student_partial_plus_leak",
+   "subject": "psychology",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-psy-clean_hint",
+   "category": "leakage",
+   "subtype": "clean_hint",
+   "subject": "psychology",
+   "gold": "CLEAN",
+   "observed": "PASSED",
+   "outcome": "TRUE_PASS",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "TRUE_PASS"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-psy-short_leak",
+   "category": "leakage",
+   "subtype": "short_leak",
+   "subject": "psychology",
+   "gold": "LEAK",
+   "observed": "BLOCKED",
+   "outcome": "TRUE_BLOCK",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "BLOCKED",
+    "outcome": "TRUE_BLOCK"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "LEAK-psy-short_clean",
+   "category": "leakage",
+   "subtype": "short_clean",
+   "subject": "psychology",
+   "gold": "CLEAN",
+   "observed": "PASSED",
+   "outcome": "TRUE_PASS",
+   "note": "",
+   "detail": {},
+   "code_path": "tutor_policy.reveals_reference (L130) via tutoring._check_reply (L535)",
+   "validator": {
+    "observed": "PASSED",
+    "outcome": "TRUE_PASS"
+   },
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-mar-confident_control",
+   "category": "hedge",
+   "subtype": "confident_control",
+   "subject": "marketing",
+   "gold": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "CONSOLIDATE",
+    "plan_reason": "CORRECT_ANSWER",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-mar-i_think_correct",
+   "category": "hedge",
+   "subtype": "i_think_correct",
+   "subject": "marketing",
+   "gold": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "FOLLOW_UP",
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "CHECK_REASONING",
+    "plan_reason": "REASONING_CHECK",
+    "reasoning_check_friction": true
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-mar-perhaps_mid_correct",
+   "category": "hedge",
+   "subtype": "perhaps_mid_correct",
+   "subject": "marketing",
+   "gold": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "FOLLOW_UP",
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "CHECK_REASONING",
+    "plan_reason": "REASONING_CHECK",
+    "reasoning_check_friction": true
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-mar-i_believe_correct",
+   "category": "hedge",
+   "subtype": "i_believe_correct",
+   "subject": "marketing",
+   "gold": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "FOLLOW_UP",
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "TRANSFER"
+   },
+   "outcome": "FAIL",
+   "note": "failed checks: hedged",
+   "detail": {
+    "failed_checks": [
+     "hedged"
+    ],
+    "next_action": "CONSOLIDATE",
+    "plan_reason": "CORRECT_ANSWER",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": "LOW"
+  },
+  {
+   "case_id": "HEDGE-mar-idk",
+   "category": "hedge",
+   "subtype": "idk",
+   "subject": "marketing",
+   "gold": {
+    "hedged": true,
+    "non_answer": true,
+    "model_judged": false,
+    "diagnosis_preserved": "unclear",
+    "progression": [
+     "NONE"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": true,
+    "model_judged": false,
+    "diagnosis_preserved": "unclear",
+    "progression": "NONE"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "OFFER_HINT",
+    "plan_reason": "NEEDS_CLARITY",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-mar-unsure_what_asked",
+   "category": "hedge",
+   "subtype": "unsure_what_asked",
+   "subject": "marketing",
+   "gold": {
+    "hedged": true,
+    "non_answer": true,
+    "model_judged": false,
+    "diagnosis_preserved": "unclear",
+    "progression": [
+     "NONE"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "unclear",
+    "progression": "NONE"
+   },
+   "outcome": "FAIL",
+   "note": "failed checks: non_answer, model_judged",
+   "detail": {
+    "failed_checks": [
+     "non_answer",
+     "model_judged"
+    ],
+    "next_action": "OFFER_HINT",
+    "plan_reason": "NEEDS_CLARITY",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": "MEDIUM"
+  },
+  {
+   "case_id": "HEDGE-eco-confident_control",
+   "category": "hedge",
+   "subtype": "confident_control",
+   "subject": "economics",
+   "gold": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "CONSOLIDATE",
+    "plan_reason": "CORRECT_ANSWER",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-eco-i_think_correct",
+   "category": "hedge",
+   "subtype": "i_think_correct",
+   "subject": "economics",
+   "gold": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "FOLLOW_UP",
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "CHECK_REASONING",
+    "plan_reason": "REASONING_CHECK",
+    "reasoning_check_friction": true
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-eco-perhaps_mid_correct",
+   "category": "hedge",
+   "subtype": "perhaps_mid_correct",
+   "subject": "economics",
+   "gold": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "FOLLOW_UP",
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "CHECK_REASONING",
+    "plan_reason": "REASONING_CHECK",
+    "reasoning_check_friction": true
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-eco-i_believe_correct",
+   "category": "hedge",
+   "subtype": "i_believe_correct",
+   "subject": "economics",
+   "gold": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "FOLLOW_UP",
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "TRANSFER"
+   },
+   "outcome": "FAIL",
+   "note": "failed checks: hedged",
+   "detail": {
+    "failed_checks": [
+     "hedged"
+    ],
+    "next_action": "CONSOLIDATE",
+    "plan_reason": "CORRECT_ANSWER",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": "LOW"
+  },
+  {
+   "case_id": "HEDGE-eco-idk",
+   "category": "hedge",
+   "subtype": "idk",
+   "subject": "economics",
+   "gold": {
+    "hedged": true,
+    "non_answer": true,
+    "model_judged": false,
+    "diagnosis_preserved": "unclear",
+    "progression": [
+     "NONE"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": true,
+    "model_judged": false,
+    "diagnosis_preserved": "unclear",
+    "progression": "NONE"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "OFFER_HINT",
+    "plan_reason": "NEEDS_CLARITY",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-eco-unsure_what_asked",
+   "category": "hedge",
+   "subtype": "unsure_what_asked",
+   "subject": "economics",
+   "gold": {
+    "hedged": true,
+    "non_answer": true,
+    "model_judged": false,
+    "diagnosis_preserved": "unclear",
+    "progression": [
+     "NONE"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "unclear",
+    "progression": "NONE"
+   },
+   "outcome": "FAIL",
+   "note": "failed checks: non_answer, model_judged",
+   "detail": {
+    "failed_checks": [
+     "non_answer",
+     "model_judged"
+    ],
+    "next_action": "OFFER_HINT",
+    "plan_reason": "NEEDS_CLARITY",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": "MEDIUM"
+  },
+  {
+   "case_id": "HEDGE-sta-confident_control",
+   "category": "hedge",
+   "subtype": "confident_control",
+   "subject": "statistics",
+   "gold": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "CONSOLIDATE",
+    "plan_reason": "CORRECT_ANSWER",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-sta-i_think_correct",
+   "category": "hedge",
+   "subtype": "i_think_correct",
+   "subject": "statistics",
+   "gold": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "FOLLOW_UP",
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "CHECK_REASONING",
+    "plan_reason": "REASONING_CHECK",
+    "reasoning_check_friction": true
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-sta-perhaps_mid_correct",
+   "category": "hedge",
+   "subtype": "perhaps_mid_correct",
+   "subject": "statistics",
+   "gold": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "FOLLOW_UP",
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "CHECK_REASONING",
+    "plan_reason": "REASONING_CHECK",
+    "reasoning_check_friction": true
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-sta-i_believe_correct",
+   "category": "hedge",
+   "subtype": "i_believe_correct",
+   "subject": "statistics",
+   "gold": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "FOLLOW_UP",
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "TRANSFER"
+   },
+   "outcome": "FAIL",
+   "note": "failed checks: hedged",
+   "detail": {
+    "failed_checks": [
+     "hedged"
+    ],
+    "next_action": "CONSOLIDATE",
+    "plan_reason": "CORRECT_ANSWER",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": "LOW"
+  },
+  {
+   "case_id": "HEDGE-sta-idk",
+   "category": "hedge",
+   "subtype": "idk",
+   "subject": "statistics",
+   "gold": {
+    "hedged": true,
+    "non_answer": true,
+    "model_judged": false,
+    "diagnosis_preserved": "unclear",
+    "progression": [
+     "NONE"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": true,
+    "model_judged": false,
+    "diagnosis_preserved": "unclear",
+    "progression": "NONE"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "OFFER_HINT",
+    "plan_reason": "NEEDS_CLARITY",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-sta-unsure_what_asked",
+   "category": "hedge",
+   "subtype": "unsure_what_asked",
+   "subject": "statistics",
+   "gold": {
+    "hedged": true,
+    "non_answer": true,
+    "model_judged": false,
+    "diagnosis_preserved": "unclear",
+    "progression": [
+     "NONE"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "unclear",
+    "progression": "NONE"
+   },
+   "outcome": "FAIL",
+   "note": "failed checks: non_answer, model_judged",
+   "detail": {
+    "failed_checks": [
+     "non_answer",
+     "model_judged"
+    ],
+    "next_action": "OFFER_HINT",
+    "plan_reason": "NEEDS_CLARITY",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": "MEDIUM"
+  },
+  {
+   "case_id": "HEDGE-sta-hedge_phrase_as_content",
+   "category": "hedge",
+   "subtype": "hedge_phrase_as_content",
+   "subject": "statistics",
+   "gold": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "FOLLOW_UP"
+   },
+   "outcome": "FAIL",
+   "note": "failed checks: hedged, progression",
+   "detail": {
+    "failed_checks": [
+     "hedged",
+     "progression"
+    ],
+    "next_action": "CHECK_REASONING",
+    "plan_reason": "REASONING_CHECK",
+    "reasoning_check_friction": true
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": "MEDIUM"
+  },
+  {
+   "case_id": "HEDGE-fin-confident_control",
+   "category": "hedge",
+   "subtype": "confident_control",
+   "subject": "finance",
+   "gold": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "CONSOLIDATE",
+    "plan_reason": "CORRECT_ANSWER",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-fin-i_think_correct",
+   "category": "hedge",
+   "subtype": "i_think_correct",
+   "subject": "finance",
+   "gold": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "FOLLOW_UP",
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "CHECK_REASONING",
+    "plan_reason": "REASONING_CHECK",
+    "reasoning_check_friction": true
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-fin-perhaps_mid_correct",
+   "category": "hedge",
+   "subtype": "perhaps_mid_correct",
+   "subject": "finance",
+   "gold": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "FOLLOW_UP",
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "CHECK_REASONING",
+    "plan_reason": "REASONING_CHECK",
+    "reasoning_check_friction": true
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-fin-i_believe_correct",
+   "category": "hedge",
+   "subtype": "i_believe_correct",
+   "subject": "finance",
+   "gold": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "FOLLOW_UP",
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "TRANSFER"
+   },
+   "outcome": "FAIL",
+   "note": "failed checks: hedged",
+   "detail": {
+    "failed_checks": [
+     "hedged"
+    ],
+    "next_action": "CONSOLIDATE",
+    "plan_reason": "CORRECT_ANSWER",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": "LOW"
+  },
+  {
+   "case_id": "HEDGE-fin-idk",
+   "category": "hedge",
+   "subtype": "idk",
+   "subject": "finance",
+   "gold": {
+    "hedged": true,
+    "non_answer": true,
+    "model_judged": false,
+    "diagnosis_preserved": "unclear",
+    "progression": [
+     "NONE"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": true,
+    "model_judged": false,
+    "diagnosis_preserved": "unclear",
+    "progression": "NONE"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "OFFER_HINT",
+    "plan_reason": "NEEDS_CLARITY",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-fin-unsure_what_asked",
+   "category": "hedge",
+   "subtype": "unsure_what_asked",
+   "subject": "finance",
+   "gold": {
+    "hedged": true,
+    "non_answer": true,
+    "model_judged": false,
+    "diagnosis_preserved": "unclear",
+    "progression": [
+     "NONE"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "unclear",
+    "progression": "NONE"
+   },
+   "outcome": "FAIL",
+   "note": "failed checks: non_answer, model_judged",
+   "detail": {
+    "failed_checks": [
+     "non_answer",
+     "model_judged"
+    ],
+    "next_action": "OFFER_HINT",
+    "plan_reason": "NEEDS_CLARITY",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": "MEDIUM"
+  },
+  {
+   "case_id": "HEDGE-fin-hedge_phrase_as_content",
+   "category": "hedge",
+   "subtype": "hedge_phrase_as_content",
+   "subject": "finance",
+   "gold": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "FOLLOW_UP"
+   },
+   "outcome": "FAIL",
+   "note": "failed checks: hedged, progression",
+   "detail": {
+    "failed_checks": [
+     "hedged",
+     "progression"
+    ],
+    "next_action": "CHECK_REASONING",
+    "plan_reason": "REASONING_CHECK",
+    "reasoning_check_friction": true
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": "MEDIUM"
+  },
+  {
+   "case_id": "HEDGE-psy-confident_control",
+   "category": "hedge",
+   "subtype": "confident_control",
+   "subject": "psychology",
+   "gold": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "TRANSFER"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "CONSOLIDATE",
+    "plan_reason": "CORRECT_ANSWER",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-psy-i_think_correct",
+   "category": "hedge",
+   "subtype": "i_think_correct",
+   "subject": "psychology",
+   "gold": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "FOLLOW_UP",
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "CHECK_REASONING",
+    "plan_reason": "REASONING_CHECK",
+    "reasoning_check_friction": true
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-psy-perhaps_mid_correct",
+   "category": "hedge",
+   "subtype": "perhaps_mid_correct",
+   "subject": "psychology",
+   "gold": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "FOLLOW_UP",
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "FOLLOW_UP"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "CHECK_REASONING",
+    "plan_reason": "REASONING_CHECK",
+    "reasoning_check_friction": true
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-psy-i_believe_correct",
+   "category": "hedge",
+   "subtype": "i_believe_correct",
+   "subject": "psychology",
+   "gold": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "FOLLOW_UP",
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "TRANSFER"
+   },
+   "outcome": "FAIL",
+   "note": "failed checks: hedged",
+   "detail": {
+    "failed_checks": [
+     "hedged"
+    ],
+    "next_action": "CONSOLIDATE",
+    "plan_reason": "CORRECT_ANSWER",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": "LOW"
+  },
+  {
+   "case_id": "HEDGE-psy-idk",
+   "category": "hedge",
+   "subtype": "idk",
+   "subject": "psychology",
+   "gold": {
+    "hedged": true,
+    "non_answer": true,
+    "model_judged": false,
+    "diagnosis_preserved": "unclear",
+    "progression": [
+     "NONE"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": true,
+    "model_judged": false,
+    "diagnosis_preserved": "unclear",
+    "progression": "NONE"
+   },
+   "outcome": "PASS",
+   "note": "",
+   "detail": {
+    "failed_checks": [],
+    "next_action": "OFFER_HINT",
+    "plan_reason": "NEEDS_CLARITY",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": null
+  },
+  {
+   "case_id": "HEDGE-psy-unsure_what_asked",
+   "category": "hedge",
+   "subtype": "unsure_what_asked",
+   "subject": "psychology",
+   "gold": {
+    "hedged": true,
+    "non_answer": true,
+    "model_judged": false,
+    "diagnosis_preserved": "unclear",
+    "progression": [
+     "NONE"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "unclear",
+    "progression": "NONE"
+   },
+   "outcome": "FAIL",
+   "note": "failed checks: non_answer, model_judged",
+   "detail": {
+    "failed_checks": [
+     "non_answer",
+     "model_judged"
+    ],
+    "next_action": "OFFER_HINT",
+    "plan_reason": "NEEDS_CLARITY",
+    "reasoning_check_friction": false
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": "MEDIUM"
+  },
+  {
+   "case_id": "HEDGE-psy-hedge_phrase_as_content",
+   "category": "hedge",
+   "subtype": "hedge_phrase_as_content",
+   "subject": "psychology",
+   "gold": {
+    "hedged": false,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": [
+     "TRANSFER"
+    ]
+   },
+   "observed": {
+    "hedged": true,
+    "non_answer": false,
+    "model_judged": true,
+    "diagnosis_preserved": "correct",
+    "progression": "FOLLOW_UP"
+   },
+   "outcome": "FAIL",
+   "note": "failed checks: hedged, progression",
+   "detail": {
+    "failed_checks": [
+     "hedged",
+     "progression"
+    ],
+    "next_action": "CHECK_REASONING",
+    "plan_reason": "REASONING_CHECK",
+    "reasoning_check_friction": true
+   },
+   "code_path": "tutor_policy.detect_hedge (L66) -> next_action (L183) / plan_next (L241)",
+   "severity": "MEDIUM"
+  }
+ ]
+}

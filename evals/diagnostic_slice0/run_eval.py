@@ -143,7 +143,7 @@ class ScriptedNext(Scripted):
         return super().generate_structured_output(context, instructions, output_format)
 
 
-def run_next(subject_key: str, question: str, expected: str, cites: list[dict]) -> dict:
+def run_next(subject_key: str, question: str, expected: str, cites: list[dict], calculation=None) -> dict:
     """PRODUCTION path for a generated follow-up: real retrieval, create_session -> skip -> next_question ->
     _open_next_question -> _generate_question -> validate_question + reference gate. Observed ACCEPT == the question
     was opened for the student. Only the model is scripted."""
@@ -154,7 +154,8 @@ def run_next(subject_key: str, question: str, expected: str, cites: list[dict]) 
             patch("university_jarvis.tutoring.build_week_context", side_effect=ctx):
         root = Path(tmp) / "ws"
         _make_record(root, subject, subject["root_ref"], 1)
-        provider = ScriptedNext({"question": question, "expected_answer": expected, "citations": cites})
+        provider = ScriptedNext({"question": question, "expected_answer": expected, "citations": cites,
+                                 **({"calculation": calculation} if calculation is not None else {})})
         session = tutoring.create_session({}, C.MODULE, 1, intention="TEST_ME", client_request_id="eval-1",
                                           provider=provider, workspace_root=root)
         tutoring.skip_question({}, C.MODULE, 1, session["session_id"], client_turn_id="s1", provider=provider,

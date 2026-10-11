@@ -127,6 +127,22 @@ class LearningEvidenceTests(unittest.TestCase):
         self.assertEqual(len(provider.contexts), 1)
         self.assertIn("Expected application", json.loads(self.record_path.read_text())["learning"]["generated_tasks"][0]["expected_answer"])
 
+    def test_generated_root_task_with_a_computed_answer_is_refused_because_it_cannot_be_verified(self):
+        from university_jarvis.reasoning import ReasoningError
+
+        class TaskProvider:
+            def cache_identity(self): return {"provider":"fake", "model":"task-v1"}
+            def generate_structured_output(self, context, instructions, output_format):
+                return {"task":"A cell of length 60 is cut into 12 equal parts. How long is each part?",
+                        "expected_answer_or_rubric":"Each part is 5 long.", "source_references":[{"source_id":"s1", "pdf_page":1}]}
+        self._save_quiz_tasks()
+        self.record["learning"]["evidence"] = [{"capability":"APPLICATION", "assistance_status":"UNAIDED", "origin":"QUIZ:quiz-1:a1", "evaluation":{"outcome":"UNCLEAR"}}]
+        self.record_path.write_text(json.dumps(self.record))
+        with patch("university_jarvis.hub_service.build_week_context", side_effect=self._context):
+            with self.assertRaises(ReasoningError):
+                hub_service.continue_learning_task("BIO101", 1, state={}, provider=TaskProvider(), workspace_root=self.root)
+        self.assertNotIn("generated_tasks", json.loads(self.record_path.read_text())["learning"])
+
 
 if __name__ == "__main__":
     unittest.main()

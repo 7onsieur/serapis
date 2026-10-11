@@ -1,0 +1,659 @@
+[
+ {
+  "case": "v_density",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_bmi",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_wage",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_probability",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_growth_two_steps",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_net_change_loss_magnitude",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_negative_profit",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_unit_conversion",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "BLOCK",
+  "outcome": "FALSE_REJECT",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the expected answer states 0.75, which the calculation does not produce and the sources do not state"
+ },
+ {
+  "case": "v_rounding",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "BLOCK",
+  "outcome": "FALSE_REJECT",
+  "engine": "VERIFIED",
+  "reason": "expected answer is not supported by the cited passages"
+ },
+ {
+  "case": "v_standard_error",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_standard_error_power_form",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_present_value",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_percentage_of",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_two_step_cart",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_elasticity_direction",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_decrease_rate",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_constant_stated_in_passage",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_rounding_tie_half_up",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "BLOCK",
+  "outcome": "FALSE_REJECT",
+  "engine": "VERIFIED",
+  "reason": "expected answer is not supported by the cited passages"
+ },
+ {
+  "case": "v_add_converted_units",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "f_se_multiplied",
+  "category": "wrong_formula",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the formula for 'standard error of the mean' contradicts the cited passage (sample standard deviation multiplied by the square root of sample size)"
+ },
+ {
+  "case": "f_density_inverted",
+  "category": "wrong_formula",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the formula for 'density' contradicts the cited passage (volume divided by mass)"
+ },
+ {
+  "case": "f_bmi_not_squared",
+  "category": "wrong_formula",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the cited passage does not state the formula for 'body mass index' in a form that can be matched (weight divided by height)"
+ },
+ {
+  "case": "f_wage_added",
+  "category": "wrong_formula",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the cited passage does not state the formula for 'total pay' in a form that can be matched (hourly rate plus hours worked)"
+ },
+ {
+  "case": "f_probability_inverted",
+  "category": "wrong_formula",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the formula for 'probability of the event' contradicts the cited passage (number of possible outcomes divided by number of favourable outcomes)"
+ },
+ {
+  "case": "f_pv_multiplied",
+  "category": "wrong_formula",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the formula for 'present value' contradicts the cited passage (future value multiplied by one plus discount rate)"
+ },
+ {
+  "case": "f_growth_wrong_denominator",
+  "category": "wrong_formula",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the cited passage does not state the formula for 'growth rate' in a form that can be matched (change divided by new value)"
+ },
+ {
+  "case": "f_cart_tax_multiplied",
+  "category": "wrong_formula",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the cited passage does not state the formula for 'total' in a form that can be matched (subtotal multiplied by tax)"
+ },
+ {
+  "case": "f_mean_multiplied",
+  "category": "wrong_formula",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the formula for 'mean' contradicts the cited passage (total multiplied by count)"
+ },
+ {
+  "case": "f_weight_wrong_constant_same_as_question",
+  "category": "wrong_formula",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the cited passage does not state the formula for 'weight' in a form that can be matched (mass multiplied by ten)"
+ },
+ {
+  "case": "f_decrease_rate_added",
+  "category": "wrong_formula",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the cited passage does not state the formula for 'new price' in a form that can be matched (old price multiplied by one plus decrease rate)"
+ },
+ {
+  "case": "a_se_result",
+  "category": "wrong_arithmetic",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the recomputed result is 5, not 6"
+ },
+ {
+  "case": "a_wage_result",
+  "category": "wrong_arithmetic",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the recomputed result is 100, not 90"
+ },
+ {
+  "case": "a_pv_result",
+  "category": "wrong_arithmetic",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the recomputed result is 2000, not 2200"
+ },
+ {
+  "case": "a_probability_result",
+  "category": "wrong_arithmetic",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the recomputed result is 0.25, not 0.4"
+ },
+ {
+  "case": "i_se_swapped_preceding",
+  "category": "input_assignment",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the value of 's' (9) sits next to a different quantity in the question"
+ },
+ {
+  "case": "i_mean_swapped_preceding",
+  "category": "input_assignment",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the value of 't' (3) sits next to a different quantity in the question"
+ },
+ {
+  "case": "i_mean_swapped_number_first_for",
+  "category": "input_assignment",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the value of 't' (3) sits next to a different quantity in the question"
+ },
+ {
+  "case": "i_mean_swapped_number_first_is",
+  "category": "input_assignment",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the value of 't' (3) sits next to a different quantity in the question"
+ },
+ {
+  "case": "i_probability_swapped_number_first",
+  "category": "input_assignment",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the value of 'f' (12) sits next to a different quantity in the question"
+ },
+ {
+  "case": "i_invented_value",
+  "category": "input_assignment",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: input 's' = 16 is not stated in the question"
+ },
+ {
+  "case": "i_percent_as_plain_number",
+  "category": "input_assignment",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: input 'r' is a percentage in the question but is used as a plain number"
+ },
+ {
+  "case": "i_relabelled_inputs",
+  "category": "input_assignment",
+  "expected": "BLOCK",
+  "observed": "ACCEPT",
+  "outcome": "FALSE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "d_fall_recorded_positive",
+  "category": "direction",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the sign of 'dq' (20) does not agree with how the question describes it"
+ },
+ {
+  "case": "d_rise_recorded_negative",
+  "category": "direction",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the sign of 'dp' (-10) does not agree with how the question describes it"
+ },
+ {
+  "case": "d_loss_recorded_negative",
+  "category": "direction",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: 'l' is named as a decrease but recorded as negative"
+ },
+ {
+  "case": "d_decline_unmarked",
+  "category": "direction",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the sign of 'dq' (20) does not agree with how the question describes it"
+ },
+ {
+  "case": "d_negative_without_text_support",
+  "category": "direction",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the sign of 'r' (-5) does not agree with how the question describes it"
+ },
+ {
+  "case": "c_hidden_rate_constant",
+  "category": "constants",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the constant 0.1 is not stated in the question or the cited passage"
+ },
+ {
+  "case": "c_hidden_conversion",
+  "category": "constants",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the constant 60 is not stated in the question or the cited passage"
+ },
+ {
+  "case": "c_constant_not_in_passage",
+  "category": "constants",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the constant 9.81 is not stated in the question or the cited passage"
+ },
+ {
+  "case": "r_tie_other_convention",
+  "category": "rounding",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the result sits exactly on a rounding tie and the stated value uses another convention"
+ },
+ {
+  "case": "r_wrong_digit",
+  "category": "rounding",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the recomputed result is 2.33, not 2.34"
+ },
+ {
+  "case": "r_answer_text_disagrees",
+  "category": "rounding",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the expected answer does not state the computed result"
+ },
+ {
+  "case": "r_unstated_rounding",
+  "category": "rounding",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the result is not exact, so the rounding must be stated"
+ },
+ {
+  "case": "u_forgotten_conversion",
+  "category": "units",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the recomputed result is 120, not 2"
+ },
+ {
+  "case": "u_units_added_unconverted",
+  "category": "units",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the recomputed result is 5.4, not 45"
+ },
+ {
+  "case": "u_result_unit_missing",
+  "category": "units",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: units do not match when comparing the computed unit with the stated result unit: length*time^-1 and (none)"
+ },
+ {
+  "case": "m_asks_margin_answers_profit",
+  "category": "misleading",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the final step does not compute what the question asks for ('profit')"
+ },
+ {
+  "case": "m_extra_unsupported_number",
+  "category": "misleading",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the expected answer states 42, which the calculation does not produce and the sources do not state"
+ },
+ {
+  "case": "m_wrong_intermediate_in_text",
+  "category": "misleading",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the expected answer states 16, which the calculation does not produce and the sources do not state"
+ },
+ {
+  "case": "m_second_quantity_unverified",
+  "category": "misleading",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the expected answer states 225, which the calculation does not produce and the sources do not state"
+ },
+ {
+  "case": "m_formula_for_a_different_quantity",
+  "category": "misleading",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the cited passage does not state the formula for 'mean' in a form that can be matched (middle value multiplied by one)"
+ },
+ {
+  "case": "o_omitted_derived_answer",
+  "category": "omitted_spec",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": null,
+  "reason": "a computed answer needs a verified calculation: it states 5, which neither the question nor the cited passages state"
+ },
+ {
+  "case": "o_omitted_date_arithmetic",
+  "category": "omitted_spec",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": null,
+  "reason": "a computed answer needs a verified calculation: it states 12, which neither the question nor the cited passages state"
+ },
+ {
+  "case": "o_omitted_calculate_verb",
+  "category": "omitted_spec",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": null,
+  "reason": "a computed answer needs a verified calculation: it states 20, which neither the question nor the cited passages state"
+ },
+ {
+  "case": "o_omitted_result_appears_in_passage",
+  "category": "omitted_spec",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": null,
+  "reason": "a computed answer needs a verified calculation: it asks for a calculation over numbers it gives"
+ },
+ {
+  "case": "n_date",
+  "category": "non_computational",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": null,
+  "reason": ""
+ },
+ {
+  "case": "n_threshold",
+  "category": "non_computational",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": null,
+  "reason": ""
+ },
+ {
+  "case": "n_percentage_quoted",
+  "category": "non_computational",
+  "expected": "ACCEPT",
+  "observed": "BLOCK",
+  "outcome": "FALSE_REJECT",
+  "engine": null,
+  "reason": "question gives away its own answer"
+ },
+ {
+  "case": "n_count_in_words",
+  "category": "non_computational",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": null,
+  "reason": ""
+ },
+ {
+  "case": "n_two_numbers_comparison",
+  "category": "non_computational",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": null,
+  "reason": ""
+ },
+ {
+  "case": "n_digit_for_word_in_passage",
+  "category": "non_computational",
+  "expected": "ACCEPT",
+  "observed": "BLOCK",
+  "outcome": "FALSE_REJECT",
+  "engine": null,
+  "reason": "expected answer is not supported by the cited passages"
+ },
+ {
+  "case": "n_how_many_with_numbers_stated",
+  "category": "non_computational",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": null,
+  "reason": ""
+ }
+]

@@ -1,0 +1,992 @@
+[
+ {
+  "kind": "engine",
+  "case": "arith_valid",
+  "category": "arithmetic",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "arith_wrong_result",
+  "category": "arithmetic",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the recomputed result is 180, not 280"
+ },
+ {
+  "kind": "engine",
+  "case": "arith_wrong_operator",
+  "category": "arithmetic",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula for 'profit' contradicts the cited passage (revenue plus cost)"
+ },
+ {
+  "kind": "engine",
+  "case": "arith_reversed_operands",
+  "category": "reversed_operands",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula for 'profit' contradicts the cited passage (cost minus revenue)"
+ },
+ {
+  "kind": "engine",
+  "case": "arith_result_not_in_answer",
+  "category": "arithmetic",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the expected answer does not state the computed result"
+ },
+ {
+  "kind": "engine",
+  "case": "arith_input_not_in_question",
+  "category": "arithmetic",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "input 'rev' = 600 is not stated in the question"
+ },
+ {
+  "kind": "engine",
+  "case": "arith_input_wrong_source",
+  "category": "arithmetic",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "input 'rev' = 500 is not stated in the cited passage"
+ },
+ {
+  "kind": "engine",
+  "case": "swapped_inputs_mean",
+  "category": "swapped_inputs",
+  "gold": "REJECT",
+  "observed": "INCONCLUSIVE",
+  "outcome": "SAFE_BLOCK",
+  "note": "the value of 't' (3) sits next to a different quantity in the question"
+ },
+ {
+  "kind": "engine",
+  "case": "swapped_inputs_standard_error",
+  "category": "swapped_inputs",
+  "gold": "REJECT",
+  "observed": "INCONCLUSIVE",
+  "outcome": "SAFE_BLOCK",
+  "note": "the value of 's' (25) sits next to a different quantity in the question"
+ },
+ {
+  "kind": "engine",
+  "case": "swapped_inputs_not_detected_when_number_precedes_name",
+  "category": "swapped_inputs",
+  "gold": "KNOWN_LIMIT",
+  "observed": "VERIFIED",
+  "outcome": "KNOWN_LIMIT_FALSE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "negative_result_valid",
+  "category": "negative_values",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "negative_result_sign_dropped",
+  "category": "negative_values",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the recomputed result is -150, not 150"
+ },
+ {
+  "kind": "engine",
+  "case": "negative_input_sign_unsupported",
+  "category": "negative_values",
+  "gold": "INCONCLUSIVE",
+  "observed": "INCONCLUSIVE",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "input 'rev' has a sign that the question does not support"
+ },
+ {
+  "kind": "engine",
+  "case": "negative_input_with_cue_valid",
+  "category": "negative_values",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "negative_direction_ignored",
+  "category": "negative_values",
+  "gold": "KNOWN_LIMIT",
+  "observed": "VERIFIED",
+  "outcome": "KNOWN_LIMIT_FALSE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "percent_valid",
+  "category": "percentages",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "percent_as_plain_number",
+  "category": "percentages",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "input 'rate' is a percentage in the question but is used as a plain number"
+ },
+ {
+  "kind": "engine",
+  "case": "percent_decimal_equivalent",
+  "category": "percentages",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "percent_result_valid",
+  "category": "percentages",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "percent_result_decimal_claimed_as_percent",
+  "category": "percentages",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the recomputed result is 36, not 0.36"
+ },
+ {
+  "kind": "engine",
+  "case": "percent_result_percent_claimed_as_decimal",
+  "category": "percentages",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the recomputed result is 0.36, not 36"
+ },
+ {
+  "kind": "engine",
+  "case": "percent_unit_without_percent_in_source",
+  "category": "percentages",
+  "gold": "INCONCLUSIVE",
+  "observed": "INCONCLUSIVE",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "input 'rate' is used as a percentage but the question does not say percent"
+ },
+ {
+  "kind": "engine",
+  "case": "units_valid",
+  "category": "units",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "units_conversion_valid",
+  "category": "units",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "units_conversion_forgotten",
+  "category": "units",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the recomputed result is about 0.833333, not 50"
+ },
+ {
+  "kind": "engine",
+  "case": "units_result_unit_wrong_dimension",
+  "category": "units",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "units do not match when comparing the computed unit with the stated result unit: length*time^-1 and (none)"
+ },
+ {
+  "kind": "engine",
+  "case": "units_add_incompatible",
+  "category": "units",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "units do not match when adding or subtracting: length and time"
+ },
+ {
+  "kind": "engine",
+  "case": "units_add_converted",
+  "category": "units",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "units_area",
+  "category": "units",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "units_opaque_mismatch",
+  "category": "units",
+  "gold": "INCONCLUSIVE",
+  "observed": "INCONCLUSIVE",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "units do not match when comparing the computed unit with the stated result unit: apple and pear"
+ },
+ {
+  "kind": "engine",
+  "case": "units_temperature",
+  "category": "units",
+  "gold": "INCONCLUSIVE",
+  "observed": "INCONCLUSIVE",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "unit '\u00b0c' is not supported (no affine conversions)"
+ },
+ {
+  "kind": "engine",
+  "case": "round_valid",
+  "category": "rounding",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "round_wrong_digit",
+  "category": "rounding",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the recomputed result is 0.67, not 0.66"
+ },
+ {
+  "kind": "engine",
+  "case": "round_boundary_half_up",
+  "category": "rounding",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "round_boundary_tie_other_convention",
+  "category": "rounding",
+  "gold": "INCONCLUSIVE",
+  "observed": "INCONCLUSIVE",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "the result sits exactly on a rounding tie and the stated value uses another convention"
+ },
+ {
+  "kind": "engine",
+  "case": "round_not_stated",
+  "category": "rounding",
+  "gold": "INCONCLUSIVE",
+  "observed": "INCONCLUSIVE",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "the result is not exact, so the rounding must be stated"
+ },
+ {
+  "kind": "engine",
+  "case": "round_exact_without_decimals",
+  "category": "rounding",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "round_down_valid",
+  "category": "rounding",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "round_up_wrong",
+  "category": "rounding",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the recomputed result is 0.8, not 0.9"
+ },
+ {
+  "kind": "engine",
+  "case": "multi_valid",
+  "category": "multi_step",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "multi_wrong_final_step",
+  "category": "multi_step",
+  "gold": "REJECT",
+  "observed": "INCONCLUSIVE",
+  "outcome": "SAFE_BLOCK",
+  "note": "the cited passage does not state the formula for 'profit margin' in a form that can be matched (profit divided by cost)"
+ },
+ {
+  "kind": "engine",
+  "case": "multi_wrong_first_step",
+  "category": "multi_step",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula for 'profit' contradicts the cited passage (revenue plus cost)"
+ },
+ {
+  "kind": "engine",
+  "case": "multi_wrong_final_result",
+  "category": "multi_step",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the recomputed result is 36, not 18"
+ },
+ {
+  "kind": "engine",
+  "case": "formula_not_in_passage",
+  "category": "unsupported_formula",
+  "gold": "INCONCLUSIVE",
+  "observed": "INCONCLUSIVE",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "the cited passage does not state the formula for 'profit' in a form that can be matched (revenue minus cost)"
+ },
+ {
+  "kind": "engine",
+  "case": "formula_three_factor",
+  "category": "unsupported_formula",
+  "gold": "INCONCLUSIVE",
+  "observed": "INCONCLUSIVE",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "the cited passage does not state the formula for 'simple interest' in a form that can be matched (principal multiplied by rate multiplied by time)"
+ },
+ {
+  "kind": "engine",
+  "case": "formula_constant_not_in_sources",
+  "category": "unsupported_formula",
+  "gold": "INCONCLUSIVE",
+  "observed": "INCONCLUSIVE",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "the constant 0.25 is not stated in the question or the cited passage"
+ },
+ {
+  "kind": "engine",
+  "case": "formula_conversion_constant_not_in_sources",
+  "category": "unsupported_formula",
+  "gold": "INCONCLUSIVE",
+  "observed": "INCONCLUSIVE",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "the constant 60 is not stated in the question or the cited passage"
+ },
+ {
+  "kind": "engine",
+  "case": "formula_no_cited_page",
+  "category": "unsupported_formula",
+  "gold": "INCONCLUSIVE",
+  "observed": "INCONCLUSIVE",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "there is no cited passage to ground the calculation"
+ },
+ {
+  "kind": "engine",
+  "case": "formula_no_operator_step",
+  "category": "unsupported_formula",
+  "gold": "INCONCLUSIVE",
+  "observed": "INCONCLUSIVE",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "no step states an operator relationship that the cited passage can confirm"
+ },
+ {
+  "kind": "engine",
+  "case": "zero_count",
+  "category": "division_by_zero",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "division by zero"
+ },
+ {
+  "kind": "engine",
+  "case": "zero_denominator_expression",
+  "category": "division_by_zero",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "division by zero"
+ },
+ {
+  "kind": "engine",
+  "case": "sqrt_negative",
+  "category": "division_by_zero",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "square root of a negative number"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_import",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near '__import'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_open_file",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near ''/etc/pa'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_attribute",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near '.__class'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_eval_call",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near ''1')'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_exec_call",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near ''x=1')'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_power_tower",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "an exponent above 16 is not allowed"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_huge_power",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "an exponent above 16 is not allowed"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_trailing_operator",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula is malformed"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_implicit_multiplication",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula is malformed (unexpected trailing input)"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_unknown_variable",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "unknown variable 'm'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_semicolon",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near '; n'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_empty",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula is empty"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_too_long",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula is too long or contains unsupported characters"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_fullwidth_plus",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula is too long or contains unsupported characters"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_deep_nesting",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula is too complex"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_scientific_notation",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula is malformed (unexpected trailing input)"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_keyword_name",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near 'True'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_lambda",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near ': 1'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_comprehension",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near '[s for s'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_subscript",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near '[0]'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_comma",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near ', n)'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_unsupported_function",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "function 'log' is not supported"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_unbalanced",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula is malformed (expected ')')"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_comment",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near '# hide'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_string",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near ''s''"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_newline",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula is too long or contains unsupported characters"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_division_by_literal_zero",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "division by zero"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_modulo",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula is malformed (unexpected trailing input)"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_floor_division",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula is malformed"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_bitwise",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near '| n'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_walrus",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near ':= s)'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_backtick",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near '`s`'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_dunder_name",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the formula contains an unsupported character near '__s__'"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_not_a_mapping",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the calculation specification does not match the required structure"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_extra_key",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the calculation specification does not match the required structure"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_oversized_value",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "the value of 's' is not a plain decimal number"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_duplicate_name",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "a variable name is used twice"
+ },
+ {
+  "kind": "engine",
+  "case": "malicious_name_shadows_function",
+  "category": "malicious",
+  "gold": "REJECT",
+  "observed": "REJECTED",
+  "outcome": "TRUE_REJECT",
+  "note": "a variable name is not a plain lowercase identifier"
+ },
+ {
+  "kind": "engine",
+  "case": "equiv_sqrt",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "equiv_power_half",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "equiv_double_star",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "equiv_parentheses",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "equiv_commutative",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "equiv_claimed_trailing_zero",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "engine",
+  "case": "equiv_inverse_form_not_grounded",
+  "category": "equivalent",
+  "gold": "INCONCLUSIVE",
+  "observed": "INCONCLUSIVE",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "only integer powers and the power 0.5 are supported"
+ },
+ {
+  "kind": "engine",
+  "case": "equiv_reordered_sum_in_denominator",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "observed": "VERIFIED",
+  "outcome": "TRUE_ACCEPT",
+  "note": "recomputed and grounded"
+ },
+ {
+  "kind": "generated",
+  "case": "quant_stat_valid",
+  "category": "production",
+  "gold": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "note": ""
+ },
+ {
+  "kind": "generated",
+  "case": "quant_stat_wrong_arith",
+  "category": "production",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: calculation inconclusive: the cited passage does not state the formula for 'standard error of the mean' in a form that can be matched (sample standard deviation divided by sample size)"
+ },
+ {
+  "kind": "generated",
+  "case": "quant_stat_wrong_arith_same_formula",
+  "category": "production",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: calculation rejected: the recomputed result is 2, not 0.4"
+ },
+ {
+  "kind": "generated",
+  "case": "quant_stat_wrong_formula",
+  "category": "production",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: calculation rejected: the formula for 'standard error of the mean' contradicts the cited passage (sample standard deviation multiplied by the square root of sample size)"
+ },
+ {
+  "kind": "generated",
+  "case": "quant_eco_valid",
+  "category": "production",
+  "gold": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "note": ""
+ },
+ {
+  "kind": "generated",
+  "case": "quant_eco_wrong_arith",
+  "category": "production",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: calculation rejected: the formula for 'price elasticity of demand' contradicts the cited passage (percentage change in price divided by percentage change in quantity demanded)"
+ },
+ {
+  "kind": "generated",
+  "case": "quant_eco_wrong_formula",
+  "category": "production",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: calculation rejected: the formula for 'price elasticity of demand' contradicts the cited passage (percentage change in quantity demanded multiplied by percentage change in price)"
+ },
+ {
+  "kind": "generated",
+  "case": "quant_fin_valid",
+  "category": "production",
+  "gold": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "note": ""
+ },
+ {
+  "kind": "generated",
+  "case": "quant_fin_wrong_arith",
+  "category": "production",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: calculation rejected: the recomputed result is 1000, not 1100"
+ },
+ {
+  "kind": "generated",
+  "case": "quant_fin_wrong_formula",
+  "category": "production",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: calculation rejected: the formula for 'present value' contradicts the cited passage (future value multiplied by one plus discount rate)"
+ },
+ {
+  "kind": "generated",
+  "case": "derived_numeric_heavy_valid",
+  "category": "production",
+  "gold": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "note": ""
+ },
+ {
+  "kind": "generated",
+  "case": "derived_numeric_heavy_wrong",
+  "category": "production",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: calculation rejected: the recomputed result is 2, not 3"
+ }
+]

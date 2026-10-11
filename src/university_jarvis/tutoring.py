@@ -97,7 +97,7 @@ from .workspace import (
 SESSION_SCHEMA_VERSION = 2
 LEGACY_SESSION_SCHEMA_VERSIONS = (1,)
 TUTOR_PROMPT_VERSION = "tutor-turn-v2"
-TUTOR_QUESTION_PROMPT_VERSION = "tutor-question-v1"
+TUTOR_QUESTION_PROMPT_VERSION = "tutor-question-v3"
 INTENTIONS = ("TEACH_ME", "TEST_ME")
 MAX_RESPONSE_CHARS = 2_000
 MAX_MESSAGE_CHARS = 2_500
@@ -198,14 +198,36 @@ action HINT: give a hint of strength hint_level (1 = where to look, 2 = a guidin
 contrast). Never state the answer to the task; diagnosis must be "none"."""
 
 
+_CALCULATION = {
+    "type": ["object", "null"],
+    "properties": {
+        "inputs": {"type": "array", "items": {
+            "type": "object",
+            "properties": {"name": {"type": "string"}, "label": {"type": "string"}, "value": {"type": "string"},
+                           "unit": {"type": "string"}, "source": {"type": "string", "enum": ["QUESTION", "CITED"]}},
+            "required": ["name", "label", "value", "unit", "source"], "additionalProperties": False}},
+        "steps": {"type": "array", "items": {
+            "type": "object",
+            "properties": {"name": {"type": "string"}, "label": {"type": "string"}, "formula": {"type": "string"}},
+            "required": ["name", "label", "formula"], "additionalProperties": False}},
+        "result": {"type": "object",
+                   "properties": {"value": {"type": "string"}, "unit": {"type": "string"},
+                                  "decimals": {"type": ["integer", "null"]}},
+                   "required": ["value", "unit", "decimals"], "additionalProperties": False},
+    },
+    "required": ["inputs", "steps", "result"],
+    "additionalProperties": False,
+}
+
 TUTOR_QUESTION_FORMAT = {
     "type": "json_schema",
     "name": "tutor_question",
     "strict": True,
     "schema": {
         "type": "object",
-        "properties": {"question": {"type": "string"}, "expected_answer": {"type": "string"}, "citations": _CITATIONS},
-        "required": ["question", "expected_answer", "citations"],
+        "properties": {"question": {"type": "string"}, "expected_answer": {"type": "string"}, "citations": _CITATIONS,
+                       "calculation": _CALCULATION},
+        "required": ["question", "expected_answer", "citations", "calculation"],
         "additionalProperties": False,
     },
 }
@@ -218,7 +240,19 @@ that is clearly different from every previous question -- a different situation 
 The question must be answerable from the cited passages. expected_answer is a private reference answer
 taken from the sources: never put it, or any earlier reference answer, in the question. Do not reuse the
 wording of previous_questions. Cite the supplied source_id and page that support expected_answer. No outside
-knowledge, no tools, never write assessed work for submission, never claim the student has mastered anything."""
+knowledge, no tools, never write assessed work for submission, never claim the student has mastered anything.
+calculation: required (never null) whenever expected_answer states a number that is neither in the question nor in a
+cited passage, or the question asks to calculate; null only for a question that merely mentions numbers the sources
+state. A computed question without a verifiable calculation is discarded. Describe it exactly: inputs
+(each value copied as a plain decimal string from the question or a cited passage, with its unit, source QUESTION or
+CITED, and the passage's own name for the quantity as label), steps (a name, the passage's name for the result as
+label, and a formula using only + - * / ^, sqrt(), parentheses and earlier names; a percentage input has unit "%"),
+and result (value, unit, decimals or null). The cited passage must state the formula. The last step must be the
+quantity the question asks for. Name each input with the words the question uses for it, and write it as the question
+does: a quantity that falls is a negative number unless its name is itself a decrease ("loss", "decrease rate"), in
+which case it is a positive magnitude. expected_answer must state the result, and any other number in it must be an
+input, an intermediate value of the formula or a number the sources state. A calculation that cannot be verified is
+discarded together with the question."""
 
 
 class ReplyRejected(ReasoningError):
@@ -434,8 +468,10 @@ def _view(session: dict[str, Any]) -> dict[str, Any]:
     view = deepcopy(session)
     task = view["task"]
     task["has_reference_answer"] = bool(task.pop("expected_answer", None))
+    task.pop("calculation", None)  # the specification states the result, so it is as private as the reference
     for question in view["questions"]:
         question["task"].pop("expected_answer", None)
+        question["task"].pop("calculation", None)
     pending = _recoverable_turn(session)
     in_flight = pending is not None and pending["status"] == "PENDING" and _age_seconds(pending["started_at"]) < STALE_PENDING_SECONDS
     view["recovery"] = (
@@ -1111,7 +1147,8 @@ def _execute(state, module_code, week_number, path, session, turn, task, provide
 def _reference_problem(task: dict[str, Any], context: dict[str, Any]) -> str | None:
     """Gate for every use of a task's stored reference (grading, reveal, hint, explanation, follow-ups)."""
     return reference_problem(task.get("expected_answer"), task.get("source_references"),
-                             context.get("source_contexts", []))
+                             context.get("source_contexts", []), calculation=task.get("calculation"),
+                             question=task.get("task"))
 
 
 def _source_only_hint(task: dict[str, Any], context: dict[str, Any]) -> str | None:
@@ -1223,13 +1260,14 @@ def _open_next_question(state, module_code, week_number, session, turn, provider
         # Without a fingerprint a later source change could not be detected, so the reference answer
         # could not be kept honest. Fail safely instead of judging against it.
         raise ReplyRejected("Generated question rejected: its source has no fingerprint to pin the reference answer to")
-    if (problem := _reference_problem({"expected_answer": clean["expected_answer"], "source_references": refs}, context)):
+    if (problem := _reference_problem({"expected_answer": clean["expected_answer"], "source_references": refs,
+                                       "task": clean["question"], "calculation": clean.get("calculation")}, context)):
         # A new question must start with a reference answer its own citations support.
         raise ReplyRejected(f"Generated question rejected: its reference answer is not supported ({problem})")
     task = {"task_id": f"{session_id}-{question_id}", "task": clean["question"], "capability": root["task"]["capability"],
             "origin": f"TUTOR:{session_id}:{question_id}", "task_key": f"TUTOR:{session_id}:{question_id}",
             "expected_answer": clean["expected_answer"], "source_references": refs, "assistance_status": None,
-            "prompt_help": []}
+            "prompt_help": [], **({"calculation": clean["calculation"]} if clean.get("calculation") is not None else {})}
     lineage = _lineage(plan["step"], question_id, current["question_id"], root["question_id"], _prior_help(session))
 
     def open_question(s: dict[str, Any]) -> None:

@@ -1,0 +1,650 @@
+[
+ {
+  "kind": "engine",
+  "case": "arith_valid",
+  "category": "arithmetic",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "arith_wrong_result",
+  "category": "arithmetic",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "arith_wrong_operator",
+  "category": "arithmetic",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "arith_reversed_operands",
+  "category": "reversed_operands",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "arith_result_not_in_answer",
+  "category": "arithmetic",
+  "gold": "REJECT",
+  "observed": "ACCEPT",
+  "outcome": "FALSE_ACCEPT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "arith_input_not_in_question",
+  "category": "arithmetic",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "arith_input_wrong_source",
+  "category": "arithmetic",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "swapped_inputs_mean",
+  "category": "swapped_inputs",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "swapped_inputs_standard_error",
+  "category": "swapped_inputs",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "swapped_inputs_not_detected_when_number_precedes_name",
+  "category": "swapped_inputs",
+  "gold": "KNOWN_LIMIT",
+  "observed": "REJECT",
+  "outcome": "KNOWN_LIMIT_BLOCKED",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "negative_result_valid",
+  "category": "negative_values",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "negative_result_sign_dropped",
+  "category": "negative_values",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "negative_input_sign_unsupported",
+  "category": "negative_values",
+  "gold": "INCONCLUSIVE",
+  "observed": "REJECT",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "negative_input_with_cue_valid",
+  "category": "negative_values",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "negative_direction_ignored",
+  "category": "negative_values",
+  "gold": "KNOWN_LIMIT",
+  "observed": "REJECT",
+  "outcome": "KNOWN_LIMIT_BLOCKED",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "percent_valid",
+  "category": "percentages",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "percent_as_plain_number",
+  "category": "percentages",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "percent_decimal_equivalent",
+  "category": "percentages",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "percent_result_valid",
+  "category": "percentages",
+  "gold": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "percent_result_decimal_claimed_as_percent",
+  "category": "percentages",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "percent_result_percent_claimed_as_decimal",
+  "category": "percentages",
+  "gold": "REJECT",
+  "observed": "ACCEPT",
+  "outcome": "FALSE_ACCEPT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "percent_unit_without_percent_in_source",
+  "category": "percentages",
+  "gold": "INCONCLUSIVE",
+  "observed": "ACCEPT",
+  "outcome": "FALSE_ACCEPT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "units_valid",
+  "category": "units",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "units_conversion_valid",
+  "category": "units",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "units_conversion_forgotten",
+  "category": "units",
+  "gold": "REJECT",
+  "observed": "ACCEPT",
+  "outcome": "FALSE_ACCEPT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "units_result_unit_wrong_dimension",
+  "category": "units",
+  "gold": "REJECT",
+  "observed": "ACCEPT",
+  "outcome": "FALSE_ACCEPT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "units_add_incompatible",
+  "category": "units",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "units_add_converted",
+  "category": "units",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "units_area",
+  "category": "units",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "units_opaque_mismatch",
+  "category": "units",
+  "gold": "INCONCLUSIVE",
+  "observed": "REJECT",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "units_temperature",
+  "category": "units",
+  "gold": "INCONCLUSIVE",
+  "observed": "REJECT",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "round_valid",
+  "category": "rounding",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "round_wrong_digit",
+  "category": "rounding",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "round_boundary_half_up",
+  "category": "rounding",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "round_boundary_tie_other_convention",
+  "category": "rounding",
+  "gold": "INCONCLUSIVE",
+  "observed": "REJECT",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "round_not_stated",
+  "category": "rounding",
+  "gold": "INCONCLUSIVE",
+  "observed": "REJECT",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "round_exact_without_decimals",
+  "category": "rounding",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "round_down_valid",
+  "category": "rounding",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "round_up_wrong",
+  "category": "rounding",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "multi_valid",
+  "category": "multi_step",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "multi_wrong_final_step",
+  "category": "multi_step",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "multi_wrong_first_step",
+  "category": "multi_step",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "multi_wrong_final_result",
+  "category": "multi_step",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "formula_not_in_passage",
+  "category": "unsupported_formula",
+  "gold": "INCONCLUSIVE",
+  "observed": "REJECT",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "formula_three_factor",
+  "category": "unsupported_formula",
+  "gold": "INCONCLUSIVE",
+  "observed": "ACCEPT",
+  "outcome": "FALSE_ACCEPT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "formula_constant_not_in_sources",
+  "category": "unsupported_formula",
+  "gold": "INCONCLUSIVE",
+  "observed": "REJECT",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "formula_conversion_constant_not_in_sources",
+  "category": "unsupported_formula",
+  "gold": "INCONCLUSIVE",
+  "observed": "REJECT",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "formula_no_cited_page",
+  "category": "unsupported_formula",
+  "gold": "INCONCLUSIVE",
+  "observed": "REJECT",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "formula_no_operator_step",
+  "category": "unsupported_formula",
+  "gold": "INCONCLUSIVE",
+  "observed": "REJECT",
+  "outcome": "INCONCLUSIVE_OK",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "zero_count",
+  "category": "division_by_zero",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "zero_denominator_expression",
+  "category": "division_by_zero",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "sqrt_negative",
+  "category": "division_by_zero",
+  "gold": "REJECT",
+  "observed": "ACCEPT",
+  "outcome": "FALSE_ACCEPT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "equiv_sqrt",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "equiv_power_half",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "equiv_double_star",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "equiv_parentheses",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "equiv_commutative",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "equiv_claimed_trailing_zero",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "equiv_inverse_form_not_grounded",
+  "category": "equivalent",
+  "gold": "INCONCLUSIVE",
+  "observed": "ACCEPT",
+  "outcome": "FALSE_ACCEPT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "engine",
+  "case": "equiv_reordered_sum_in_denominator",
+  "category": "equivalent",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "old reference gate"
+ },
+ {
+  "kind": "generated",
+  "case": "quant_stat_valid",
+  "category": "production",
+  "gold": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "note": ""
+ },
+ {
+  "kind": "generated",
+  "case": "quant_stat_wrong_arith",
+  "category": "production",
+  "gold": "REJECT",
+  "observed": "ACCEPT",
+  "outcome": "FALSE_ACCEPT",
+  "note": ""
+ },
+ {
+  "kind": "generated",
+  "case": "quant_stat_wrong_arith_same_formula",
+  "category": "production",
+  "gold": "REJECT",
+  "observed": "ACCEPT",
+  "outcome": "FALSE_ACCEPT",
+  "note": ""
+ },
+ {
+  "kind": "generated",
+  "case": "quant_stat_wrong_formula",
+  "category": "production",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: expected answer is not supported by the cited passages"
+ },
+ {
+  "kind": "generated",
+  "case": "quant_eco_valid",
+  "category": "production",
+  "gold": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "note": ""
+ },
+ {
+  "kind": "generated",
+  "case": "quant_eco_wrong_arith",
+  "category": "production",
+  "gold": "REJECT",
+  "observed": "ACCEPT",
+  "outcome": "FALSE_ACCEPT",
+  "note": ""
+ },
+ {
+  "kind": "generated",
+  "case": "quant_eco_wrong_formula",
+  "category": "production",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: its reference answer is not supported (the reference says 'multiplied' where the passage says 'divided')"
+ },
+ {
+  "kind": "generated",
+  "case": "quant_fin_valid",
+  "category": "production",
+  "gold": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "note": ""
+ },
+ {
+  "kind": "generated",
+  "case": "quant_fin_wrong_arith",
+  "category": "production",
+  "gold": "REJECT",
+  "observed": "ACCEPT",
+  "outcome": "FALSE_ACCEPT",
+  "note": ""
+ },
+ {
+  "kind": "generated",
+  "case": "quant_fin_wrong_formula",
+  "category": "production",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: expected answer is not supported by the cited passages"
+ },
+ {
+  "kind": "generated",
+  "case": "derived_numeric_heavy_valid",
+  "category": "production",
+  "gold": "ACCEPT",
+  "observed": "REJECT",
+  "outcome": "FALSE_REJECT",
+  "note": "Generated question rejected: expected answer is not supported by the cited passages"
+ },
+ {
+  "kind": "generated",
+  "case": "derived_numeric_heavy_wrong",
+  "category": "production",
+  "gold": "REJECT",
+  "observed": "REJECT",
+  "outcome": "TRUE_REJECT",
+  "note": "Generated question rejected: expected answer is not supported by the cited passages"
+ }
+]

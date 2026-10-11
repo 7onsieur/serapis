@@ -1,0 +1,452 @@
+[
+ {
+  "case": "v_gross_margin",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_break_even",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "BLOCK",
+  "outcome": "FALSE_REJECT",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the value of 'p' (50) sits next to a different quantity in the question"
+ },
+ {
+  "case": "v_roi",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_roi_rounded",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_pct_change_up",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_pct_change_down",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "BLOCK",
+  "outcome": "FALSE_REJECT",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the sign of 'o' (50) does not agree with how the question describes it"
+ },
+ {
+  "case": "v_income_elasticity",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_price_elasticity_negative",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_current_ratio",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_debt_to_equity",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_inventory_turnover",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_eps_rounded",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_pe_ratio",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_markup",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_negative_margin",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_loss_as_magnitude",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "v_payback",
+  "category": "valid",
+  "expected": "ACCEPT",
+  "observed": "BLOCK",
+  "outcome": "FALSE_REJECT",
+  "engine": "VERIFIED",
+  "reason": "expected answer is not supported by the cited passages"
+ },
+ {
+  "case": "w_gm_wrong_denominator",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the cited passage does not state the formula for 'gross margin' in a form that can be matched (gross profit divided by cost of goods sold)"
+ },
+ {
+  "case": "w_break_even_price_not_margin",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the value of 'p' (50) sits next to a different quantity in the question"
+ },
+ {
+  "case": "w_roi_inverted",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the formula for 'return on investment' contradicts the cited passage (cost of the investment divided by net profit)"
+ },
+ {
+  "case": "w_pct_change_new_denominator",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the cited passage does not state the formula for 'percentage change' in a form that can be matched (change divided by new value)"
+ },
+ {
+  "case": "w_elasticity_inverted",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the formula for 'income elasticity of demand' contradicts the cited passage (percentage change in income divided by percentage change in quantity demanded)"
+ },
+ {
+  "case": "w_current_ratio_inverted",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the formula for 'current ratio' contradicts the cited passage (current liabilities divided by current assets)"
+ },
+ {
+  "case": "w_debt_equity_ungrounded_formula",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the cited passage does not state the formula for 'debt-to-equity ratio' in a form that can be matched (total debt divided by total debt plus total equity)"
+ },
+ {
+  "case": "w_pe_multiplied",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the formula for 'price-earnings ratio' contradicts the cited passage (share price multiplied by earnings per share)"
+ },
+ {
+  "case": "w_markup_subtracted",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the cited passage does not state the formula for 'selling price' in a form that can be matched (cost multiplied by one minus markup)"
+ },
+ {
+  "case": "w_markup_percent_plain",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: input 'm' is a percentage in the question but is used as a plain number"
+ },
+ {
+  "case": "w_roi_arithmetic",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the recomputed result is 25, not 20"
+ },
+ {
+  "case": "w_break_even_arithmetic",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the value of 'p' (50) sits next to a different quantity in the question"
+ },
+ {
+  "case": "w_eps_rounding",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the recomputed result is 3.33, not 3.34"
+ },
+ {
+  "case": "w_swapped_preceding",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the value of 'ca' (600) sits next to a different quantity in the question"
+ },
+ {
+  "case": "w_swapped_number_first",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the value of 'd' (900) is not tied to its name in the question"
+ },
+ {
+  "case": "w_from_to_reversed",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the sign of 'n' (50) does not agree with how the question describes it"
+ },
+ {
+  "case": "w_fall_recorded_positive",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the sign of 'dp' (10) does not agree with how the question describes it"
+ },
+ {
+  "case": "w_loss_recorded_negative",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: 'l' is named as a decrease but recorded as negative"
+ },
+ {
+  "case": "w_hidden_tax_constant",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the constant 0.3 is not stated in the question or the cited passage"
+ },
+ {
+  "case": "w_formula_not_in_passage",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the value of 'ca' (900) sits next to a different quantity in the question"
+ },
+ {
+  "case": "w_asks_margin_answers_profit",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "INCONCLUSIVE",
+  "reason": "calculation inconclusive: the final step does not compute what the question asks for ('gross profit')"
+ },
+ {
+  "case": "w_extra_unsupported_number",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "REJECTED",
+  "reason": "calculation rejected: the expected answer states 12, which the calculation does not produce and the sources do not state"
+ },
+ {
+  "case": "w_extra_unsupported_claim",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "VERIFIED",
+  "reason": "expected answer is not supported by the cited passages"
+ },
+ {
+  "case": "w_extra_unsupported_small_number",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": "VERIFIED",
+  "reason": "expected answer is not supported by the cited passages"
+ },
+ {
+  "case": "w_relabelled_both_inputs",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "ACCEPT",
+  "outcome": "FALSE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "w_relabelled_one_input",
+  "category": "wrong",
+  "expected": "BLOCK",
+  "observed": "ACCEPT",
+  "outcome": "FALSE_ACCEPT",
+  "engine": "VERIFIED",
+  "reason": ""
+ },
+ {
+  "case": "o_calculate_no_spec",
+  "category": "omitted_spec",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": null,
+  "reason": "a computed answer needs a verified calculation: it states 600, which neither the question nor the cited passages state"
+ },
+ {
+  "case": "o_derived_no_verb",
+  "category": "omitted_spec",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": null,
+  "reason": "a computed answer needs a verified calculation: it states 25, which neither the question nor the cited passages state"
+ },
+ {
+  "case": "o_result_in_passage",
+  "category": "omitted_spec",
+  "expected": "BLOCK",
+  "observed": "BLOCK",
+  "outcome": "TRUE_BLOCK",
+  "engine": null,
+  "reason": "a computed answer needs a verified calculation: it asks for a calculation over numbers it gives"
+ },
+ {
+  "case": "n_rule_of_thumb",
+  "category": "non_computational",
+  "expected": "ACCEPT",
+  "observed": "BLOCK",
+  "outcome": "FALSE_REJECT",
+  "engine": null,
+  "reason": "expected answer adds nothing beyond the question"
+ },
+ {
+  "case": "n_year",
+  "category": "non_computational",
+  "expected": "ACCEPT",
+  "observed": "BLOCK",
+  "outcome": "FALSE_REJECT",
+  "engine": null,
+  "reason": "expected answer adds nothing beyond the question"
+ },
+ {
+  "case": "n_four_ps",
+  "category": "non_computational",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": null,
+  "reason": ""
+ },
+ {
+  "case": "n_thin_margin",
+  "category": "non_computational",
+  "expected": "ACCEPT",
+  "observed": "ACCEPT",
+  "outcome": "TRUE_ACCEPT",
+  "engine": null,
+  "reason": ""
+ }
+]

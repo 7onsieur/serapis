@@ -25,6 +25,7 @@ import re
 from decimal import Decimal
 from typing import Any, Callable, Iterable
 
+from .calculation import VERIFIED, narration_stems, verify_calculation
 from .relations import relation_conflict
 from .retrieval import tokenize
 
@@ -411,9 +412,11 @@ def validate_question(raw: Any, *, step: str, citations_ok: Callable[[list[dict[
     """
     if step not in NEW_WORDS_MIN:
         return None, "unknown question step"
-    if not isinstance(raw, dict) or set(raw) != {"question", "expected_answer", "citations"}:
+    if not isinstance(raw, dict) or set(raw) not in ({"question", "expected_answer", "citations"},
+                                                      {"question", "expected_answer", "citations", "calculation"}):
         return None, "question does not match the required structure"
     question, expected, citations = raw["question"], raw["expected_answer"], raw["citations"]
+    calculation = raw.get("calculation")
     if not isinstance(question, str) or not MIN_QUESTION_CHARS <= len(question.strip()) <= MAX_QUESTION_CHARS:
         return None, "question is empty, too short or too long"
     if not isinstance(expected, str) or not expected.strip() or len(expected) > MAX_EXPECTED_CHARS:
@@ -430,21 +433,37 @@ def validate_question(raw: Any, *, step: str, citations_ok: Callable[[list[dict[
     question, expected = question.strip(), expected.strip()
     if reveals_reference(question, expected):
         return None, "question gives away its own answer"
-    expected_stems, passage_stems = set(tokenize(expected)), set(tokenize(cited_text(citations)))
-    if len(expected_stems) < 2 or not passage_stems:
+    cited_pages = [cited_text([c]) for c in citations]
+    if calculation is None and (why := requires_calculation(question, expected, cited_pages)):
+        return None, f"a computed answer needs a verified calculation: {why}"
+    if calculation is not None:
+        verdict = verify_calculation(calculation, question=question, expected_answer=expected, cited_pages=cited_pages)
+        if verdict.status != VERIFIED:
+            return None, f"calculation {verdict.status.lower()}: {verdict.reason}"
+    expected_all, passage_stems = set(tokenize(expected)), set(tokenize(cited_text(citations)))
+    # A verified calculation yields numbers the passage cannot contain, and narrates them in words that state no
+    # fact ("negative", "divided", a unit name). The calculation checked the numbers (including that the answer
+    # quotes no other), so only the remaining words are held to the passage. The result still counts as something
+    # the answer adds to the question.
+    ignore = narration_stems(calculation) if calculation is not None else set()
+    keep = lambda stems: {x for x in stems if not x.isdigit() and x not in ignore} if calculation is not None else stems  # noqa: E731
+    expected_stems = keep(expected_all)
+    if len(expected_all) < 2 or not passage_stems:
         return None, "expected answer is too thin to check against the sources"
-    support = len(expected_stems & passage_stems) / len(expected_stems)
+    support = len(expected_stems & passage_stems) / len(expected_stems) if expected_stems else 1.0
     if support < SUPPORT_MIN:
         return None, "expected answer is not supported by the cited passages"
     # Support must come from what the answer adds beyond the question's own words, and every
     # cited page must carry some of it: a decoy citation cannot borrow another page's support.
-    answer_words = expected_stems - set(tokenize(question))
-    if len(answer_words) < 2:
+    answer_all = expected_all - set(tokenize(question))
+    if len(answer_all) < 2:
         return None, "expected answer adds nothing beyond the question"
-    if len(answer_words & passage_stems) / len(answer_words) < SUPPORT_MIN:
-        return None, "expected answer is not supported by the cited passages"
-    if any(not (answer_words & set(tokenize(cited_text([c])))) for c in citations):
-        return None, "a cited passage does not support the expected answer"
+    answer_words = keep(answer_all)
+    if answer_words:
+        if len(answer_words & passage_stems) / len(answer_words) < SUPPORT_MIN:
+            return None, "expected answer is not supported by the cited passages"
+        if any(not (answer_words & set(tokenize(cited_text([c])))) for c in citations):
+            return None, "a cited passage does not support the expected answer"
     if (relevance := _citation_relevance(question, answer_words, [cited_text([c]) for c in citations],
                                          list(other_pages))):
         return None, relevance
@@ -472,9 +491,41 @@ def validate_question(raw: Any, *, step: str, citations_ok: Callable[[list[dict[
     if new_words < NEW_WORDS_MIN[step]:
         return None, "question adds nothing new to what was already asked"
     return {"question": question, "expected_answer": expected, "citations": [dict(c) for c in citations],
+            **({"calculation": calculation} if calculation is not None else {}),
             "checks": {"support": round(support, 3), "concept_overlap": concept_overlap,
                        "novelty_overlap": novelty["overlap"], "novelty_jaccard": novelty["jaccard"],
-                       "new_words": new_words}}, None
+                       "new_words": new_words,
+                       **({"calculation": VERIFIED} if calculation is not None else {})}}, None
+
+
+# --- does a generated question need a verified calculation? ---------------------------------------------------------
+
+_COMPUTE_VERB = re.compile(
+    r"\b(?:calculate|compute|work out|how much|how many|what (?:is|are) the (?:sum|total|difference|product|ratio|"
+    r"average|mean|percentage|rate|present value|interest|profit|cost|price|area|volume|speed|probability|standard error)"
+    r")\b", re.IGNORECASE)
+
+
+def requires_calculation(question: str, expected: str, cited_pages: Iterable[str]) -> str | None:
+    """Why a newly generated question must carry a verified calculation, or None.
+
+    A question is computational when its answer states a number that is neither in the question nor in the cited
+    passages (a derived value), or when it asks for a calculation over two or more numbers it gives and its answer
+    states a number. A question that only mentions numbers, dates, percentages or statistics the sources already state
+    ("began in 1998", "set at 0.05", "three stages") is not. Digits and English number words are both read. This
+    is a screen, not a proof: a computed value written with a different spelling of a stated number (50% for one half)
+    is read as derived, and a computation that happens to produce a number the sources state is caught only when it is
+    phrased as a request to calculate.
+    """
+    pages = list(cited_pages)
+    stated = {abs(v) for text in (question, *pages) for v, _ in numbers_in(text)}
+    for value, locator in numbers_in(expected):
+        if not locator and abs(value) not in stated:
+            return f"it states {value.normalize():f}, which neither the question nor the cited passages state"
+    given = {abs(v) for v, locator in numbers_in(question) if not locator}
+    if _COMPUTE_VERB.search(question) and len(given) >= 2 and any(not loc for _, loc in numbers_in(expected)):
+        return "it asks for a calculation over numbers it gives"
+    return None
 
 
 QUESTION_PAGE_MARGIN = 0.15  # how much better one page must match the question than another to count
@@ -524,7 +575,8 @@ _OPPOSITE_OF = {a: b for a, b in _OPPOSITES} | {b: a for a, b in _OPPOSITES}
 _ABSOLUTES = frozenset({"only", "always", "never", "cannot", "guarantee", "guarantees", "proves", "exactly"})
 
 
-def reference_unsupported(reference: str | None, cited_pages: list[str], other_pages: Iterable[str] = ()) -> str | None:
+def reference_unsupported(reference: str | None, cited_pages: list[str], other_pages: Iterable[str] = (),
+                          *, ignore_stems: set[str] | None = None) -> str | None:
     """Why ``reference`` cannot be treated as backed by ``cited_pages`` (one text per cited page), or None.
 
     Lexical screening only. It rejects a reference that is thin, mostly absent from the cited text, cited to
@@ -536,6 +588,8 @@ def reference_unsupported(reference: str | None, cited_pages: list[str], other_p
     derived number.
     """
     stems = set(tokenize(reference or ""))
+    if ignore_stems is not None:  # numbers and narration of a VERIFIED calculation: the calculation checked them
+        stems = {stem for stem in stems if not stem.isdigit() and stem not in ignore_stems}
     if not stems or not cited_pages:
         return "the reference has no checkable content or no cited page text"
     cited_stems = [set(tokenize(page)) for page in cited_pages]
@@ -559,12 +613,15 @@ def reference_unsupported(reference: str | None, cited_pages: list[str], other_p
     return None
 
 
-def reference_problem(reference: str | None, source_references: Any, source_contexts: list[dict[str, Any]]) -> str | None:
+def reference_problem(reference: str | None, source_references: Any, source_contexts: list[dict[str, Any]], *,
+                      calculation: Any = None, question: str | None = None) -> str | None:
     """Why a stored reference answer must not be graded against, revealed, hinted from or explained; else None.
 
     The one gate every use of a stored reference goes through. A task with no reference has nothing to verify.
     Otherwise every citation needs a source id, a source fingerprint and an integer page that was actually
     supplied, and the cited pages must support the reference (``reference_unsupported``).
+    A task that carries a ``calculation`` must also have it VERIFIED (``calculation.verify_calculation``) against its
+    question and cited pages: REJECTED and INCONCLUSIVE both block the reference. A task without one is unchanged.
     """
     if not reference:
         return None
@@ -578,8 +635,14 @@ def reference_problem(reference: str | None, source_references: Any, source_cont
              for sc in source_contexts or [] for e in sc.get("excerpts", []) or []}
     if any(key not in pages for key in cited):
         return "a cited page was not among the supplied passages"
-    return reference_unsupported(reference, [pages[k] for k in sorted(cited)],
-                                 [text for key, text in pages.items() if key not in cited])
+    cited_pages = [pages[k] for k in sorted(cited)]
+    if calculation is not None:
+        verdict = verify_calculation(calculation, question=question or "", expected_answer=reference,
+                                     cited_pages=cited_pages)
+        if verdict.status != VERIFIED:
+            return f"the calculation is {verdict.status.lower()}: {verdict.reason}"
+    return reference_unsupported(reference, cited_pages, [text for key, text in pages.items() if key not in cited],
+                                 ignore_stems=narration_stems(calculation) if calculation is not None else None)
 
 
 HINT_TERMS_MIN, HINT_TERMS_MAX = 2, 4
