@@ -608,6 +608,9 @@ class OpenAIReasoningProvider:
     def __init__(self, model: str | None = None) -> None:
         self.model = model or os.environ.get("JARVIS_REASONING_MODEL", DEFAULT_OPENAI_MODEL)
         self.last_usage: TokenUsage | None = None
+        # None keeps the original behaviour. A caller that needs a hard per-request output (and reasoning) bound,
+        # such as the budget-capped evaluation pilot, sets it; it then applies to every workflow.
+        self.max_output_tokens: int | None = None
 
     def cache_identity(self) -> dict[str, str]:
         return {"provider": "openai", "model": self.model}
@@ -640,6 +643,8 @@ class OpenAIReasoningProvider:
         }
         if context.get("workflow") == "PREPARE_ME":
             request["max_output_tokens"] = PREPARE_MAX_OUTPUT_TOKENS
+        if self.max_output_tokens is not None:
+            request["max_output_tokens"] = self.max_output_tokens
 
         try:
             response = OpenAI(api_key=api_key, max_retries=0).responses.create(**request)

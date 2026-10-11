@@ -1,0 +1,118 @@
+{
+ "approval_id": "dry-run",
+ "calls": 31,
+ "halted": null,
+ "known_limitations": [
+  "Retrieval: question generation can only cite pages retrieved for the ROOT question; transfer questions that cite a scenario page may be rejected for that reason, not because the model wrote a bad question (see retrieval_supplied_pages).",
+  "Lexical validators: paraphrased answer leaks and quote-of-a-correct-answer misconception claims are not detectable offline.",
+  "Gold labels were written by one author; AP-ACC2 good_transfer was corrected in V1.1.",
+  "n = 8 tasks: finds gross failures, does not estimate quality."
+ ],
+ "mode": "DRY RUN (scripted; synthetic token counts and rates, not real usage)",
+ "model": "scripted",
+ "retrieval_by_task": {
+  "AP-ACC2": {
+   "gap": [],
+   "needed": [
+    1,
+    2
+   ],
+   "supplied": [
+    1,
+    2
+   ]
+  },
+  "AP-MKT2": {
+   "gap": [
+    2
+   ],
+   "needed": [
+    1,
+    2
+   ],
+   "supplied": [
+    1
+   ]
+  },
+  "CS-ACC1": {
+   "gap": [],
+   "needed": [
+    1,
+    2
+   ],
+   "supplied": [
+    1,
+    2
+   ]
+  },
+  "CS-MGT1": {
+   "gap": [],
+   "needed": [
+    1,
+    2
+   ],
+   "supplied": [
+    1,
+    2
+   ]
+  },
+  "CT-FIN1": {
+   "gap": [],
+   "needed": [
+    1
+   ],
+   "supplied": [
+    1
+   ]
+  },
+  "CT-MGT2": {
+   "gap": [],
+   "needed": [
+    1
+   ],
+   "supplied": [
+    1
+   ]
+  },
+  "MD-ECO1": {
+   "gap": [],
+   "needed": [
+    1
+   ],
+   "supplied": [
+    1,
+    2
+   ]
+  },
+  "MD-FIN2": {
+   "gap": [],
+   "needed": [
+    1
+   ],
+   "supplied": [
+    1
+   ]
+  }
+ },
+ "retrieval_gaps": {
+  "AP-MKT2": [
+   2
+  ]
+ },
+ "tasks": [
+  "CT-FIN1",
+  "CT-MGT2",
+  "MD-ECO1",
+  "MD-FIN2",
+  "CS-ACC1",
+  "CS-MGT1",
+  "AP-MKT2",
+  "AP-ACC2"
+ ],
+ "token_cap": 600000,
+ "tokens_charged": 16750,
+ "unmeasured_calls": 0,
+ "unsettled_reservations": 0,
+ "usd_cap": "5",
+ "usd_charged": "0.017684"
+}

@@ -31,6 +31,8 @@ the production safeguards and routing behave as intended when a model returns a 
 | question_* | `create_session -> submit_response -> next_question -> validate_question` | generated follow-ups: accepted when answerable and new, rejected when off-concept, unsupported, reworded or answer-leaking |
 | adaptive_request | `plan_next` -> NEXT_QUESTION request | the request to the model carries the step/reason/diagnosis implied by the student's last answer |
 
+> V1.1 (`corrections/v1_1.py`, `run_eval.py --variant v1_1`, `results/after_triage_v1_1/`) corrects only the AP-ACC2 good_transfer question; V1.0 is untouched.
+>
 > After triage (`TRIAGE.md`): 311 pass / 18 fail in `results/after_triage/`; the baseline below is preserved in `results/`.
 
 ## Result of the first run (see `results/summary.md`)

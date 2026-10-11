@@ -136,7 +136,7 @@ class PilotMachinery(unittest.TestCase):
     def test_live_refuses_unapproved_file(self):
         with tempfile.TemporaryDirectory() as d:
             f = Path(d) / "a.json"
-            f.write_text(json.dumps({"approved": False, "model": "m", "reviewer": "r"}))
+            f.write_text(json.dumps({"approved": False, "model": "m", "reviewer": "r"}))  # schema: pilot_budget.parse_approval
             r = self.run_py("--live", "--approval", str(f), env={"SERAPIS_PILOT_LIVE": "1"})
             self.assertNotEqual(r.returncode, 0)
             self.assertIn("Nothing was called", r.stderr + r.stdout)
@@ -148,6 +148,10 @@ class PilotMachinery(unittest.TestCase):
             summary = json.loads(r.stdout)
             self.assertTrue(summary["mode"].startswith("DRY RUN"))
             self.assertEqual(summary["unmeasured_calls"], 0)
+            self.assertIn("cap", summary["halted"])  # refused before any request, from the worst-case reservation
+            self.assertEqual(summary["calls"], 0)
+            self.assertTrue(summary["known_limitations"])
+            self.assertIn("AP-MKT2", summary["retrieval_gaps"])
             self.assertEqual(len(summary["tasks"]), 8)
             self.assertTrue(summary["halted"], "the cap must halt the run")
             self.assertLessEqual(summary["token_cap"], 600_000)

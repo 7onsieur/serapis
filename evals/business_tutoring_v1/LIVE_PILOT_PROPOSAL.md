@@ -61,9 +61,27 @@ consecutive provider errors.
 `results/live_pilot_<date>/` with raw replies, per-call token counts, deterministic tallies, the reviewer's rubric sheet, and
 a one-page summary stating N, the model, the date and what the sample cannot show.
 
-## Preparation status (nothing live has run)
-`pilot_runner.py` implements the flow above: the 8 tasks, a per-call token ledger that records only measured usage, hard
-token/USD caps (an approval file can only lower them), a halt if the first-5-call average projects past the cap, and raw-reply
-capture. Default is `--dry-run` (scripted provider with synthetic token counts; `results/pilot_dry_run/ledger.json`). `--live`
-refuses unless `SERAPIS_PILOT_LIVE=1` and an owner-written approval file (`approved: true`, model, reviewer, prices) exist.
-Tests cover the refusals and the cap halt. No API key was read and no network call was made.
+## Spending controls (revised; supersedes the earlier "first-5-call projection" idea, which was not a hard cap)
+Implemented in `pilot_budget.py`, used by `pilot_runner.py`; nothing live has run.
+- **Reserve before send.** Each request's worst-case cost is written (fsynced) to an append-only ledger and must fit inside BOTH the
+  token cap and the dollar cap, or the request is refused and the pilot halts. Worst case = byte-bounded input (a token spans at
+  least one byte; an assumption about the tokenizer, not measured) + a fixed 1,000-token overhead + the explicit
+  `max_output_tokens` sent with the request (`OpenAIReasoningProvider.max_output_tokens`, the one production change; it also bounds
+  reasoning tokens), priced at the owner-attested input and output rates times an owner-stated surcharge multiplier (>= 1).
+  Cached-input discounts are ignored, which only over-reserves.
+- **Settle after.** Measured provider usage replaces the reservation. Missing or malformed usage, usage above the reservation, an error
+  with no usage, or a KeyboardInterrupt charges the worst case and halts. Retries are separate reservations.
+- **No reset.** The ledger is replayed on start: unsettled (interrupted) reservations count at worst case, a halt persists, a ledger
+  from another approval id is refused, and a new approval file cannot raise the caps recorded when the ledger was opened. Approval
+  files can only lower the hard ceilings (600,000 tokens, US$5, 4,000 output tokens, 80 calls).
+- **Pricing is attested, not fetched.** The runner has no network and cannot verify prices. The approval file must carry model-specific
+  input/output rates, a source, who verified them, a verification date within 30 days, and a surcharge multiplier. No tools or
+  web-search are used in these requests, so no tool fees apply.
+- **Limit.** The ledger is a local file; anyone with file access can delete it. Set a provider-side spend limit on the API key/project
+  as the independent backstop.
+- Dry run (default): `results/pilot_dry_run/` (synthetic rates and token counts, not real usage). `--live` also needs
+  `SERAPIS_PILOT_LIVE=1` and an owner-written approval file (`approved: true`, `approval_id`, `model`, `reviewer`,
+  `max_output_tokens`, optional lower `token_cap`/`usd_cap`, and the `pricing` object).
+- Reporting always lists the known limitations, including per-task retrieval gaps (pages the candidate good questions need but root
+  retrieval does not supply; currently AP-MKT2 page 2).
+- The pilot uses the V1.1 correction of AP-ACC2 (`corrections/v1_1.py`); V1.0 files, labels and results are unchanged.

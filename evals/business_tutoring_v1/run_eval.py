@@ -414,6 +414,11 @@ def main():
     out = HERE / "results"
     if "--out" in sys.argv:
         out = HERE / sys.argv[sys.argv.index("--out") + 1]
+    variant = "1.0"
+    if "--variant" in sys.argv and sys.argv[sys.argv.index("--variant") + 1] == "v1_1":
+        from corrections import v1_1  # noqa: E402  (V1.0 files are never edited; the correction is applied in memory)
+        T.TASKS[:] = v1_1.apply(T.TASKS)
+        variant = "1.1 (AP-ACC2 good_transfer corrected; historical V1.0 labels and results are unchanged)"
     for task in T.TASKS:
         probe_responses(task)
         probe_guidance(task)
@@ -429,7 +434,7 @@ def main():
     fails = [c for c in CASES if c["outcome"] == "FAIL"]
     by_class = Counter(c["failure_class"] for c in fails)
     result = {
-        "label": LABEL, "fingerprints": fingerprints(), "coverage": coverage(),
+        "label": LABEL, "variant": variant, "fingerprints": fingerprints(), "coverage": coverage(),
         "totals": {"cases": len(CASES), "pass": len(CASES) - len(fails), "fail": len(fails),
                    "fail_known_structural_gap": sum(c["known_structural_gap"] for c in fails)},
         "failures_by_class": dict(sorted(by_class.items())), "tallies": tallies(),
