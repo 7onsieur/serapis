@@ -24,8 +24,11 @@ task is treated as assisted although the student may not have seen the help; evi
 may be under-credited but is never over-credited. "Same task" means the same task key
 or identical wording; a different question on the same concept is a new, unaided task.
 
-Teaching policy is deterministic Python; the model only writes the reply and labels
-the student's answer with a closed-list diagnosis. Provider calls go through the
+Teaching policy is deterministic Python (``tutor_policy``); the model only writes the reply and
+labels the student's answer with a closed-list diagnosis and, for a misconception, a quoted,
+cited, confidence-rated claim that is dropped (diagnosis becomes "unclear") if any check fails.
+A student can dispute a suspected misconception, and may self-report confidence; neither changes
+the stored answer or lowers any assistance record. Provider calls go through the
 existing ``ReasoningProvider`` boundary.
 """
 
@@ -51,22 +54,31 @@ from .reasoning import (
 )
 from .sources import render_source_location
 from .state import StateError
+from .tutor_policy import (
+    SELF_CONFIDENCE,
+    detect_hedge,
+    next_action,
+    reveals_reference,
+    validate_misconception,
+)
 from .workflows import build_week_context
 from .workspace import (
     _learning_record,
     _workspace_paths,
+    dispute_learning_evaluation,
     record_learning_attempt,
     record_task_exposure,
     save_learning_evaluation,
 )
 
 SESSION_SCHEMA_VERSION = 1
-TUTOR_PROMPT_VERSION = "tutor-turn-v1"
+TUTOR_PROMPT_VERSION = "tutor-turn-v2"
 INTENTIONS = ("TEACH_ME", "TEST_ME")
 MAX_RESPONSE_CHARS = 2_000
 MAX_MESSAGE_CHARS = 2_500
 MAX_HINT_LEVEL = 2
 MAX_MODEL_CALLS = 20
+MAX_REJECTED_REPLIES = 2  # after this many discarded replies for one turn, a fixed fallback replaces the model
 MAX_TURNS = 80
 RECENT_TURNS = 4
 STALE_PENDING_SECONDS = 120
@@ -80,7 +92,25 @@ _OUTCOME = {
     "off_target": "NOT_SUPPORTED",
     "unclear": "UNCLEAR",
 }
+FALLBACK_FEEDBACK = ("Your answer is saved, but I couldn't produce feedback on it that passed my safety checks, "
+                     "so I'm not going to guess. Re-read the sources for this week, ask for a hint, or end the "
+                     "session and try again later. Nothing here counts against you.")
+FALLBACK_HINT = "I can't build a safe hint for this task right now. Re-read this week's sources, or end the session."
+NON_ANSWER_REPLY = ("That's okay -- not knowing yet is useful to know. Ask for a hint, or tell me the part you "
+                    "do understand and we'll start there. Nothing here counts against you.")
+DISPUTE_REPLY = ("Thanks for telling me. I've set that reading aside: your answer is unchanged, it is not "
+                 "counted as a misunderstanding, and you can try again, rephrase, or ask for a hint.")
 _SESSION_ID = re.compile(r"tutor-[0-9a-f]{12}")
+
+_CITATIONS = {
+    "type": "array",
+    "items": {
+        "type": "object",
+        "properties": {"source_id": {"type": "string"}, "pdf_page": {"type": ["integer", "null"]}},
+        "required": ["source_id", "pdf_page"],
+        "additionalProperties": False,
+    },
+}
 
 TUTOR_TURN_FORMAT = {
     "type": "json_schema",
@@ -91,17 +121,20 @@ TUTOR_TURN_FORMAT = {
         "properties": {
             "message": {"type": "string"},
             "diagnosis": {"type": "string", "enum": [*DIAGNOSES, "none"]},
-            "citations": {
-                "type": "array",
-                "items": {
-                    "type": "object",
-                    "properties": {"source_id": {"type": "string"}, "pdf_page": {"type": ["integer", "null"]}},
-                    "required": ["source_id", "pdf_page"],
-                    "additionalProperties": False,
+            "citations": _CITATIONS,
+            "misconception": {
+                "type": ["object", "null"],
+                "properties": {
+                    "label": {"type": "string"},
+                    "quote": {"type": "string"},
+                    "confidence": {"type": "string", "enum": ["low", "medium", "high"]},
+                    "citations": _CITATIONS,
                 },
+                "required": ["label", "quote", "confidence", "citations"],
+                "additionalProperties": False,
             },
         },
-        "required": ["message", "diagnosis", "citations"],
+        "required": ["message", "diagnosis", "citations", "misconception"],
         "additionalProperties": False,
     },
 }
@@ -115,9 +148,21 @@ action EXPLAIN: explain the underlying idea in a few short paragraphs without st
 task; diagnosis must be "none".
 action FEEDBACK: judge student_response against expected_answer_or_rubric and the sources; set diagnosis
 to one of correct, partial, misconception, off_target, unclear; give brief feedback and, unless correct,
-one targeted follow-up question.
+one targeted follow-up question. Never quote or paraphrase expected_answer_or_rubric: it is private.
+Set misconception to null unless diagnosis is "misconception". For a misconception give a short label of
+what the student seems to believe, quote the exact words from student_response that show it, cite the
+supplied passage that contradicts it, and state your confidence (low, medium or high). If you cannot
+quote the student literally, use "partial" or "unclear" instead. Uncertain or hedged answers are not
+misconceptions. Self-reported confidence is not provided to you and must not affect your judgement.
 action HINT: give a hint of strength hint_level (1 = where to look, 2 = a guiding sub-question or
 contrast). Never state the answer to the task; diagnosis must be "none"."""
+
+
+class ReplyRejected(ReasoningError):
+    """The model answered, but its reply failed a safety or grounding check and was discarded.
+
+    Distinct from a provider/transport failure so repeated rejections can be bounded.
+    """
 
 
 class TutorSessionError(StateError):
@@ -212,9 +257,17 @@ def _view(session: dict[str, Any]) -> dict[str, Any]:
     in_flight = pending is not None and pending["status"] == "PENDING" and _age_seconds(pending["started_at"]) < STALE_PENDING_SECONDS
     view["recovery"] = (
         {"client_turn_id": pending["client_turn_id"], "action": pending["action"],
-         "state": "IN_PROGRESS" if in_flight else "RETRY"}
+         "state": "IN_PROGRESS" if in_flight else "RETRY",
+         **({"rejected_replies": pending["rejected_replies"],
+             "fallback_next": pending["rejected_replies"] >= MAX_REJECTED_REPLIES}
+            if pending.get("rejected_replies") else {})}
         if pending else None
     )
+    for turn in view["turns"]:
+        mis = turn.get("misconception")
+        turn["can_dispute"] = bool(
+            session["status"] == "ACTIVE" and not pending and mis and mis.get("status") == "SUSPECTED"
+            and turn.get("status") == "COMPLETE")
     actions: list[str] = []
     if session["status"] == "ACTIVE" and not session["task_stale"] and not pending:
         actions.append("ANSWER")
@@ -259,14 +312,14 @@ def _prepare(state: dict[str, Any], module_code: str, week_number: int, task: di
     return "OK", context
 
 
-def _normalise(text: str) -> str:
-    return " ".join(re.findall(r"[a-z0-9]+", text.lower()))
-
-
 def _ask_model(provider: ReasoningProvider, *, action: str, task: dict[str, Any], context: dict[str, Any],
                intention: str, hint_level: int, response: str | None,
-               recent: list[dict[str, Any]]) -> tuple[dict[str, Any], dict[str, Any] | None]:
-    """One validated model call: citations must be supplied sources/pages; hints must not leak."""
+               recent: list[dict[str, Any]], revealed: bool = False) -> tuple[dict[str, Any], dict[str, Any] | None]:
+    """One validated model call: citations must be supplied sources/pages; no reply may leak the answer.
+
+    A suspected misconception is kept only if it passes ``tutor_policy.validate_misconception``;
+    otherwise it is dropped and a "misconception" diagnosis falls back to "unclear".
+    """
     bounded = {
         "workflow": "TUTOR_TURN", "prompt_version": TUTOR_PROMPT_VERSION, "action": action,
         "intention": intention, "task": task["task"], "expected_answer_or_rubric": task.get("expected_answer"),
@@ -277,7 +330,19 @@ def _ask_model(provider: ReasoningProvider, *, action: str, task: dict[str, Any]
     raw = provider.generate_structured_output(bounded, TUTOR_INSTRUCTIONS, TUTOR_TURN_FORMAT)
     usage = getattr(provider, "last_usage", None)
     usage = usage.to_dict() if hasattr(usage, "to_dict") else None
-    if not isinstance(raw, dict) or set(raw) != {"message", "diagnosis", "citations"}:
+    try:
+        return _check_reply(raw, action=action, task=task, context=context, response=response, revealed=revealed), usage
+    except ReplyRejected:
+        raise
+    except ReasoningError as exc:
+        raise ReplyRejected(str(exc)) from exc
+
+
+def _check_reply(raw: Any, *, action: str, task: dict[str, Any], context: dict[str, Any],
+                 response: str | None, revealed: bool) -> dict[str, Any]:
+    """Every check a model reply must pass before it can be stored or shown."""
+    if not isinstance(raw, dict) or set(raw) not in ({"message", "diagnosis", "citations"},
+                                                      {"message", "diagnosis", "citations", "misconception"}):
         raise ReasoningError("Tutor reply does not match the required structure", usage=None)
     message = raw["message"]
     if not isinstance(message, str) or not message.strip() or len(message) > MAX_MESSAGE_CHARS:
@@ -290,13 +355,29 @@ def _ask_model(provider: ReasoningProvider, *, action: str, task: dict[str, Any]
         isinstance(c, dict) and set(c) == {"source_id", "pdf_page"} for c in citations
     ):
         raise ReasoningError("Tutor reply must cite at least one supplied source")
-    wrapped = {"provenance": citations}
-    _validate_citation_ids(wrapped, {s["id"] for s in context["sources"]})
-    _validate_citation_pages(wrapped, supplied_units(context["source_contexts"]))
-    answer = _normalise(task.get("expected_answer") or "")
-    if action in ("HINT", "EXPLAIN") and len(answer) >= 25 and answer in _normalise(message):
+    source_ids, units = {s["id"] for s in context["sources"]}, supplied_units(context["source_contexts"])
+
+    def citations_ok(cites: list[dict[str, Any]]) -> None:
+        _validate_citation_ids({"provenance": cites}, source_ids)
+        _validate_citation_pages({"provenance": cites}, units)
+
+    citations_ok(citations)
+    answer = task.get("expected_answer")
+    # Once the answer has been shown there is nothing left to protect; until then no reply
+    # (explanation, hint or feedback) may reproduce the stored reference answer or rubric.
+    if not revealed and reveals_reference(message, answer, allowed_text=[task["task"], response or ""]):
         raise ReasoningError("Tutor reply would reveal the reference answer")
-    return {"message": message.strip(), "diagnosis": raw["diagnosis"], "citations": citations}, usage
+    diagnosis, misconception, dropped = raw["diagnosis"], None, None
+    if action == "FEEDBACK":
+        misconception, dropped = validate_misconception(
+            raw.get("misconception"), response or "", diagnosis, citations_ok=citations_ok,
+            reference_answer=None if revealed else answer, allowed_text=[task["task"]])
+        if diagnosis == "misconception" and misconception is None:
+            # Safe fallback: an unsupported accusation becomes "could not be judged", never a wrong answer.
+            diagnosis = "unclear"
+    return {"message": message.strip(), "diagnosis": diagnosis, "model_diagnosis": raw["diagnosis"],
+            "misconception": misconception, "misconception_dropped": dropped,
+            "citations": citations}
 
 
 def _count_call(session: dict[str, Any]) -> None:
@@ -488,13 +569,14 @@ def _result(session: dict[str, Any], turn: dict[str, Any]) -> dict[str, Any]:
 
 
 def _claim(path: Path, module_code: str, week_number: int, session_id: str, client_turn_id: str,
-           action: str, text: str | None) -> tuple[dict[str, Any], dict[str, Any], bool]:
+           action: str, text: str | None, confidence: str | None = None) -> tuple[dict[str, Any], dict[str, Any], bool]:
     """Claim (or recover) a turn under the session lock. Returns (session, turn, already_done)."""
     with record_lock(path, create_dir=True):
         session = _read(path, module_code, week_number)
         turn = next((t for t in _student_turns(session) if t["client_turn_id"] == client_turn_id), None)
         if turn is not None:
-            if turn["action"] != action or (action == "ANSWER" and turn["text"] != text):
+            if (turn["action"] != action or (action == "ANSWER" and (turn["text"] != text or turn.get("self_confidence") != confidence))
+                    or (action == "DISPUTE" and turn.get("target_turn_id") != text)):
                 raise TutorSessionError("This turn id was already used for a different request")
             if turn["status"] in ("COMPLETE", "BLOCKED", "ABANDONED"):
                 return session, turn, True
@@ -515,6 +597,12 @@ def _claim(path: Path, module_code: str, week_number: int, session_id: str, clie
                 raise TutorSessionError("This session has reached its turn limit; end it and start a new one")
             if action == "ANSWER" and (not text or not text.strip() or len(text) > MAX_RESPONSE_CHARS):
                 raise TutorSessionError(f"Answers must be 1 to {MAX_RESPONSE_CHARS} characters")
+            if action == "DISPUTE":
+                target = next((t for t in _student_turns(session) if t["turn_id"] == text), None)
+                if target is None or not target.get("misconception") or target["status"] != "COMPLETE":
+                    raise TutorSessionError("There is no suspected misunderstanding on that answer to dispute")
+                if target["misconception"].get("status") != "SUSPECTED":
+                    raise TutorSessionError("That suspected misunderstanding was already disputed")
             if action == "HINT" and (session["hint_level"] >= MAX_HINT_LEVEL or session["revealed"]):
                 raise TutorSessionError("No further hints are available for this task")
             if action == "REVEAL" and (session["revealed"] or not session["task"].get("expected_answer")):
@@ -523,9 +611,14 @@ def _claim(path: Path, module_code: str, week_number: int, session_id: str, clie
                     "client_turn_id": client_turn_id, "text": text if action == "ANSWER" else "",
                     "status": "PENDING", "started_at": _now(), "attempt_id": None, "assistance_status": None,
                     "diagnosis": None, "error": None,
+                    **({"self_confidence": confidence} if action == "ANSWER" else {}),
+                    **({"target_turn_id": text} if action == "DISPUTE" else {}),
                     "hint_level": session["hint_level"] + (1 if action == "HINT" else 0)}
             session["turns"].append(turn)
-        needs_model = action == "ANSWER" or (action == "HINT" and turn["hint_level"] >= 2)
+        # A pure "I don't know" reply is answered without the model (and without spending a call).
+        exhausted = turn.get("rejected_replies", 0) >= MAX_REJECTED_REPLIES  # the fallback needs no model call
+        needs_model = not exhausted and ((action == "ANSWER" and not detect_hedge(turn["text"])["non_answer"])
+                                         or (action == "HINT" and turn["hint_level"] >= 2))
         if needs_model:
             _count_call(session)
         turn.update({"status": "PENDING", "started_at": _now(), "error": None})
@@ -535,13 +628,16 @@ def _claim(path: Path, module_code: str, week_number: int, session_id: str, clie
 
 def _finish(path: Path, module_code: str, week_number: int, turn_id: str, *, status: str,
             reply: dict[str, Any] | None, fields: dict[str, Any], usage: dict[str, Any] | None,
-            session_updates: dict[str, Any] | None = None) -> dict[str, Any]:
+            session_updates: dict[str, Any] | None = None,
+            other_turn: tuple[str, dict[str, Any]] | None = None) -> dict[str, Any]:
     with record_lock(path, create_dir=True):
         session = _read(path, module_code, week_number)
         turn = next(t for t in session["turns"] if t["turn_id"] == turn_id)
         if turn["status"] in ("COMPLETE", "BLOCKED", "ABANDONED"):
             return _result(session, turn)  # another recovery finished first; its result stands
         turn.update(fields)
+        if other_turn is not None:
+            next(t for t in session["turns"] if t["turn_id"] == other_turn[0]).update(other_turn[1])
         turn["status"] = status
         if reply is not None:
             session["turns"].append({"turn_id": f"t{len(session['turns'])+1:04d}", "role": "tutor",
@@ -557,16 +653,19 @@ def _fail(path: Path, module_code: str, week_number: int, turn_id: str, exc: Exc
         session = _read(path, module_code, week_number)
         turn = next(t for t in session["turns"] if t["turn_id"] == turn_id)
         if turn["status"] == "PENDING":
+            if isinstance(exc, ReplyRejected):
+                turn["rejected_replies"] = turn.get("rejected_replies", 0) + 1
             turn["status"] = "FAILED"
             turn["error"] = (str(exc) if isinstance(exc, (ReasoningError, StateError)) else type(exc).__name__)[:200]
             _write(path, session)
 
 
 def _run_turn(state: dict[str, Any], module_code: str, week_number: int, session_id: str, client_turn_id: str,
-              action: str, text: str | None, provider: ReasoningProvider, root: Path | None) -> dict[str, Any]:
+              action: str, text: str | None, provider: ReasoningProvider, root: Path | None,
+              confidence: str | None = None) -> dict[str, Any]:
     client_turn_id = _clean_id(client_turn_id, "client_turn_id")
     path = _session_path(module_code, week_number, session_id, root)
-    session, turn, done = _claim(path, module_code, week_number, session_id, client_turn_id, action, text)
+    session, turn, done = _claim(path, module_code, week_number, session_id, client_turn_id, action, text, confidence)
     if done:
         return _result(session, turn)
     turn_id, task = turn["turn_id"], session["task"]
@@ -588,6 +687,7 @@ def _record_answer(session: dict[str, Any], turn: dict[str, Any], module_code: s
         response=turn["text"], assistance_status=requested, expected_answer=task.get("expected_answer"),
         source_references=task["source_references"], root=root, session_id=session["session_id"],
         turn_id=turn["turn_id"], hint_level=turn["hint_level"], task_key=task["task_key"],
+        self_confidence=turn.get("self_confidence"),
         prompt_help=[*(task.get("prompt_help") or []),
                      *([f"Hint level {turn['hint_level']} used"] if turn["hint_level"] else [])])
 
@@ -600,6 +700,19 @@ def _execute(state, module_code, week_number, path, session, turn, task, provide
         turn_id=turn_id, hint_level=level, task_text=task["task"], root=root)
     record, *_ = _learning_record(module_code, week_number, root)
     sources = _source_titles(record)
+
+    if action == "DISPUTE":
+        target_id = turn["target_turn_id"]
+        target = next(t for t in session["turns"] if t["turn_id"] == target_id)
+        # Evidence first (idempotent): the answer stays as written; only the reading is withdrawn.
+        dispute_learning_evaluation(module_code, week_number, target["attempt_id"], session_id=session_id,
+                                    turn_id=turn_id, root=root)
+        latest = _student_turns(session)
+        updates = {"last_diagnosis": "unclear"} if [t for t in latest if t.get("attempt_id")][-1:] == [target] else {}
+        return done(status="COMPLETE", usage=None, session_updates=updates, fields={},
+                    other_turn=(target_id, {"misconception": {**target["misconception"], "status": "DISPUTED"},
+                                            "next_action": "CLARIFY"}),
+                    reply={"kind": "NOTE", "text": DISPUTE_REPLY, "citations": [], "hint_level": session["hint_level"]})
 
     if action == "REVEAL":
         expose("REVEAL")
@@ -623,9 +736,9 @@ def _execute(state, module_code, week_number, path, session, turn, task, provide
     recent = [t for t in session["turns"] if t["turn_id"] != turn_id and t.get("text")]
 
     if action == "HINT":
-        if status != "OK":
+        if status != "OK" or turn.get("rejected_replies", 0) >= MAX_REJECTED_REPLIES:
             return done(status="COMPLETE", usage=None, fields={}, reply={
-                "kind": "HINT", "text": "I can't build a source-grounded hint for this task right now.",
+                "kind": "HINT", "text": FALLBACK_HINT if status == "OK" else "I can't build a source-grounded hint for this task right now.",
                 "citations": [], "hint_level": session["hint_level"]})
         reply, usage = _ask_model(provider, action="HINT", task=task, context=context, intention=session["intention"],
                                   hint_level=2, response=None, recent=recent)
@@ -643,15 +756,37 @@ def _execute(state, module_code, week_number, path, session, turn, task, provide
                         "text": "Your answer is saved, but the source for this task has changed, so I can't "
                                 "judge it. End this session and start a new one."})
     evaluated_at = _now()
-    if status == "NO_MATCH":
+    hedge = detect_hedge(turn["text"])
+    misconception, dropped, model_diagnosis = None, None, None
+    if hedge["non_answer"]:
+        # "I don't know" is an evidence gap, not a wrong answer: no model call, no help given.
+        diagnosis, outcome, basis = "unclear", "UNCLEAR", "STUDENT_UNCERTAIN"
+        reply, usage = {"message": NON_ANSWER_REPLY, "citations": []}, None
+    elif turn.get("rejected_replies", 0) >= MAX_REJECTED_REPLIES:
+        # Bounded fallback: the model's replies kept failing the checks, so stop asking. The answer is
+        # already saved; no help was shown, so no exposure is recorded and nothing is claimed.
+        diagnosis, outcome, basis = "unclear", "UNCLEAR", "TUTOR_REPLY_REJECTED"
+        reply, usage = {"message": FALLBACK_FEEDBACK, "citations": []}, None
+        hedge = {**hedge, "non_answer": True}  # advice only: offer a hint or an end, not "say more"
+    elif status == "NO_MATCH":
         diagnosis, outcome, basis = "unclear", "UNCLEAR", "NO_EVIDENCE_RETRIEVED"
         reply, usage = {"message": "I can't find a supporting passage for this task in your sources, so I can't "
                                    "judge your answer.", "citations": []}, None
     else:
         reply, usage = _ask_model(provider, action="FEEDBACK", task=task, context=context, intention=session["intention"],
-                                  hint_level=turn["hint_level"], response=turn["text"], recent=recent)
+                                  hint_level=turn["hint_level"], response=turn["text"], recent=recent,
+                                  revealed=session["revealed"])
         diagnosis, outcome, basis = reply["diagnosis"], _OUTCOME[reply["diagnosis"]], "TUTOR_TURN_MODEL_JUDGEMENT"
+        misconception, dropped = reply["misconception"], reply["misconception_dropped"]
+        model_diagnosis = reply["model_diagnosis"]
         expose("FEEDBACK")  # later answers to this task have seen the feedback
+    previous_unclear = [t for t in _student_turns(session) if t.get("diagnosis")][-1:]
+    suggestion = next_action(
+        diagnosis=diagnosis, hedged=hedge["hedged"], non_answer=hedge["non_answer"],
+        misconception=misconception is not None, self_confidence=turn.get("self_confidence"),
+        assistance_status=attempt["assistance_status"], hints_left=session["hint_level"] < MAX_HINT_LEVEL,
+        answer_revealed=session["revealed"],
+        consecutive_unclear=1 if previous_unclear and previous_unclear[0]["diagnosis"] == "unclear" else 0)
     saved, *_ = _learning_record(module_code, week_number, root)
     stored = next(a for a in saved["learning"]["evidence"] if a["attempt_id"] == attempt["attempt_id"])
     if stored.get("evaluation") is None:
@@ -661,18 +796,48 @@ def _execute(state, module_code, week_number, path, session, turn, task, provide
                 {"source_id": c["source_id"], "location": f"p. {c['pdf_page']}" if isinstance(c.get("pdf_page"), int) else ""}
                 for c in reply["citations"]],
             "basis": basis, "provider": _provider_identity(provider), "evaluated_at": evaluated_at,
-            "session_id": session_id, "turn_id": turn_id}, root=root)
+            "session_id": session_id, "turn_id": turn_id,
+            **({"misconception": {k: misconception[k] for k in ("label", "quote", "confidence")}}
+               if misconception else {}),
+            **({"model_diagnosis": model_diagnosis} if model_diagnosis not in (None, diagnosis) else {})},
+            root=root)
     return done(status="COMPLETE", usage=usage, session_updates={"last_diagnosis": diagnosis},
-                fields={**fields, "diagnosis": diagnosis},
+                fields={**fields, "diagnosis": diagnosis, "next_action": suggestion,
+                        **({"model_diagnosis": model_diagnosis} if model_diagnosis not in (None, diagnosis) else {}),
+                        **({"misconception_dropped": dropped} if dropped else {}),
+                        **({"misconception": {**misconception, "status": "SUSPECTED"}} if misconception else {})},
                 reply={"kind": "FEEDBACK", "text": reply["message"], "citations": reply["citations"],
-                       "hint_level": turn["hint_level"]})
+                       "hint_level": turn["hint_level"], "next_action": suggestion})
 
 
 def submit_response(state: dict[str, Any], module_code: str, week_number: int, session_id: str, *,
                     client_turn_id: str, text: str, provider: ReasoningProvider,
-                    workspace_root: Path | None = None) -> dict[str, Any]:
-    """Answer the open task. Repeating the same ``client_turn_id`` retries, never duplicates."""
-    return _run_turn(state, module_code, week_number, session_id, client_turn_id, "ANSWER", text, provider, workspace_root)
+                    workspace_root: Path | None = None, confidence: str | None = None) -> dict[str, Any]:
+    """Answer the open task. Repeating the same ``client_turn_id`` retries, never duplicates.
+
+    ``confidence`` (SURE, UNSURE or GUESSING) is optional self-reporting. It is stored with the
+    attempt and only shapes the suggested next step; it is never sent to the model and never
+    changes the diagnosis or the evaluation.
+    """
+    if confidence is not None:
+        confidence = str(confidence).strip().upper() or None
+        if confidence is not None and confidence not in SELF_CONFIDENCE:
+            raise TutorSessionError("Confidence must be Sure, Unsure or Guessing (or left blank)")
+    return _run_turn(state, module_code, week_number, session_id, client_turn_id, "ANSWER", text, provider,
+                     workspace_root, confidence)
+
+
+def dispute_diagnosis(state: dict[str, Any], module_code: str, week_number: int, session_id: str, *,
+                      client_turn_id: str, target_turn_id: str, provider: ReasoningProvider,
+                      workspace_root: Path | None = None) -> dict[str, Any]:
+    """Withdraw a suspected misunderstanding ("that's not what I meant").
+
+    No model call and no new attempt. The student's answer is untouched; the stored
+    evaluation is softened to UNCLEAR (original outcome kept in the record), so a
+    disputed reading never counts as evidence against the student.
+    """
+    return _run_turn(state, module_code, week_number, session_id, client_turn_id, "DISPUTE",
+                     _clean_id(target_turn_id, "target_turn_id"), provider, workspace_root)
 
 
 def request_hint(state: dict[str, Any], module_code: str, week_number: int, session_id: str, *,

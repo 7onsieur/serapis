@@ -1544,7 +1544,8 @@ def record_learning_attempt(module_code: str, week_number: int, *, capability: s
                             topic: str | None = None, root: Path | None = None,
                             attempted_at: str | None = None, session_id: str | None = None,
                             turn_id: str | None = None, hint_level: int | None = None,
-                            task_key: str | None = None) -> dict[str, Any]:
+                            task_key: str | None = None,
+                            self_confidence: str | None = None) -> dict[str, Any]:
     """Append a raw student response before any evaluation is considered.
 
     With ``session_id`` and ``turn_id`` the call is idempotent: repeating it returns
@@ -1598,6 +1599,9 @@ def record_learning_attempt(module_code: str, week_number: int, *, capability: s
         if session_id is not None:
             attempt.update({"session_id": session_id, "turn_id": turn_id, "hint_level": hint_level,
                             "task_key": task_key})
+        if self_confidence is not None:
+            # Student self-report: kept for the record, never an input to any evaluation.
+            attempt["self_reported_confidence"] = self_confidence
         evidence.append(attempt)
         record["workspace_schema_version"] = WORKSPACE_SCHEMA_VERSION
         # Exports do not render learning evidence, so only the record is written.
@@ -1616,5 +1620,43 @@ def save_learning_evaluation(module_code: str, week_number: int, attempt_id: str
         if attempt.get("evaluation") is not None:
             raise StateError("Learning attempt already has an evaluation")
         attempt["evaluation"] = deepcopy(evaluation)
+        _write_record(record, record_path)
+        return deepcopy(attempt)
+
+
+def effective_outcome(evaluation: dict[str, Any] | None) -> str | None:
+    """The outcome other features should act on.
+
+    The stored ``outcome`` is the model's historical judgement and is never rewritten. A
+    NOT_SUPPORTED judgement the student disputed is read as UNCLEAR: it is neither counted
+    against them nor treated as confirmed.
+    """
+    if not evaluation:
+        return None
+    outcome = evaluation.get("outcome")
+    return "UNCLEAR" if outcome == "NOT_SUPPORTED" and evaluation.get("dispute") else outcome
+
+
+def dispute_learning_evaluation(module_code: str, week_number: int, attempt_id: str, *, session_id: str,
+                                turn_id: str, root: Path | None = None) -> dict[str, Any]:
+    """Mark the model's diagnosis of an attempt as disputed by the student.
+
+    Nothing is erased or rewritten: the raw response, assistance status, exposures and the
+    evaluation's own outcome and reason stay as the model gave them. A ``dispute`` note is
+    added beside them, and readers use ``effective_outcome``. Idempotent.
+    """
+    record_path = _workspace_paths(module_code, week_number, root)[0]
+    with record_lock(record_path):
+        record, record_path, _, _ = _learning_record(module_code, week_number, root)
+        attempt = next((item for item in record["learning"]["evidence"] if item["attempt_id"] == attempt_id), None)
+        if attempt is None:
+            raise StateError("Learning attempt not found")
+        evaluation = attempt.get("evaluation")
+        if evaluation is None or evaluation.get("dispute"):
+            return deepcopy(attempt)
+        evaluation["dispute"] = {
+            "status": "DISPUTED_BY_STUDENT", "session_id": session_id, "turn_id": turn_id,
+            "disputed_outcome": evaluation.get("outcome"),
+            "disputed_at": datetime.now(timezone.utc).replace(microsecond=0).isoformat()}
         _write_record(record, record_path)
         return deepcopy(attempt)

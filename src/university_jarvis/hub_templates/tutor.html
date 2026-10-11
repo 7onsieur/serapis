@@ -8,8 +8,12 @@
 {% set base = "/modules/" ~ module.module_code ~ "/weeks/" ~ week.week %}
 {% set post = base ~ "/tutor/" ~ session.session_id %}
 {% set assist = {"UNAIDED": "Recorded as unaided", "PROMPTED": "Recorded as assisted", "REVEALED": "Recorded after the answer was shown"} %}
-{% set already_assisted = session.intention == "TEACH_ME" or (session.turns | selectattr("action", "defined") | selectattr("action", "equalto", "ANSWER") | list | length > 0) or session.hint_level > 0 %}
+{% set already_assisted = session.intention == "TEACH_ME" or (session.turns | selectattr("kind", "defined") | selectattr("kind", "equalto", "FEEDBACK") | selectattr("citations") | list | length > 0) or session.hint_level > 0 %}
 {% set reads = {"correct": "looks correct", "partial": "partly correct", "misconception": "contains a misunderstanding", "off_target": "does not address the question", "unclear": "could not be judged"} %}
+{% set next_steps = {"OFFER_HINT": "ask for a hint, or tell me the part you do understand", "OFFER_REVEAL_OR_END": "review the sources, or end here and come back later",
+  "OFFER_HINT_OR_END": "ask for a hint, or end here and come back later", "CLARIFY": "say a little more about what you mean", "RESTATE": "re-read the question and try again",
+  "REVIEW_SOURCE": "re-read the cited passage, then try again", "FOLLOW_UP": "add the missing part, or ask for a hint", "CHECK_REASONING": "explain why, in your own words, to check it",
+  "UNAIDED_RETEST_LATER": "come back later for a fresh question without help", "CONSOLIDATE": "try a different question on this idea later"} %}
 {% macro why(t) -%}
 {%- set r = [] -%}
 {%- if t.assistance_status == "REVEALED" %}{% set _ = r.append("the answer had been shown") %}
@@ -41,19 +45,36 @@
         {% elif t.kind == "QUESTION" %}Tutor &mdash; question
         {% elif t.kind == "HINT" %}Tutor &mdash; hint {{ t.hint_level }}
         {% elif t.kind == "REVEAL" %}Reference answer (you asked to see it)
+        {% elif t.kind == "NOTE" %}Tutor
         {% else %}Tutor &mdash; feedback (provisional){% endif %}
       </div>
       <pre class="rendered-output">{{ t.text }}</pre>
+      {% if t.next_action and loop.last and session.status == "ACTIVE" %}<p class="note">Suggested next step: {{ next_steps[t.next_action] }}.</p>{% endif %}
     </div>
     {% else %}
     <div class="card tutor-turn">
       <p><strong>You</strong>
         {% if t.action == "HINT" %}asked for a hint
         {% elif t.action == "REVEAL" %}asked to see the answer
+        {% elif t.action == "DISPUTE" %}said a suspected misunderstanding is not what they meant
         {% endif %}</p>
       {% if t.text %}<pre class="rendered-output">{{ t.text }}</pre>{% endif %}
       {% if t.action == "ANSWER" and t.assistance_status %}<p class="note"><strong>{{ assist[t.assistance_status] }}</strong>{% if t.assistance_status != "UNAIDED" %} ({{ why(t) }}){% endif %}.
-        {% if t.diagnosis %}Tutor's provisional read: {{ reads[t.diagnosis] }}.{% endif %}</p>{% endif %}
+        {% if t.diagnosis %}Tutor's provisional read: {{ reads[t.diagnosis] }}.{% endif %}
+        {% if t.self_confidence %}You said: {{ t.self_confidence | lower }}.{% endif %}</p>{% endif %}
+      {% if t.misconception %}
+      <div class="note">
+        {% if t.misconception.status == "DISPUTED" %}<strong>Possible misunderstanding: disputed by you.</strong> The tutor's reading ({{ t.misconception.label }}) stays in the record marked as disputed; it is not counted against you and your answer is unchanged.
+        {% else %}<strong>Possible misunderstanding (provisional, {{ t.misconception.confidence }} confidence):</strong> {{ t.misconception.label }}<br>
+        From your words: &ldquo;{{ t.misconception.quote }}&rdquo;{% if t.misconception.citations %} &middot; see {% for c in t.misconception.citations %}{{ c.source_id }}{% if c.pdf_page %} p. {{ c.pdf_page }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}.
+        {% endif %}
+      </div>
+      {% if t.can_dispute %}
+      <form method="post" action="{{ post }}/dispute"><input type="hidden" name="client_turn_id" value="dispute-{{ t.turn_id }}"><input type="hidden" name="target" value="{{ t.turn_id }}">
+        <button type="submit">That's not what I meant</button></form>
+      {% endif %}
+      {% endif %}
+
       {% if t.status in ["PENDING", "FAILED"] %}<p class="note">The tutor has not replied to this yet{% if t.action == "ANSWER" %} &mdash; your answer is saved{% endif %}.</p>{% endif %}
       {% if t.status == "BLOCKED" %}<p class="note">Your answer is saved but could not be judged because the source material changed.</p>{% endif %}
       {% if t.status == "ABANDONED" %}<p class="note">This turn was not completed before the session ended; your answer was saved.</p>{% endif %}
@@ -68,10 +89,13 @@
     {% set pending = (session.turns | selectattr("client_turn_id", "defined") | selectattr("client_turn_id", "equalto", session.recovery.client_turn_id) | list | first) %}
     <div class="action-form">
       <h3>The last request did not finish</h3>
-      <p class="note">{% if pending.action == "ANSWER" %}Your answer is saved and will not be duplicated.{% endif %} Retrying repeats exactly that request.</p>
+      <p class="note">{% if pending.action == "ANSWER" %}Your answer is saved and will not be duplicated.{% endif %} Retrying repeats exactly that request.
+        {% if session.recovery.rejected_replies %}The tutor's last reply did not pass its safety checks and was not shown.
+        {% if session.recovery.fallback_next %}Retrying now will not call the AI again; it saves a plain reply so you can carry on.{% endif %}{% endif %}</p>
       <form method="post" action="{{ post }}/{{ 'answer' if pending.action == 'ANSWER' else pending.action | lower }}">
         <input type="hidden" name="client_turn_id" value="{{ session.recovery.client_turn_id }}">
-        {% if pending.action == "ANSWER" %}<input type="hidden" name="response" value="{{ pending.text }}">{% endif %}
+        {% if pending.action == "ANSWER" %}<input type="hidden" name="response" value="{{ pending.text }}">{% if pending.self_confidence %}<input type="hidden" name="confidence" value="{{ pending.self_confidence }}">{% endif %}{% endif %}
+        {% if pending.action == "DISPUTE" %}<input type="hidden" name="target" value="{{ pending.target_turn_id }}">{% endif %}
         {% if pending.action == "REVEAL" %}<input type="hidden" name="confirm" value="yes">{% endif %}
         <button type="submit">Retry</button>
       </form>
@@ -85,6 +109,8 @@
       <form method="post" action="{{ post }}/answer">
         <input type="hidden" name="client_turn_id" value="{{ new_turn_id }}">
         <textarea name="response" required rows="5" maxlength="2000" placeholder="Answer in your own words"></textarea>
+        <label>How sure are you? <span class="note">(optional &mdash; this is your own view; it does not change how your answer is judged)</span>
+          <select name="confidence"><option value="">Prefer not to say</option><option value="SURE">Sure</option><option value="UNSURE">Unsure</option><option value="GUESSING">Guessing</option></select></label>
         <button type="submit">Send answer</button>
       </form>
     </div>

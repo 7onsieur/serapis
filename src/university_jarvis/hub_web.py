@@ -51,7 +51,7 @@ from "gaps exist" via ``hub_service.has_any_observed_material`` -- never
 
 Phase 3B adds the Tutor: ``GET .../tutor/{session_id}`` renders a saved session
 read-only (no write, no provider call); ``POST .../tutor/start`` and
-``POST .../tutor/{session_id}/{answer|hint|dont-know|reveal|end|delete}`` are thin
+``POST .../tutor/{session_id}/{answer|hint|dont-know|dispute|reveal|end|delete}`` are thin
 wrappers over ``tutoring`` that redirect (303) back to the GET page. Every turn
 carries a ``client_turn_id`` so a resubmitted form is idempotent.
 
@@ -742,7 +742,7 @@ def create_app(
         if isinstance(found, HTMLResponse):
             return found
         module, week = found
-        if action not in {"answer", "hint", "dont-know", "reveal", "end", "delete"}:
+        if action not in {"answer", "hint", "dont-know", "dispute", "reveal", "end", "delete"}:
             return _not_found(request, "Unknown tutoring action.")
         form = await _form_fields(request)
         root = request.app.state.hub_workspace_root
@@ -755,7 +755,12 @@ def create_app(
         try:
             if action == "answer":
                 tutoring.submit_response(state, code, week_number, session_id, client_turn_id=turn_id,
-                                         text=form.get("response", ""), provider=provider, workspace_root=root)
+                                         text=form.get("response", ""), provider=provider, workspace_root=root,
+                                         confidence=form.get("confidence") or None)
+            elif action == "dispute":
+                tutoring.dispute_diagnosis(state, code, week_number, session_id, client_turn_id=turn_id,
+                                           target_turn_id=form.get("target", ""), provider=provider,
+                                           workspace_root=root)
             elif action in ("hint", "dont-know"):
                 # "I don't know" asks for the next hint; the answer is only ever shown on request.
                 tutoring.request_hint(state, code, week_number, session_id, client_turn_id=turn_id,

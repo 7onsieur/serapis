@@ -402,3 +402,114 @@ class HubTutorTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class HubTutorDiagnosisTests(unittest.TestCase):
+    """Phase 3C slice 1 through the web layer; borrows the fixture and helpers, not the tests."""
+
+    setUp = HubTutorTests.setUp
+    make_client = HubTutorTests.make_client
+    _context = HubTutorTests._context
+    learning = HubTutorTests.learning
+    start = HubTutorTests.start
+    post = HubTutorTests.post
+    turn_id = HubTutorTests.turn_id
+    page = HubTutorTests.page
+
+    WRONG = "I believe viruses are the basic unit of life"
+    MIS = {"label": "Thinks viruses are the unit of life", "quote": "viruses are the basic unit",
+           "confidence": "medium", "citations": [{"source_id": "s1", "pdf_page": 1}]}
+
+    def scripted(self, **fields):
+        base = {"message": "Look at the cited passage again.", "diagnosis": "misconception",
+                "citations": [{"source_id": "s1", "pdf_page": 1}], "misconception": self.MIS}
+        outputs = {**base, **fields}
+        original = self.provider.generate_structured_output
+
+        def generate(context, instructions, output_format):
+            if context["action"] == "FEEDBACK":
+                self.provider.calls.append(context)
+                return outputs
+            return original(context, instructions, output_format)
+        self.provider.generate_structured_output = generate
+
+    def answer(self, url, **data):
+        turn = self.turn_id(self.page(url))
+        return self.post(url, "answer", client_turn_id=turn, response=self.WRONG, **data)
+
+    def test_answer_form_offers_the_optional_confidence_selector(self):
+        html = self.page(self.start())
+        for label in ("Sure", "Unsure", "Guessing", "Prefer not to say", "does not change how your answer is judged"):
+            self.assertIn(label, html)
+
+    def test_confidence_is_saved_shown_and_not_required(self):
+        self.scripted(diagnosis="partial", misconception=None)
+        url = self.start()
+        self.assertEqual(self.answer(url, confidence="GUESSING").status_code, 303)
+        self.assertEqual(self.learning()["evidence"][0]["self_reported_confidence"], "GUESSING")
+        self.assertIn("You said: guessing", self.page(url))
+        bad = self.answer(self.start(request_id="r2"), confidence="certain")
+        self.assertEqual(bad.status_code, 200)
+        self.assertIn("Sure, Unsure or Guessing", bad.text)
+
+    def test_a_suspected_misunderstanding_is_shown_with_quote_and_can_be_disputed(self):
+        self.scripted()
+        url = self.start()
+        self.answer(url)
+        html = self.page(url)
+        self.assertIn("Possible misunderstanding (provisional, medium confidence)", html)
+        self.assertIn("viruses are the basic unit", html)
+        self.assertIn("That's not what I meant", html)
+        self.assertIn("Suggested next step", html)
+        calls = len(self.provider.calls)
+        target = re.search(r'name="target" value="(t\d+)"', html).group(1)
+        out = self.post(url, "dispute", client_turn_id=f"dispute-{target}", target=target)
+        self.assertEqual((out.status_code, out.headers["location"]), (303, url))
+        after = self.page(url)
+        self.assertIn("disputed by you", after)
+        self.assertNotIn("That's not what I meant", after)
+        self.assertEqual(len(self.provider.calls), calls)
+        attempt = self.learning()["evidence"][0]
+        self.assertEqual((attempt["student_response"], attempt["evaluation"]["outcome"]), (self.WRONG, "NOT_SUPPORTED"))
+        self.assertEqual(attempt["evaluation"]["dispute"]["status"], "DISPUTED_BY_STUDENT")  # marked, not erased
+        again = self.post(url, "dispute", client_turn_id=f"dispute-{target}", target=target)  # double click
+        self.assertEqual(again.status_code, 303)
+        self.assertEqual(len(self.learning()["evidence"]), 1)
+
+    def test_disputing_nothing_shows_an_error_not_a_crash(self):
+        self.scripted(diagnosis="partial", misconception=None)
+        url = self.start()
+        self.answer(url)
+        out = self.post(url, "dispute", client_turn_id="d-x", target="t0002")
+        self.assertEqual(out.status_code, 200)
+        self.assertIn("no suspected misunderstanding", out.text)
+
+    def test_a_feedback_that_leaks_the_reference_answer_is_never_displayed(self):
+        self.scripted(diagnosis="partial", misconception=None, message=f"Actually: {SECRET}")
+        url = self.start()
+        self.answer(url)
+        html = self.page(url)
+        self.assertNotIn(SECRET, html)
+        self.assertIn("did not finish", html)
+        self.assertIn(self.WRONG, html)  # the answer itself is safe
+
+    def test_a_fallback_reply_gave_no_help_so_the_page_does_not_say_answers_are_assisted(self):
+        self.scripted(diagnosis="partial", misconception=None, message=f"Actually: {SECRET}")
+        url = self.start()
+        turn = self.turn_id(self.page(url))
+        for _ in range(tutoring.MAX_REJECTED_REPLIES + 1):
+            self.post(url, "answer", client_turn_id=turn, response=self.WRONG)
+        html = self.page(url)
+        self.assertNotIn(SECRET, html)
+        self.assertIn("passed my safety checks", html)
+        self.assertIn("ask for a hint, or tell me the part you do understand", html)
+        self.assertIn("A hint means your next answer is recorded as assisted", html)
+        self.assertNotIn("already recorded as assisted", html)
+
+    def test_a_dispute_turn_is_labelled_not_left_blank(self):
+        self.scripted()
+        url = self.start()
+        self.answer(url)
+        target = re.search(r'name="target" value="(t\d+)"', self.page(url)).group(1)
+        self.post(url, "dispute", client_turn_id="d1", target=target)
+        self.assertIn("said a suspected misunderstanding is not what they meant", self.page(url))

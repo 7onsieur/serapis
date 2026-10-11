@@ -64,7 +64,7 @@ from .workflows import build_assignment_context, build_week_context
 from .workspace import (capture_after_lecture, materialize_week_workspace, teach_week,
                         record_learning_attempt, save_learning_evaluation, _learning_record,
                         _workspace_paths, _write_record, LEARNING_CAPABILITIES, task_exposure_keys,
-                        exposed_task_hashes, task_text_hash)
+                        exposed_task_hashes, task_text_hash, effective_outcome)
 from .reasoning import ReasoningError, supplied_units
 import re
 from datetime import datetime, timezone
@@ -356,8 +356,8 @@ def learning_view(module_code: str, week_number: int, *, workspace_root: Path | 
         if latest is None: status = "Not yet tested"
         elif latest["evaluation"] is None: status = "Attempted — awaiting evaluation"
         elif latest["assistance_status"] == "REVEALED": status = "Attempted after the answer was shown"
-        elif latest["evaluation"]["outcome"] == "SUPPORTED" and latest["assistance_status"] == "UNAIDED": status = "Demonstrated unaided"
-        elif latest["evaluation"]["outcome"] == "SUPPORTED": status = "Demonstrated after help"
+        elif effective_outcome(latest["evaluation"]) == "SUPPORTED" and latest["assistance_status"] == "UNAIDED": status = "Demonstrated unaided"
+        elif effective_outcome(latest["evaluation"]) == "SUPPORTED": status = "Demonstrated after help"
         else: status = "Needs another attempt"
         summary[capability] = {"status": status, "latest_attempt_id": latest["attempt_id"] if latest else None}
     pending = next((a["attempt_id"] for a in reversed(attempts) if a.get("evaluation") is None), None)
@@ -377,7 +377,7 @@ def select_next_study_task(attempts: list[dict[str, Any]], sources: list[dict[st
     latest = {cap: next((a for a in reversed(attempts) if a["capability"] == cap), None) for cap in LEARNING_CAPABILITIES}
     for cap in LEARNING_CAPABILITIES:
         row = latest[cap]
-        outcome = (row.get("evaluation") or {}).get("outcome") if row else None
+        outcome = effective_outcome(row.get("evaluation")) if row else None
         if outcome in {"NOT_SUPPORTED", "UNCLEAR", "PARTLY_SUPPORTED"}:
             return {"action": f"Review and retry {cap.lower()}", "reason": f"The latest task-level evaluation was {outcome.lower().replace('_',' ')}.", "capability": cap, "mode": "RETRY"}
         if row is not None and row["assistance_status"] in {"PROMPTED", "REVEALED"}:
