@@ -188,6 +188,9 @@ def materialize_workspace(
     explicit caller action; never invoked by any read function above.
     """
     resolved_state = state if state is not None else load_state()
+    # Cache-first: a matching local PREPARE_ME result is reused; only a miss calls the provider (once) and
+    # caches it, which is what the Hub button promises. The CLI-facing default of the workspace function
+    # stays strictly cache-backed.
     result = materialize_week_workspace(
         resolved_state,
         module_code,
@@ -195,6 +198,7 @@ def materialize_workspace(
         provider=provider,
         cache_dir=cache_dir,
         workspace_root=workspace_root,
+        generate_if_missing=True,
     )
     return _jsonable(result)
 
@@ -471,6 +475,7 @@ def continue_learning_task(module_code: str, week_number: int, *, state: dict[st
     its sources are unchanged. ``allow_generation=False`` never calls the model, and generation is refused
     once ``MAX_UNVERIFIED_GENERATED`` generated tasks for this capability have already failed verification.
     """
+    state = state if state is not None else load_state()
     record, record_path, study_pack_path, notebooklm_path = _learning_record(module_code, week_number, workspace_root)
     recommendation = select_next_study_task(record["learning"].get("evidence", []), record.get("sources", []))
     capability = recommendation.get("capability", "")
@@ -578,6 +583,7 @@ def answer_quiz_question(module_code: str, week_number: int, quiz_id: str, quest
 def evaluate_learning_attempt(module_code: str, week_number: int, attempt_id: str, *, state: dict[str, Any],
                               provider: ReasoningProvider, workspace_root: Path | None = None) -> dict[str, Any]:
     """Explicit bounded evaluation; raw attempt is already durably saved."""
+    state = state if state is not None else load_state()
     record, *_ = _learning_record(module_code, week_number, workspace_root)
     attempt = next((a for a in record["learning"]["evidence"] if a["attempt_id"] == attempt_id), None)
     if attempt is None: raise StateError("Learning attempt not found")
@@ -733,3 +739,89 @@ def has_any_observed_material(picture: dict[str, Any]) -> bool:
         for module in picture.get("modules", [])
         for week in module.get("weeks", [])
     )
+
+
+def build_student_journey(
+    state: dict[str, Any],
+    picture: dict[str, Any],
+    *,
+    workspace_root: Path | None = None,
+) -> dict[str, Any]:
+    """READ-ONLY: where the student is in the setup-to-assignment journey, and what to resume.
+
+    Derived only from saved local files (state, week records, tutor and Assignment Coach
+    sessions); makes no model, network or write call. A step is "done" when its evidence
+    exists, never because the student was told to do it; the next step is simply the first
+    one without evidence.
+    """
+    from . import assignment_coach, tutoring
+
+    student = state.get("student", {})
+    modules = picture.get("modules", [])
+    first_module = modules[0]["module_code"] if modules else None
+    assessments = [(m["module_code"], a) for m in modules for a in m.get("assessments", [])]
+    material_modules = {s.get("module_code") for s in state.get("sources", []) if s.get("module_code")}
+    built_weeks = [(m["module_code"], w["week"]) for m in modules for w in m.get("weeks", [])
+                   if (w.get("study_state") or {}).get("record_found")]
+    attempts = 0
+    for code, week in built_weeks:
+        try:
+            record, *_ = _learning_record(code, week, workspace_root)
+            attempts += len(record.get("learning", {}).get("evidence", []))
+        except StateError:
+            continue
+    coach_rows: list[dict[str, Any]] = []
+    for module in modules:
+        coach_rows.extend(assignment_coach.list_sessions(module["module_code"], workspace_root=workspace_root))
+    has_plan = False
+    for row in coach_rows:
+        try:
+            loaded = assignment_coach.load_session(row["module_code"], row["session_id"], workspace_root=workspace_root)
+        except StateError:
+            continue
+        if loaded["sections"] or loaded["plan"].get("main_argument"):
+            has_plan = True
+            break
+    week_href = (f"/modules/{built_weeks[0][0]}/weeks/{built_weeks[0][1]}" if built_weeks else
+                 (f"/modules/{first_module}" if first_module else "/modules"))
+    steps = [
+        {"id": "profile", "label": "Set up your profile", "done": bool(student.get("university") or student.get("programme")),
+         "href": "/profile", "detail": "University and programme. Both are optional and stay on this device."},
+        {"id": "module", "label": "Add a module", "done": bool(modules), "href": "/modules",
+         "detail": "A module code and title is enough to begin."},
+        {"id": "assessment", "label": "Add an assessment", "done": bool(assessments),
+         "href": f"/modules/{first_module}#assessments" if first_module else "/modules",
+         "detail": "Title, plus deadline, weight and requirements if you know them."},
+        {"id": "materials", "label": "Add course materials", "done": bool(material_modules),
+         "href": f"/modules/{first_module}#materials" if first_module else "/modules",
+         "detail": "PDF or PowerPoint files, attached to a week."},
+        {"id": "study_week", "label": "Prepare a week to study", "done": bool(built_weeks), "href": week_href,
+         "detail": "Open a week and build its study workspace (uses AI once you confirm)."},
+        {"id": "practice", "label": "Answer a practice question", "done": attempts > 0, "href": week_href,
+         "detail": "Quiz, Tutor or TEACH checks. Your answers are saved as study evidence."},
+        {"id": "coach", "label": "Open an assignment in the Assignment Coach", "done": bool(coach_rows),
+         "href": f"/modules/{assessments[0][0]}#assessments" if assessments else "/modules",
+         "detail": "Coaching is tied to one assessment and keeps your notes."},
+        {"id": "plan", "label": "Save an assignment plan", "done": has_plan,
+         "href": (f"/modules/{coach_rows[0]['module_code']}/coach/{coach_rows[0]['session_id']}#plan" if coach_rows else
+                  (f"/modules/{assessments[0][0]}#assessments" if assessments else "/modules")),
+         "detail": "Your argument, sections and the evidence each needs."},
+    ]
+    resume: list[dict[str, Any]] = []
+    for row in coach_rows:
+        if row["status"] == "ACTIVE":
+            resume.append({"kind": "COACH", "title": f"{row['module_code']} — {row['assessment_title']}",
+                           "detail": f"Assignment Coach, stage {row['stage'].title()}. Next: {row['next_step']}",
+                           "href": f"/modules/{row['module_code']}/coach/{row['session_id']}",
+                           "updated_at": row["updated_at"]})
+    for code, week in built_weeks:
+        for row in tutoring.list_sessions(code, week, workspace_root=workspace_root):
+            if row.get("status") == "ACTIVE":
+                resume.append({"kind": "TUTOR", "title": f"{code} Week {week}",
+                               "detail": f"Tutor session ({row['intention'].replace('_', ' ').title()}): {row['task']}",
+                               "href": f"/modules/{code}/weeks/{week}/tutor/{row['session_id']}",
+                               "updated_at": row.get("updated_at", row["created_at"])})
+    resume.sort(key=lambda r: r["updated_at"], reverse=True)
+    next_step = next((s for s in steps if not s["done"]), None)
+    return {"steps": steps, "next": next_step, "resume": resume,
+            "complete": next_step is None, "done_count": sum(s["done"] for s in steps)}

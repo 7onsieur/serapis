@@ -25,6 +25,31 @@
   </p>
 </div>
 
+{% if action_error %}
+<div class="action-error" role="alert">
+  <strong>Action failed:</strong> {{ action_error }}
+</div>
+{% endif %}
+{% if action_rows or action_rendered %}
+<div class="action-result">
+  <strong>Action succeeded.</strong>
+  {% if action_rows %}
+  <ul>
+  {% for label, value in action_rows %}
+    <li>{{ label }}: {{ value }}</li>
+  {% endfor %}
+  </ul>
+  {% endif %}
+  {% if action_rendered %}
+  <div class="response-card">
+    <div class="response-label"><span class="dot"></span>Serapis' answer</div>
+    <pre class="rendered-output">{{ action_rendered }}</pre>
+  </div>
+  {% endif %}
+</div>
+{% endif %}
+
+{% if imported %}<div class="action-result" role="status"><strong>Material added.</strong> Open a week below to study from it, or use the Assignment Coach on an assessment.</div>{% endif %}
 <div class="section card">
   <h2>Edit module</h2>
   <form method="post" action="/modules/{{ module.module_code }}/edit">
@@ -35,7 +60,7 @@
   <form method="post" action="/modules/{{ module.module_code }}/remove" onsubmit="return confirm('Remove this module and its material records?');"><button type="submit">Remove module</button></form>
 </div>
 
-<div class="section">
+<div class="section" id="materials">
   <div class="section-head"><h2>Course materials</h2></div>
   {% if materials %}<ul>{% for source in materials %}<li>{{ source.title }} — {% if source.locator.endswith('.pptx') %}text extraction supported; file must contain readable slide text{% elif source.locator.endswith('.pdf') %}{{ 'PDF text extraction is supported on macOS' if is_macos else 'PDF is stored locally; text extraction is macOS-only' }}{% endif %}
     <form method="post" enctype="multipart/form-data" action="/materials/{{ source.id }}/replace"><label>Replace file <input type="file" name="file" accept=".pdf,.pptx" required></label><button type="submit">Replace</button></form>
@@ -48,7 +73,7 @@
   </form>
 </div>
 
-<div class="section">
+<div class="section" id="weeks">
   <div class="section-head"><h2>Weeks</h2></div>
   {% if module.weeks %}
   <div class="table-scroll">
@@ -79,18 +104,9 @@
   {% else %}
   <div class="card"><p class="empty">Weeks: none known from either source.</p></div>
   {% endif %}
-  <h3>Add assessment</h3>
-  <form method="post" action="/modules/{{ module.module_code }}/assessments">
-    <label>Title <input name="title" required></label>
-    <label>Deadline (optional, YYYY-MM-DD) <input name="deadline" type="date"></label>
-    <label>Weight % (optional) <input name="weight" type="number" min="0" max="100" step="any"></label>
-    <label>Requirements (one per line) <textarea name="requirements"></textarea></label>
-    <p class="note">Details you enter are marked “Needs checking” until supported by an appropriate source.</p>
-    <button type="submit">Add assessment</button>
-  </form>
 </div>
 
-<div class="section">
+<div class="section" id="assessments">
   <div class="section-head">
     <h2>Assessments</h2>
     <span class="kicker">Your course information</span>
@@ -108,7 +124,14 @@
       </td>
       <td>{{ (assessment.weight_percent ~ '%') if assessment.weight_percent is not none else '' }} {{ fact_status(assessment, "weight_percent") }}</td>
       <td>{% if assessment.requirements %}{{ assessment.requirements|join("; ") }}{% else %}<span class="unknown">No details</span>{% endif %} {{ fact_status(assessment, "requirements") }}</td>
-      <td><details><summary>Edit</summary><form method="post" action="/modules/{{ module.module_code }}/assessments/{{ assessment.assessment_id }}/edit"><label>Title <input name="title" value="{{ assessment.title or '' }}" required></label><label>Deadline <input name="deadline" type="date" value="{{ assessment.deadline or '' }}"></label><label>Weight % <input name="weight" type="number" min="0" max="100" step="any" value="{{ assessment.weight_percent if assessment.weight_percent is not none else '' }}"></label><label>Requirements <textarea name="requirements">{{ (assessment.requirements or [])|join('\n') }}</textarea></label><button type="submit">Save assessment</button></form></details><form method="post" action="/modules/{{ module.module_code }}/assessments/{{ assessment.assessment_id }}/remove"><button type="submit">Remove</button></form></td>
+      <td>
+        {% set active_coach = coach_sessions.get(assessment.assessment_id) %}
+        {% if active_coach %}
+        <p><a class="btn" href="/modules/{{ module.module_code }}/coach/{{ active_coach.session_id }}">Continue in Assignment Coach</a><br><small class="note">{{ active_coach.next_step }}</small></p>
+        {% else %}
+        <form method="post" action="/modules/{{ module.module_code }}/assessments/{{ assessment.assessment_id }}/coach/start"><input type="hidden" name="client_request_id" value="{{ coach_request_id }}{{ loop.index }}"><button type="submit">Open in Assignment Coach</button></form>
+        {% endif %}
+        <details><summary>Edit</summary><form method="post" action="/modules/{{ module.module_code }}/assessments/{{ assessment.assessment_id }}/edit"><label>Title <input name="title" value="{{ assessment.title or '' }}" required></label><label>Deadline <input name="deadline" type="date" value="{{ assessment.deadline or '' }}"></label><label>Weight % <input name="weight" type="number" min="0" max="100" step="any" value="{{ assessment.weight_percent if assessment.weight_percent is not none else '' }}"></label><label>Requirements <textarea name="requirements">{{ (assessment.requirements or [])|join('\n') }}</textarea></label><button type="submit">Save assessment</button></form></details><form method="post" action="/modules/{{ module.module_code }}/assessments/{{ assessment.assessment_id }}/remove"><button type="submit">Remove</button></form></td>
     </tr>
     {% endfor %}
   </table>
@@ -118,39 +141,24 @@
   {% else %}
   <div class="card"><p class="empty">No assessments are recorded for this module yet.</p></div>
   {% endif %}
+  <h3>Add assessment</h3>
+  <form method="post" action="/modules/{{ module.module_code }}/assessments">
+    <label>Title <input name="title" required></label>
+    <label>Deadline (optional, YYYY-MM-DD) <input name="deadline" type="date"></label>
+    <label>Weight % (optional) <input name="weight" type="number" min="0" max="100" step="any"></label>
+    <label>Requirements (one per line) <textarea name="requirements"></textarea></label>
+    <p class="note">Details you enter are marked “Needs checking” until supported by an appropriate source.</p>
+    <button type="submit">Add assessment</button>
+  </form>
 </div>
-
-{% if action_error %}
-<div class="action-error">
-  <strong>Action failed:</strong> {{ action_error }}
-</div>
-{% endif %}
-{% if action_rows or action_rendered %}
-<div class="action-result">
-  <strong>Action succeeded.</strong>
-  {% if action_rows %}
-  <ul>
-  {% for label, value in action_rows %}
-    <li>{{ label }}: {{ value }}</li>
-  {% endfor %}
-  </ul>
-  {% endif %}
-  {% if action_rendered %}
-  <div class="response-card">
-    <div class="response-label"><span class="dot"></span>Serapis' answer</div>
-    <pre class="rendered-output">{{ action_rendered }}</pre>
-  </div>
-  {% endif %}
-</div>
-{% endif %}
 
 <div class="section">
   <div class="section-head"><h2>Actions</h2></div>
   <div class="action-form">
-    <h3><span aria-hidden="true">✦</span> AI: Assignment coach <span class="badge ephemeral">Sends selected course context to AI</span></h3>
+    <h3><span aria-hidden="true">✦</span> AI: One-off assignment planning brief <span class="badge ephemeral">Sends selected course context to AI</span></h3>
     <p class="note">
-      Cache-first AI call, generated fresh for this view only. Coaches planning and understanding
-      only: it will not produce a finished, submittable assignment response.
+      A single, non-interactive brief for the whole module that is not saved. For ongoing, resumable coaching with your own plan,
+      use <strong>Open in Assignment Coach</strong> on an assessment above. Neither will produce a finished, submittable assignment response.
     </p>
     <form method="post" action="/modules/{{ module.module_code }}/assignment">
       <button type="submit">Get coaching with AI</button>

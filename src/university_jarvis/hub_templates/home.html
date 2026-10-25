@@ -20,6 +20,27 @@
   </div>
 </div>
 
+{% if journey %}
+{% if journey.resume %}
+<div class="section">
+  <div class="section-head"><h2>Continue where you left off</h2><span class="kicker">Saved on this device</span></div>
+  {% for item in journey.resume[:5] %}
+  <a class="card" href="{{ item.href }}"><strong>{{ item.title }}</strong> <span class="tag">{{ "Assignment Coach" if item.kind == "COACH" else "Tutor" }}</span><br><span class="note">{{ item.detail }}</span></a>
+  {% endfor %}
+</div>
+{% endif %}
+<div class="section" id="journey">
+  <div class="section-head"><h2>Your study journey</h2><span class="kicker">{{ journey.done_count }} of {{ journey.steps|length }} steps have evidence</span></div>
+  {% if journey.next %}<p><strong>Next:</strong> <a href="{{ journey.next.href }}">{{ journey.next.label }}</a> — {{ journey.next.detail }}</p>{% else %}<p>Every step has evidence. Keep going from your modules or open your assignment plan.</p>{% endif %}
+  <ol class="journey">
+    {% for step in journey.steps %}
+    <li class="{{ 'done' if step.done else ('next' if step == journey.next else '') }}"><span class="mark" aria-hidden="true">{{ '✓' if step.done else ('→' if step == journey.next else '·') }}</span>
+      <span><a href="{{ step.href }}">{{ step.label }}</a>{% if step.done %} <span class="tag trust-confirmed">done</span>{% endif %}<span class="detail">{{ step.detail }}</span></span></li>
+    {% endfor %}
+  </ol>
+  <p class="section-note">A step is marked done only when saved data shows it; nothing is inferred about how well you studied.</p>
+</div>
+{% endif %}
 <div class="stat-grid">
   <div class="card stat-tile">
     <div class="n">{{ modules|map(attribute="weeks")|map("length")|sum }}</div>
@@ -39,7 +60,8 @@
   </div>
 </div>
 <div class="feature-panel"><strong>Your setup</strong> — {{ setup_status }} <a href="/modules">Manage modules</a></div>
-{% if dataset_kind == "fictional_example" %}<div class="feature-panel"><strong>Fictional sample</strong> — This is demonstration data. Run <code>serapis setup</code> to create your separate personal workspace.</div>{% endif %}
+{% if dataset_kind == "fictional_example" %}<div class="feature-panel"><div><strong>Fictional sample</strong> — what you see here is invented demonstration data, not yours. To use Serapis for your own modules, create your own empty workspace (it stays on this computer and never changes the sample).
+  <form method="post" action="/workspace/start"><button type="submit">Start my own workspace</button></form></div></div>{% endif %}
 
 <div class="section">
   <div class="section-head">

@@ -235,7 +235,7 @@ class UploadTests(HubHome):
         for name, data in cases.items():
             with self.subTest(name=name):
                 response = self._upload(client, name, data)
-                self.assertEqual(response.status_code, 404)  # rendered as a normal not-added page
+                self.assertEqual(response.status_code, 400)  # rendered as the module page with an error banner
         self.assertEqual(self._stored(), [])
         self.assertEqual(load_state()["sources"], [])
 
@@ -251,7 +251,7 @@ class UploadTests(HubHome):
         client = self.client()
         with patch.object(hub_web, "MAX_UPLOAD_BYTES", 1024):
             response = self._upload(client, "big.pdf", PDF_BYTES + b"x" * 4096)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
         self.assertIn("too large", response.text)
         self.assertEqual(self._stored(), [])
 
@@ -323,7 +323,7 @@ class UploadTests(HubHome):
         client = self.client()
         with patch("university_jarvis.student_setup._save", side_effect=OSError("disk full")):
             response = self._upload(client, "deck.pdf", PDF_BYTES)
-        self.assertEqual(response.status_code, 404)
+        self.assertEqual(response.status_code, 400)
         self.assertEqual(self._stored(), [])
 
     def test_replace_route_validates_content(self) -> None:
@@ -332,7 +332,7 @@ class UploadTests(HubHome):
         source_id = load_state()["sources"][0]["id"]
         bad = client.post(f"/materials/{source_id}/replace", files={"file": ("b.pdf", b"junk")},
                           follow_redirects=False)
-        self.assertEqual(bad.status_code, 404)
+        self.assertEqual(bad.status_code, 400)
         self.assertEqual({p.name for p in self._stored()}, {"a.pdf"})
         good = client.post(f"/materials/{source_id}/replace", files={"file": ("b.pdf", PDF_BYTES + b"2")},
                            follow_redirects=False)

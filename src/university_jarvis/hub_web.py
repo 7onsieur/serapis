@@ -80,7 +80,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from starlette.responses import Response
 from fastapi.templating import Jinja2Templates
 
-from . import hub_service, tutoring
+from . import assignment_coach, hub_service, tutoring
 from .hub_security import MAX_UPLOAD_BYTES, HubSecurityMiddleware
 from .reasoning import OpenAIReasoningProvider, ReasoningProvider
 from .state import StateError, load_state
@@ -163,7 +163,13 @@ async def _form_fields(request: Request) -> dict[str, str]:
     fields, never a file upload, so the stdlib urlencoded parser is enough.
     """
     body = await request.body()
-    return dict(parse_qsl(body.decode("utf-8"), keep_blank_values=True))
+    return dict(parse_qsl(body.decode("utf-8", errors="replace"), keep_blank_values=True))
+
+
+async def _form_pairs(request: Request) -> list[tuple[str, str]]:
+    """Like ``_form_fields`` but keeps repeated fields (checkbox groups)."""
+    body = await request.body()
+    return parse_qsl(body.decode("utf-8", errors="replace"), keep_blank_values=True)
 
 
 _UPLOAD_CHUNK_BYTES = 1024 * 1024
@@ -221,6 +227,7 @@ def create_app(
     reasoning_provider: ReasoningProvider | None = None,
     cache_dir: Path | None = None,
     allowed_hosts: tuple[str, ...] = (),
+    demo_mode: bool = False,
 ) -> FastAPI:
     """Build the Hub FastAPI app.
 
@@ -230,6 +237,10 @@ def create_app(
     real credential-resolution path, exactly as ``hub_service``'s own
     defaults and ``cli.py``'s existing resolver do today.
     """
+    if demo_mode:
+        # The synthetic demonstration never reaches Blackboard, whatever the student's machine is set up for.
+        def blackboard_client_factory() -> ContextManager[Any]:  # type: ignore[misc]
+            raise StateError("Blackboard is switched off in the synthetic demonstration.")
     app = FastAPI(title="Serapis Hub")
     app.add_middleware(HubSecurityMiddleware, allowed_hosts=allowed_hosts)
     app.state.hub_state = state
@@ -242,6 +253,7 @@ def create_app(
     app.state.hub_cache_dir = cache_dir
 
     templates = Jinja2Templates(directory=str(TEMPLATES_DIR))
+    templates.env.globals["demo_mode"] = demo_mode
 
     def _picture(request: Request) -> dict[str, Any]:
         return hub_service.get_academic_picture(
@@ -275,6 +287,52 @@ def create_app(
                 request, f"No Week {week_number} known for {module['module_code']}."
             )
         return module, week
+
+    def _render_module(
+        request: Request,
+        module_code: str,
+        *,
+        status_code: int = 200,
+        action_result: dict[str, Any] | None = None,
+        action_error: str | None = None,
+    ) -> HTMLResponse:
+        picture = _picture(request)
+        module = _find_module(picture, module_code)
+        if module is None:
+            return _not_found(request, f"No module known as {module_code.upper()}.")
+        state = request.app.state.hub_state or load_state()
+        sources = [s for s in state.get("sources", []) if s.get("module_code", "").upper() == module_code.upper()]
+        root = request.app.state.hub_workspace_root
+        coach = {}
+        for row in assignment_coach.list_sessions(module["module_code"], workspace_root=root):
+            if row["status"] == "ACTIVE":
+                coach.setdefault(row["assessment_id"], row)
+        return templates.TemplateResponse(
+            request,
+            "module.html",
+            {
+                "module": module,
+                "materials": sources,
+                "is_macos": sys.platform == "darwin",
+                "dataset_kind": picture.get("dataset_kind"),
+                "active_nav": "modules",
+                "coach_sessions": coach,
+                "coach_request_id": secrets.token_hex(12),
+                "imported": request.query_params.get("imported") == "1",
+                "action_rows": _present_action_result(action_result),
+                "action_rendered": _action_rendered_text(action_result),
+                "action_error": action_error,
+            },
+            status_code=status_code,
+        )
+
+    def _render_modules_error(request: Request, error: str) -> HTMLResponse:
+        picture = _picture(request)
+        return templates.TemplateResponse(
+            request, "modules.html",
+            {"modules": picture["modules"], "dataset_kind": picture.get("dataset_kind"), "error": error, "active_nav": "modules"},
+            status_code=400,
+        )
 
     def _render_week(
         request: Request,
@@ -325,6 +383,11 @@ def create_app(
     def home(request: Request) -> HTMLResponse:
         picture = _picture(request)
         attention = _attention(request)
+        try:
+            journey = hub_service.build_student_journey(
+                _state(request), picture, workspace_root=request.app.state.hub_workspace_root)
+        except (StateError, OSError, ValueError, KeyError, TypeError):
+            journey = None  # Home must always render; a damaged record only hides the checklist
         if not hub_service.has_any_observed_material(picture):
             material_state = "none_observed"
         elif attention["study_state_unknown"]:
@@ -343,8 +406,41 @@ def create_app(
                 "dataset_kind": picture.get("dataset_kind"),
                 "active_nav": "home",
                 "setup_status": "Add a module to begin." if not picture["modules"] else f"{len(picture['modules'])} module(s) set up.",
+                "journey": journey,
             },
         )
+
+    def _state(request: Request) -> dict[str, Any]:
+        return request.app.state.hub_state if request.app.state.hub_state is not None else load_state()
+
+    @app.post("/workspace/start", response_class=HTMLResponse)
+    def start_personal_workspace(request: Request) -> Response:
+        """LOCAL WRITE: create the student's own empty workspace so they stop looking at the fictional sample."""
+        from .student_setup import initialize_personal_state
+        try:
+            initialize_personal_state()
+        except StateError as exc:
+            return _render_modules_error(request, str(exc))
+        return RedirectResponse("/profile", status_code=303)
+
+    @app.get("/profile", response_class=HTMLResponse)
+    def profile(request: Request) -> HTMLResponse:
+        return templates.TemplateResponse(
+            request, "profile.html",
+            {"student": _state(request).get("student", {}), "active_nav": "profile", "saved": request.query_params.get("saved") == "1"},
+        )
+
+    @app.post("/profile", response_class=HTMLResponse)
+    async def save_profile(request: Request) -> Response:
+        from .student_setup import edit_profile
+        form = await _form_fields(request)
+        try:
+            edit_profile(university=form.get("university", ""), programme=form.get("programme", ""))
+        except StateError as exc:
+            student = {"university": form.get("university", ""), "programme": form.get("programme", "")}
+            return templates.TemplateResponse(
+                request, "profile.html", {"student": student, "error": str(exc), "active_nav": "profile"}, status_code=400)
+        return RedirectResponse("/profile?saved=1", status_code=303)
 
     @app.post("/modules", response_class=HTMLResponse)
     async def add_module_route(request: Request) -> HTMLResponse:
@@ -365,7 +461,7 @@ def create_app(
             update_module(module_code, form.get("title", ""), new_code=form.get("code") or None)
             return RedirectResponse("/modules", status_code=303)
         except StateError as exc:
-            return _not_found(request, str(exc))
+            return _render_module(request, module_code, status_code=400, action_error=f"Module was not saved: {exc}")
 
     @app.post("/modules/{module_code}/remove")
     def remove_module_route(request: Request, module_code: str) -> Response:
@@ -374,7 +470,7 @@ def create_app(
             remove_module(module_code)
             return RedirectResponse("/modules", status_code=303)
         except StateError as exc:
-            return _not_found(request, f"Module was not removed: {exc}")
+            return _render_module(request, module_code, status_code=400, action_error=f"Module was not removed: {exc}")
 
     @app.post("/modules/{module_code}/assessments", response_class=HTMLResponse)
     async def add_assessment_route(request: Request, module_code: str) -> HTMLResponse:
@@ -382,18 +478,18 @@ def create_app(
         form = await _form_fields(request)
         try:
             save_assessment(module_code, title=form.get("title", ""), deadline=form.get("deadline", ""), weight_percent=form.get("weight", ""), requirements=form.get("requirements", ""))
-            return RedirectResponse(f"/modules/{module_code}", status_code=303)
+            return RedirectResponse(f"/modules/{module_code}#assessments", status_code=303)
         except StateError as exc:
-            return _not_found(request, str(exc))
+            return _render_module(request, module_code, status_code=400, action_error=f"Assessment was not saved: {exc}")
 
     @app.post("/modules/{module_code}/assessments/{assessment_id}/remove")
     def remove_assessment_route(request: Request, module_code: str, assessment_id: str) -> Response:
         from .student_setup import remove_assessment
         try:
             remove_assessment(module_code, assessment_id)
-            return RedirectResponse(f"/modules/{module_code}", status_code=303)
+            return RedirectResponse(f"/modules/{module_code}#assessments", status_code=303)
         except StateError as exc:
-            return _not_found(request, f"Assessment was not removed: {exc}")
+            return _render_module(request, module_code, status_code=400, action_error=f"Assessment was not removed: {exc}")
 
     @app.post("/modules/{module_code}/assessments/{assessment_id}/edit")
     async def edit_assessment_route(request: Request, module_code: str, assessment_id: str) -> Response:
@@ -401,9 +497,9 @@ def create_app(
         form = await _form_fields(request)
         try:
             save_assessment(module_code, assessment_id=assessment_id, title=form.get("title", ""), deadline=form.get("deadline", ""), weight_percent=form.get("weight", ""), requirements=form.get("requirements", ""))
-            return RedirectResponse(f"/modules/{module_code}", status_code=303)
+            return RedirectResponse(f"/modules/{module_code}#assessments", status_code=303)
         except StateError as exc:
-            return _not_found(request, f"Assessment was not saved: {exc}")
+            return _render_module(request, module_code, status_code=400, action_error=f"Assessment was not saved: {exc}")
 
     @app.post("/modules/{module_code}/materials", response_class=HTMLResponse)
     async def add_material_route(request: Request, module_code: str) -> HTMLResponse:
@@ -424,9 +520,10 @@ def create_app(
                 result = import_material(module_code, scratch, week=week)
             finally:
                 shutil.rmtree(scratch_dir, ignore_errors=True)
-            return RedirectResponse(f"/modules/{module_code}?imported=1", status_code=303)
+            return RedirectResponse(f"/modules/{module_code}?imported=1#materials", status_code=303)
         except (StateError, ValueError, OSError) as exc:
-            return _not_found(request, f"Material could not be added: {exc}")
+            message = "Week must be a whole number." if isinstance(exc, ValueError) and not isinstance(exc, StateError) else str(exc)
+            return _render_module(request, module_code, status_code=400, action_error=f"Material could not be added: {message}")
 
     @app.post("/materials/{source_id}/remove")
     def remove_material_route(request: Request, source_id: str) -> Response:
@@ -435,7 +532,7 @@ def create_app(
             remove_material(source_id)
             return RedirectResponse("/modules", status_code=303)
         except StateError as exc:
-            return _not_found(request, f"Material was not removed: {exc}")
+            return _render_modules_error(request, f"Material was not removed: {exc}")
 
     @app.post("/materials/{source_id}/replace")
     async def replace_material_route(request: Request, source_id: str) -> RedirectResponse:
@@ -443,7 +540,7 @@ def create_app(
         form = await request.form()
         upload = form.get("file")
         if upload is None or not getattr(upload, "filename", ""):
-            return _not_found(request, "Choose a replacement PDF or PowerPoint file.")
+            return _render_modules_error(request, "Choose a replacement PDF or PowerPoint file.")
         import shutil
         import tempfile
         scratch_dir = Path(tempfile.mkdtemp(prefix="serapis-replace-"))
@@ -452,7 +549,7 @@ def create_app(
             result = replace_material(source_id, scratch)
             return RedirectResponse("/modules", status_code=303)
         except (StateError, OSError) as exc:
-            return _not_found(request, f"Replacement was not saved: {exc}")
+            return _render_modules_error(request, f"Replacement was not saved: {exc}")
         finally:
             shutil.rmtree(scratch_dir, ignore_errors=True)
 
@@ -465,7 +562,7 @@ def create_app(
             reassign_material(source_id, form.get("module_code", ""), week)
             return RedirectResponse("/modules", status_code=303)
         except (StateError, ValueError) as exc:
-            return _not_found(request, f"Material location was not changed: {exc}")
+            return _render_modules_error(request, f"Material location was not changed: {exc}")
 
     @app.get("/modules", response_class=HTMLResponse)
     def modules(request: Request) -> HTMLResponse:
@@ -476,16 +573,7 @@ def create_app(
 
     @app.get("/modules/{module_code}", response_class=HTMLResponse)
     def module_detail(request: Request, module_code: str) -> HTMLResponse:
-        picture = _picture(request)
-        module = _find_module(picture, module_code)
-        if module is None:
-            return _not_found(request, f"No module known as {module_code.upper()}.")
-        from .state import load_state
-        state = request.app.state.hub_state or load_state()
-        sources = [s for s in state.get("sources", []) if s.get("module_code", "").upper() == module_code.upper()]
-        return templates.TemplateResponse(
-            request, "module.html", {"module": module, "materials": sources, "is_macos": sys.platform == "darwin", "dataset_kind": picture.get("dataset_kind"), "active_nav": "modules"}
-        )
+        return _render_module(request, module_code)
 
     @app.get("/modules/{module_code}/weeks/{week_number}", response_class=HTMLResponse)
     def week_detail(request: Request, module_code: str, week_number: int) -> HTMLResponse:
@@ -638,7 +726,7 @@ def create_app(
         module, week = found
         try:
             result = hub_service.continue_learning_task(module["module_code"], week_number,
-                state=request.app.state.hub_state, provider=request.app.state.hub_reasoning_provider,
+                state=_state(request), provider=request.app.state.hub_reasoning_provider,
                 workspace_root=request.app.state.hub_workspace_root)
             return _render_week(request, module, week, active_task=result["task"],
                                 learning_recommendation=result["recommendation"])
@@ -681,7 +769,7 @@ def create_app(
         form = await _form_fields(request)
         try:
             result = hub_service.evaluate_learning_attempt(module["module_code"], week_number,
-                form.get("attempt_id", ""), state=request.app.state.hub_state,
+                form.get("attempt_id", ""), state=_state(request),
                 provider=request.app.state.hub_reasoning_provider,
                 workspace_root=request.app.state.hub_workspace_root)
             return _render_week(request, module, week, action_result={"evaluation_outcome": result["evaluation"]["outcome"]})
@@ -816,7 +904,10 @@ def create_app(
 
     @app.post("/modules/{module_code}/assignment", response_class=HTMLResponse)
     def assignment(request: Request, module_code: str) -> HTMLResponse:
-        """MODEL CALL (cache-first), module-scoped. Ephemeral: never touches the workspace record."""
+        """MODEL CALL (cache-first), module-scoped one-off planning brief. Ephemeral: never touches the workspace record.
+
+        The resumable, per-assignment coaching lives under ``/modules/{code}/coach/{session}``.
+        """
         picture = _picture(request)
         module = _find_module(picture, module_code)
         if module is None:
@@ -832,17 +923,7 @@ def create_app(
             )
         except StateError as exc:
             action_error = str(exc)
-        return templates.TemplateResponse(
-            request,
-            "module.html",
-            {
-                "module": module,
-                "active_nav": "modules",
-                "action_rows": _present_action_result(action_result),
-                "action_rendered": _action_rendered_text(action_result),
-                "action_error": action_error,
-            },
-        )
+        return _render_module(request, module["module_code"], action_result=action_result, action_error=action_error)
 
     @app.post(
         "/modules/{module_code}/weeks/{week_number}/after-lecture", response_class=HTMLResponse
@@ -875,5 +956,152 @@ def create_app(
             return refreshed
         module, week = refreshed
         return _render_week(request, module, week, action_result=action_result, action_error=action_error)
+
+    # ----- Assignment Coach ------------------------------------------------------------------------------
+    # GET is read-only. Every POST is one explicit action; only ``message``/``retry`` can call the model,
+    # and a refused or recovered message does not. Student-authored notes (plan, evidence, questions,
+    # criteria) are local writes.
+
+    def _coach_url(module_code: str, session_id: str, anchor: str = "") -> str:
+        return f"/modules/{module_code}/coach/{session_id}" + (f"#{anchor}" if anchor else "")
+
+    def _render_coach(
+        request: Request, module: dict[str, Any], session_view: dict[str, Any], *,
+        error: str | None = None, draft: str = "", draft_shared: bool = False, status_code: int = 200,
+    ) -> HTMLResponse:
+        state = _state(request)
+        assessment = next((a for a in module.get("assessments", []) if a["assessment_id"] == session_view["assessment_id"]), None)
+        loaded = assignment_coach.load_session(
+            module["module_code"], session_view["session_id"],
+            workspace_root=request.app.state.hub_workspace_root, state=state)
+        return templates.TemplateResponse(
+            request, "coach.html",
+            {"module": module, "session": loaded, "assessment": assessment, "error": error, "draft": draft,
+             "draft_shared": draft_shared, "new_turn_id": secrets.token_hex(12), "active_nav": "modules",
+             "stages": assignment_coach.STAGES, "section_statuses": assignment_coach.SECTION_STATUSES,
+             "evidence_kinds": assignment_coach.EVIDENCE_KINDS,
+             "max_message_chars": assignment_coach.MAX_MESSAGE_CHARS},
+            status_code=status_code,
+        )
+
+    @app.post("/modules/{module_code}/assessments/{assessment_id}/coach/start", response_class=HTMLResponse)
+    async def coach_start(request: Request, module_code: str, assessment_id: str) -> Response:
+        picture = _picture(request)
+        module = _find_module(picture, module_code)
+        if module is None:
+            return _not_found(request, f"No module known as {module_code.upper()}.")
+        form = await _form_fields(request)
+        try:
+            started = assignment_coach.start_session(
+                _state(request), module["module_code"], assessment_id,
+                client_request_id=form.get("client_request_id", ""), force_new=form.get("new") == "yes",
+                workspace_root=request.app.state.hub_workspace_root)
+        except StateError as exc:
+            return _render_module(request, module["module_code"], status_code=400, action_error=str(exc))
+        return RedirectResponse(_coach_url(module["module_code"], started["session_id"]), status_code=303)
+
+    @app.get("/modules/{module_code}/coach/{session_id}", response_class=HTMLResponse)
+    def coach_session(request: Request, module_code: str, session_id: str) -> HTMLResponse:
+        picture = _picture(request)
+        module = _find_module(picture, module_code)
+        if module is None:
+            return _not_found(request, f"No module known as {module_code.upper()}.")
+        try:
+            loaded = assignment_coach.load_session(
+                module["module_code"], session_id, workspace_root=request.app.state.hub_workspace_root)
+        except StateError as exc:
+            return _not_found(request, f"That Assignment Coach session could not be opened: {exc}")
+        return _render_coach(request, module, loaded)
+
+    _COACH_ANCHORS = {
+        "brief-add": "brief", "brief-remove": "brief", "sync": "brief", "plan": "plan", "section-save": "plan",
+        "section-remove": "plan", "section-move": "plan", "evidence-save": "evidence", "evidence-remove": "evidence",
+        "question-add": "questions", "question-resolve": "questions", "question-remove": "questions",
+        "stage": "progress", "message": "conversation", "retry": "conversation", "discard": "conversation", "end": "", "reopen": "",
+    }
+
+    @app.post("/modules/{module_code}/coach/{session_id}/{action}", response_class=HTMLResponse)
+    async def coach_action(request: Request, module_code: str, session_id: str, action: str) -> Response:
+        picture = _picture(request)
+        module = _find_module(picture, module_code)
+        if module is None:
+            return _not_found(request, f"No module known as {module_code.upper()}.")
+        if action not in {*_COACH_ANCHORS, "delete"}:
+            return _not_found(request, "Unknown Assignment Coach action.")
+        pairs = await _form_pairs(request)
+        form = dict(pairs)
+        many = lambda key: [v for k, v in pairs if k == key]  # noqa: E731
+        code = module["module_code"]
+        root = request.app.state.hub_workspace_root
+        draft, shared = "", False
+        try:
+            if action in ("message", "retry"):
+                text, shared = form.get("message", ""), form.get("shared_work") == "yes"
+                turn_id = form.get("client_turn_id", "")
+                if action == "retry":
+                    pending = assignment_coach.load_session(code, session_id, workspace_root=root)["recovery"]
+                    if pending is None:
+                        raise StateError("There is no unfinished message to retry.")
+                    text, shared, turn_id = pending["text"], pending["shared_work"], pending["client_turn_id"]
+                draft = text
+                assignment_coach.send_message(
+                    _state(request), code, session_id, client_turn_id=turn_id, text=text, shared_work=shared,
+                    provider=request.app.state.hub_reasoning_provider or OpenAIReasoningProvider(),
+                    workspace_root=root)
+            elif action == "discard":
+                assignment_coach.discard_unfinished(code, session_id, workspace_root=root)
+            elif action == "brief-add":
+                assignment_coach.add_brief_items(code, session_id, kind=form.get("kind", ""), text=form.get("text", ""), workspace_root=root)
+            elif action == "brief-remove":
+                assignment_coach.remove_brief_item(code, session_id, form.get("item_id", ""), workspace_root=root)
+            elif action == "sync":
+                assignment_coach.sync_with_assessment(_state(request), code, session_id, workspace_root=root)
+            elif action == "plan":
+                assignment_coach.save_plan_overview(code, session_id, main_argument=form.get("main_argument", ""), notes=form.get("notes", ""), workspace_root=root)
+            elif action == "section-save":
+                assignment_coach.save_section(
+                    code, session_id, section_id=form.get("section_id") or None, heading=form.get("heading", ""),
+                    point=form.get("point", ""), addresses=many("addresses"), evidence_ids=many("evidence_ids"),
+                    status=form.get("status", "PLANNED"), workspace_root=root)
+            elif action == "section-remove":
+                assignment_coach.remove_section(code, session_id, form.get("section_id", ""), workspace_root=root)
+            elif action == "section-move":
+                assignment_coach.move_section(code, session_id, form.get("section_id", ""), form.get("direction", ""), workspace_root=root)
+            elif action == "evidence-save":
+                page = form.get("pdf_page", "").strip()
+                if page and not page.isdigit():
+                    raise StateError("Page or slide must be a whole number.")
+                assignment_coach.save_evidence(
+                    code, session_id, evidence_id=form.get("evidence_id") or None, description=form.get("description", ""),
+                    kind=form.get("kind", "COURSE_MATERIAL"), status=form.get("status", "NEEDED"),
+                    source_id=form.get("source_id") or None, pdf_page=int(page) if page else None,
+                    note=form.get("note", ""), workspace_root=root, state=_state(request))
+            elif action == "evidence-remove":
+                assignment_coach.remove_evidence(code, session_id, form.get("evidence_id", ""), workspace_root=root)
+            elif action == "question-add":
+                assignment_coach.add_question(code, session_id, text=form.get("text", ""), workspace_root=root)
+            elif action == "question-resolve":
+                assignment_coach.resolve_question(code, session_id, form.get("question_id", ""), answer=form.get("answer", ""), reopen=form.get("reopen") == "yes", workspace_root=root)
+            elif action == "question-remove":
+                assignment_coach.remove_question(code, session_id, form.get("question_id", ""), workspace_root=root)
+            elif action == "stage":
+                assignment_coach.set_stage(code, session_id, form.get("stage", ""), workspace_root=root)
+            elif action == "end":
+                assignment_coach.end_session(code, session_id, workspace_root=root)
+            elif action == "reopen":
+                assignment_coach.reopen_session(code, session_id, workspace_root=root)
+            else:
+                if form.get("confirm") != "yes":
+                    raise StateError("Tick the box to confirm you want this session deleted.")
+                assignment_coach.delete_session(code, session_id, workspace_root=root)
+                return RedirectResponse(f"/modules/{code}#assessments", status_code=303)
+        except StateError as exc:
+            try:
+                loaded = assignment_coach.load_session(code, session_id, workspace_root=root)
+            except StateError:
+                return _render_module(request, code, status_code=400, action_error=str(exc))
+            return _render_coach(request, module, loaded, error=str(exc), draft=draft or form.get("message", ""),
+                                 draft_shared=shared or form.get("shared_work") == "yes", status_code=400)
+        return RedirectResponse(_coach_url(code, session_id, _COACH_ANCHORS.get(action, "")), status_code=303)
 
     return app

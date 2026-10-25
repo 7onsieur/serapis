@@ -1,0 +1,330 @@
+{% extends "base.html" %}
+{% block title %}Assignment Coach — {{ module.module_code }} — Serapis by Limitless Hub{% endblock %}
+{% block content %}
+<style>
+  .coach input[type="text"], .coach input[type="number"], .coach textarea, .coach select {
+    width: 100%; box-sizing: border-box; font: inherit; color: var(--text-0); background: var(--bg-1);
+    border: 1px solid var(--border-strong); border-radius: var(--radius-sm); padding: 0.5rem 0.65rem; margin-top: 0.25rem;
+  }
+  .coach textarea { min-height: 5.5rem; resize: vertical; }
+  .coach input:focus, .coach textarea:focus, .coach select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+  .coach label { display: block; margin-bottom: 0.6rem; font-size: 0.85rem; color: var(--text-2); }
+  .coach label.inline { display: inline-flex; align-items: center; gap: 0.4rem; margin-right: 0.9rem; }
+  .coach label.inline input { width: auto; margin: 0; }
+  .coach .row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.4rem 0; }
+  .coach .row form { margin: 0; }
+  .coach .item { border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.7rem 0.9rem; margin: 0.55rem 0; background: var(--bg-2); }
+  .coach .item p { margin: 0.15rem 0; }
+  .coach details > summary { cursor: pointer; color: var(--text-2); font-size: 0.85rem; margin-top: 0.4rem; }
+  .coach .small { font-size: 0.8rem; color: var(--text-2); }
+  .coach .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 0.9rem; }
+  .coach .gap-list li { margin: 0.3rem 0; }
+  .coach .turn-you { border-left: 3px solid var(--accent); }
+  .coach .anchors a { margin-right: 0.9rem; font-size: 0.85rem; }
+  .coach .cite { display: inline-block; margin: 0.15rem 0.35rem 0 0; }
+  .coach button.quiet { background: transparent; border-color: var(--border-strong); font-weight: 500; }
+  .coach .stagebar { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .coach .stagebar .tag.current { color: var(--accent); border-color: var(--accent); }
+</style>
+{% set base = "/modules/" ~ module.module_code ~ "/coach/" ~ session.session_id %}
+{% set live = session.status == "ACTIVE" %}
+{% set brief_items = session.requirements + session.criteria %}
+{% set trust = {"CONFIRMED": "Confirmed", "NEEDS_VERIFICATION": "Needs checking", "UNKNOWN": "Unknown"} %}
+{% set stage_names = {"UNDERSTAND": "Understand the brief", "PLAN": "Plan", "EVIDENCE": "Find evidence", "DRAFT": "Write your draft", "REVIEW": "Review against criteria"} %}
+<div class="coach">
+<p class="breadcrumb"><a href="/modules">Modules</a> &rarr; <a href="/modules/{{ module.module_code }}">{{ module.module_code }}</a> &rarr; <a href="/modules/{{ module.module_code }}#assessments">Assessments</a> &rarr; Assignment Coach</p>
+<div class="page-head">
+  <p class="eyebrow">Assignment Coach &middot; {{ stage_names[session.stage] }} &middot; {{ "in progress" if live else "ended" }}</p>
+  <h1>{{ session.assessment.title }}</h1>
+  <p class="lede">
+    {{ module.module_code }}{% if module.title %} — {{ module.title }}{% endif %}
+    &middot; Deadline: {{ session.assessment.deadline or "unknown" }} <span class="tag trust-{{ session.assessment.fact_status.deadline|lower }}">{{ trust[session.assessment.fact_status.deadline] }}</span>
+    &middot; Weight: {{ (session.assessment.weight_percent ~ "%") if session.assessment.weight_percent is not none else "unknown" }} <span class="tag trust-{{ session.assessment.fact_status.weight_percent|lower }}">{{ trust[session.assessment.fact_status.weight_percent] }}</span>
+  </p>
+  <p class="anchors"><a href="#progress">Progress</a><a href="#conversation">Conversation</a><a href="#plan">Plan</a><a href="#evidence">Evidence</a><a href="#questions">Questions</a><a href="#brief">Brief &amp; criteria</a><a href="#materials">Materials</a></p>
+</div>
+
+<div class="feature-panel"><div>
+  <strong>This is your assignment.</strong> The coach helps you understand the brief, plan, find evidence and test your reasoning. It will not write, draft or rewrite anything you would submit, and it cannot confirm facts about your assignment: deadline, weight and requirements stay marked “Needs checking” until you verify them against your official brief.
+</div></div>
+<p class="section-note">Each message you send shares that message, your plan notes, the requirements and criteria, and a few relevant excerpts from your course materials with the configured AI provider. Editing your plan, evidence, questions and criteria is local and makes no AI call. Replies are AI-generated study support: check them against your sources and your lecturer's guidance. Coach checks reduce, but cannot eliminate, the chance of an unsuitable reply. You are responsible for your institution's academic-integrity rules.</p>
+
+{% if error %}<div class="action-error" role="alert"><strong>That didn't work:</strong> {{ error }}</div>{% endif %}
+{% if session.assessment_changed %}
+<div class="feature-panel"><div><strong>The assessment record changed since this session started.</strong> Your plan is untouched.
+  {% if live %}<form method="post" action="{{ base }}/sync" style="display:inline;"><button type="submit" class="quiet">Update requirements from the assessment</button></form>{% endif %}</div></div>
+{% endif %}
+{% if session.assessment_missing %}
+<div class="action-error"><strong>This assessment is no longer in your module.</strong> Your notes here are kept; you can still read and edit them.</div>
+{% endif %}
+
+<div class="section" id="progress">
+  <div class="section-head"><h2>Where you are</h2><span class="kicker">Counts, not a grade</span></div>
+  <div class="card">
+    <p><strong>Next step:</strong> {{ session.progress.next_step }}</p>
+    <p class="small">
+      Requirements addressed {{ session.progress.requirements.addressed }} of {{ session.progress.requirements.total }}
+      &middot; Criteria addressed {{ session.progress.criteria.addressed }} of {{ session.progress.criteria.total }}
+      &middot; Sections planned {{ session.progress.sections.total }} ({{ session.progress.sections.drafting }} drafting, {{ session.progress.sections.done }} done)
+      &middot; Evidence found {{ session.progress.evidence.found }} of {{ session.progress.evidence.total }}
+      &middot; Questions resolved {{ session.progress.questions.resolved }} of {{ session.progress.questions.total }}
+    </p>
+    {% if live %}
+    <form method="post" action="{{ base }}/stage" class="row">
+      <fieldset style="border:0;padding:0;margin:0;"><legend class="small">Stage you're working on</legend>
+      <span class="stagebar">{% for st in stages %}<label class="inline"><input type="radio" name="stage" value="{{ st }}" {{ "checked" if st == session.stage }}> {{ stage_names[st] }}</label>{% endfor %}</span></fieldset>
+      <button type="submit" class="quiet">Save stage</button>
+    </form>
+    {% endif %}
+  </div>
+  <h3>What is missing or unresolved</h3>
+  {% if session.gaps %}
+  <ul class="gap-list">
+    {% for g in session.gaps %}<li>{{ g.text }}</li>{% endfor %}
+  </ul>
+  <p class="small">Computed from your session only. A gap is not a judgement of your work; it shows what this session does not yet contain.</p>
+  {% else %}
+  <p class="empty">No gaps found in this session's record. That is not a check of the quality of your work.</p>
+  {% endif %}
+</div>
+
+<div class="section" id="conversation">
+  <div class="section-head"><h2>Conversation</h2><span class="kicker">{{ session.calls_remaining }} AI replies left in this session</span></div>
+  {% if not session.turns %}<p class="empty">Nothing yet. Ask what a requirement means, tell the coach your main argument, or ask where the course material covers an idea.</p>{% endif %}
+  {% for t in session.turns %}
+    {% if t.role == "coach" %}
+    <div class="response-card">
+      <div class="response-label"><span class="dot"></span>Coach{% if t.kind == "REFUSAL" %} &mdash; not something I can do{% elif t.kind == "FALLBACK" %} &mdash; no safe reply{% endif %}</div>
+      <pre class="rendered-output">{{ t.text }}</pre>
+      {% if t.kind == "COACHING" %}
+        {% if t.citations %}
+          <p class="small">From your course material:
+          {% for c in t.citations %}<span class="tag cite">{{ c.title }}{% if c.location %} — {{ c.location }}{% endif %}</span>{% endfor %}</p>
+        {% else %}
+          <p class="small">Not drawn from your course materials{% if t.retrieval_status == "no_readable_material" %} (none of this module's files could be read){% elif t.retrieval_status != "matched" %} (no matching passage was found){% endif %}. Treat it as general coaching and check it yourself.</p>
+        {% endif %}
+        {% if t.follow_up_questions %}<p class="small">Added to your open questions: {{ t.follow_up_questions|join(" · ") }}</p>{% endif %}
+        {% if t.evidence_needs %}<p class="small">Added to evidence you still need: {{ t.evidence_needs|join(" · ") }}</p>{% endif %}
+      {% endif %}
+    </div>
+    {% else %}
+    <div class="card turn-you">
+      <p><strong>You</strong>{% if t.shared_work %} <span class="tag">your own wording shared for feedback</span>{% endif %}{% if t.status == "BLOCKED" %} <span class="tag trust-needs_verification">not sent to AI</span>{% elif t.status in ("FAILED", "PENDING") %} <span class="tag status-failed">unfinished</span>{% endif %}</p>
+      <pre class="rendered-output">{{ t.text }}</pre>
+    </div>
+    {% endif %}
+  {% endfor %}
+
+  {% if live %}
+    {% if session.recovery and session.recovery.state == "RETRY" %}
+    <div class="action-error"><strong>Your last message didn't finish.</strong> It is saved, and nothing was sent twice. Retrying sends it once.
+      <div class="row"><form method="post" action="{{ base }}/retry"><button type="submit">Retry my last message</button></form>
+      <form method="post" action="{{ base }}/discard"><button type="submit" class="quiet">Discard it</button></form></div>
+      {% if session.recovery.text %}<p class="small">Your unsent message: {{ session.recovery.text[:300] }}{{ "…" if session.recovery.text|length > 300 }}</p>{% endif %}</div>
+    {% elif session.recovery %}
+    <div class="feature-panel"><div>Your last message is still being processed. Reload this page in a moment.</div></div>
+    {% else %}
+    <div class="action-form">
+      <h3><span aria-hidden="true">✦</span> Message the coach <span class="badge ephemeral">Sends your message and selected course excerpts to AI</span></h3>
+      <form method="post" action="{{ base }}/message">
+        <input type="hidden" name="client_turn_id" value="{{ new_turn_id }}">
+        <label>Your message (up to {{ max_message_chars }} characters)
+          <textarea name="message" required maxlength="{{ max_message_chars }}" placeholder="e.g. What is requirement 2 actually asking for? / My main argument is… does it fit the criteria?">{{ draft }}</textarea></label>
+        <label class="inline"><input type="checkbox" name="shared_work" value="yes" {{ "checked" if draft_shared }}> I'm sharing my own wording and want feedback, not a rewrite</label>
+        <div><button type="submit">Send to coach</button></div>
+      </form>
+    </div>
+    {% endif %}
+  {% endif %}
+</div>
+
+<div class="section" id="plan">
+  <div class="section-head"><h2>Your plan</h2><span class="kicker">Written by you · saved on this device</span></div>
+  {% if live %}
+  <form method="post" action="{{ base }}/plan" class="card">
+    <label>Main argument or approach, in your own words
+      <textarea name="main_argument" maxlength="2000">{{ session.plan.main_argument }}</textarea></label>
+    <label>Notes to yourself
+      <textarea name="notes" maxlength="2000">{{ session.plan.notes }}</textarea></label>
+    <button type="submit">Save plan</button>
+  </form>
+  {% elif session.plan.main_argument or session.plan.notes %}
+  <div class="card"><p><strong>Main argument:</strong> {{ session.plan.main_argument or "—" }}</p><p><strong>Notes:</strong> {{ session.plan.notes or "—" }}</p></div>
+  {% endif %}
+
+  <h3>Sections</h3>
+  {% for sec in session.sections %}
+  <div class="item">
+    <p><strong>{{ loop.index }}. {{ sec.heading }}</strong> <span class="tag">{{ sec.status|title }}</span></p>
+    {% if sec.point %}<p>{{ sec.point }}</p>{% endif %}
+    <p class="small">Addresses:
+      {% for aid in sec.addresses %}{% for b in brief_items if b.id == aid %}<span class="tag">{{ b.text[:60] }}{{ "…" if b.text|length > 60 }}</span>{% endfor %}{% else %}nothing linked yet{% endfor %}
+      &middot; Evidence:
+      {% for eid in sec.evidence_ids %}{% for e in session.evidence if e.evidence_id == eid %}<span class="tag">{{ e.description[:50] }}{{ "…" if e.description|length > 50 }} ({{ e.status|lower }})</span>{% endfor %}{% else %}none linked yet{% endfor %}
+    </p>
+    {% if live %}
+    <div class="row">
+      <form method="post" action="{{ base }}/section-move"><input type="hidden" name="section_id" value="{{ sec.section_id }}"><input type="hidden" name="direction" value="up"><button type="submit" class="quiet" {{ "disabled" if loop.first }} aria-label="Move up">&uarr;</button></form>
+      <form method="post" action="{{ base }}/section-move"><input type="hidden" name="section_id" value="{{ sec.section_id }}"><input type="hidden" name="direction" value="down"><button type="submit" class="quiet" {{ "disabled" if loop.last }} aria-label="Move down">&darr;</button></form>
+      <form method="post" action="{{ base }}/section-remove"><input type="hidden" name="section_id" value="{{ sec.section_id }}"><button type="submit" class="quiet">Remove</button></form>
+    </div>
+    <details><summary>Edit section</summary>
+      <form method="post" action="{{ base }}/section-save">
+        <input type="hidden" name="section_id" value="{{ sec.section_id }}">
+        <label>Heading <input type="text" name="heading" value="{{ sec.heading }}" required maxlength="600"></label>
+        <label>Key point, in your words <textarea name="point" maxlength="2000">{{ sec.point }}</textarea></label>
+        <label>Status
+          <select name="status">{% for st in section_statuses %}<option value="{{ st }}" {{ "selected" if st == sec.status }}>{{ st|title }}</option>{% endfor %}</select></label>
+        {% if brief_items %}<fieldset><legend class="small">Requirements and criteria this section addresses</legend>
+          {% for b in brief_items %}<label class="inline"><input type="checkbox" name="addresses" value="{{ b.id }}" {{ "checked" if b.id in sec.addresses }}> {{ b.text[:80] }}{{ "…" if b.text|length > 80 }}</label><br>{% endfor %}</fieldset>{% endif %}
+        {% if session.evidence %}<fieldset><legend class="small">Evidence supporting it</legend>
+          {% for e in session.evidence %}<label class="inline"><input type="checkbox" name="evidence_ids" value="{{ e.evidence_id }}" {{ "checked" if e.evidence_id in sec.evidence_ids }}> {{ e.description[:80] }}</label><br>{% endfor %}</fieldset>{% endif %}
+        <button type="submit">Save section</button>
+      </form>
+    </details>
+    {% endif %}
+  </div>
+  {% else %}<p class="empty">No sections yet.</p>{% endfor %}
+  {% if live %}
+  <details class="card"><summary>Add a section</summary>
+    <form method="post" action="{{ base }}/section-save">
+      <label>Heading <input type="text" name="heading" required maxlength="600" placeholder="e.g. Define the key terms"></label>
+      <label>Key point, in your words <textarea name="point" maxlength="2000"></textarea></label>
+      {% if brief_items %}<fieldset><legend class="small">Requirements and criteria this section addresses</legend>
+        {% for b in brief_items %}<label class="inline"><input type="checkbox" name="addresses" value="{{ b.id }}"> {{ b.text[:80] }}{{ "…" if b.text|length > 80 }}</label><br>{% endfor %}</fieldset>{% endif %}
+      {% if session.evidence %}<fieldset><legend class="small">Evidence supporting it</legend>
+        {% for e in session.evidence %}<label class="inline"><input type="checkbox" name="evidence_ids" value="{{ e.evidence_id }}"> {{ e.description[:80] }}</label><br>{% endfor %}</fieldset>{% endif %}
+      <button type="submit">Add section</button>
+    </form>
+  </details>
+  {% endif %}
+</div>
+
+<div class="section" id="evidence">
+  <div class="section-head"><h2>Evidence</h2><span class="kicker">You mark it found</span></div>
+  {% for e in session.evidence %}
+  <div class="item">
+    <p><strong>{{ e.description }}</strong> <span class="tag {{ "trust-confirmed" if e.status == "FOUND" else "trust-needs_verification" }}">{{ e.status|title }}</span>
+      {% if e.origin == "COACH_SUGGESTED" %}<span class="tag">suggested by coach</span>{% endif %}</p>
+    <p class="small">{{ e.kind.replace("_", " ")|title }}
+      {% if e.source_id %}&middot; {% for m in session.materials if m.source_id == e.source_id %}{{ m.title }}{% endfor %}{% if e.pdf_page %}, page/slide {{ e.pdf_page }}{% endif %}{% endif %}
+      {% if e.note %}&middot; {{ e.note }}{% endif %}</p>
+    {% if live %}
+    <details><summary>Edit</summary>
+      <form method="post" action="{{ base }}/evidence-save">
+        <input type="hidden" name="evidence_id" value="{{ e.evidence_id }}">
+        <label>What the evidence is <input type="text" name="description" value="{{ e.description }}" required maxlength="600"></label>
+        <div class="grid2">
+          <label>Type <select name="kind">{% for k in evidence_kinds %}<option value="{{ k }}" {{ "selected" if k == e.kind }}>{{ k.replace("_", " ")|title }}</option>{% endfor %}</select></label>
+          <label>Status <select name="status"><option value="NEEDED" {{ "selected" if e.status == "NEEDED" }}>Still needed</option><option value="FOUND" {{ "selected" if e.status == "FOUND" }}>Found</option></select></label>
+        </div>
+        <div class="grid2">
+          <label>Course material (optional) <select name="source_id"><option value="">None</option>{% for m in session.materials %}<option value="{{ m.source_id }}" {{ "selected" if m.source_id == e.source_id }}>{{ m.title }}</option>{% endfor %}</select></label>
+          <label>Page or slide (optional) <input type="number" name="pdf_page" min="1" value="{{ e.pdf_page or "" }}"></label>
+        </div>
+        <label>Note <input type="text" name="note" value="{{ e.note }}" maxlength="600"></label>
+        <button type="submit">Save evidence</button>
+      </form>
+    </details>
+    <form method="post" action="{{ base }}/evidence-remove"><input type="hidden" name="evidence_id" value="{{ e.evidence_id }}"><button type="submit" class="quiet">Remove</button></form>
+    {% endif %}
+  </div>
+  {% else %}<p class="empty">No evidence recorded yet.</p>{% endfor %}
+  {% if live %}
+  <details class="card"><summary>Add evidence you need or have found</summary>
+    <form method="post" action="{{ base }}/evidence-save">
+      <label>What the evidence is <input type="text" name="description" required maxlength="600" placeholder="e.g. An example from week 2 that supports my second point"></label>
+      <div class="grid2">
+        <label>Type <select name="kind">{% for k in evidence_kinds %}<option value="{{ k }}">{{ k.replace("_", " ")|title }}</option>{% endfor %}</select></label>
+        <label>Status <select name="status"><option value="NEEDED">Still needed</option><option value="FOUND">Found</option></select></label>
+      </div>
+      <div class="grid2">
+        <label>Course material (optional) <select name="source_id"><option value="">None</option>{% for m in session.materials %}<option value="{{ m.source_id }}">{{ m.title }}</option>{% endfor %}</select></label>
+        <label>Page or slide (optional) <input type="number" name="pdf_page" min="1"></label>
+      </div>
+      <label>Note <input type="text" name="note" maxlength="600"></label>
+      <button type="submit">Add evidence</button>
+    </form>
+  </details>
+  {% endif %}
+</div>
+
+<div class="section" id="questions">
+  <div class="section-head"><h2>Open questions</h2><span class="kicker">Yours and the coach's</span></div>
+  {% for q in session.questions %}
+  <div class="item">
+    <p>{{ q.text }} <span class="tag {{ "trust-confirmed" if q.status == "RESOLVED" else "trust-needs_verification" }}">{{ q.status|title }}</span>{% if q.origin == "COACH" %} <span class="tag">from coach</span>{% endif %}</p>
+    {% if q.answer %}<p class="small">Your answer: {{ q.answer }}</p>{% endif %}
+    {% if live %}
+      {% if q.status == "OPEN" %}
+      <form method="post" action="{{ base }}/question-resolve">
+        <input type="hidden" name="question_id" value="{{ q.question_id }}">
+        <label>Your answer, in your own words (optional) <textarea name="answer" maxlength="2000"></textarea></label>
+        <button type="submit">Mark resolved</button>
+      </form>
+      {% else %}
+      <form method="post" action="{{ base }}/question-resolve" class="row"><input type="hidden" name="question_id" value="{{ q.question_id }}"><input type="hidden" name="reopen" value="yes"><button type="submit" class="quiet">Reopen</button></form>
+      {% endif %}
+      <form method="post" action="{{ base }}/question-remove"><input type="hidden" name="question_id" value="{{ q.question_id }}"><button type="submit" class="quiet">Remove</button></form>
+    {% endif %}
+  </div>
+  {% else %}<p class="empty">No questions yet.</p>{% endfor %}
+  {% if live %}
+  <form method="post" action="{{ base }}/question-add" class="card">
+    <label>Something you're unsure about <input type="text" name="text" required maxlength="600" placeholder="e.g. Does the word limit include the reference list?"></label>
+    <button type="submit">Add question</button>
+  </form>
+  {% endif %}
+</div>
+
+<div class="section" id="brief">
+  <div class="section-head"><h2>Brief and marking criteria</h2><span class="kicker">What the coach works from</span></div>
+  <p class="section-note">Requirements come from the assessment record and keep its status. Anything you type here is student-entered and marked “Needs checking”: copy it from your official brief or rubric. The coach does not guess marking criteria.</p>
+  <h3>Requirements</h3>
+  {% for r in session.requirements %}
+  <div class="item">
+    <p>{{ r.text }} <span class="tag trust-{{ r.status|lower }}">{{ trust[r.status] }}</span>
+      <span class="tag">{{ "from assessment record" if r.origin == "ASSESSMENT_RECORD" else "entered by you" }}</span>
+      {% if r.removed_from_assessment %}<span class="tag status-failed">no longer in the assessment record</span>{% endif %}</p>
+    {% if live %}<form method="post" action="{{ base }}/brief-remove"><input type="hidden" name="item_id" value="{{ r.id }}"><button type="submit" class="quiet">Remove</button></form>{% endif %}
+  </div>
+  {% else %}<p class="empty">No requirements recorded.</p>{% endfor %}
+  <h3>Marking criteria</h3>
+  {% for c in session.criteria %}
+  <div class="item">
+    <p>{{ c.text }} <span class="tag trust-needs_verification">{{ trust[c.status] }}</span> <span class="tag">entered by you</span></p>
+    {% if live %}<form method="post" action="{{ base }}/brief-remove"><input type="hidden" name="item_id" value="{{ c.id }}"><button type="submit" class="quiet">Remove</button></form>{% endif %}
+  </div>
+  {% else %}<p class="empty">No marking criteria added.</p>{% endfor %}
+  {% if live %}
+  <div class="grid2">
+    <form method="post" action="{{ base }}/brief-add" class="card"><input type="hidden" name="kind" value="requirements">
+      <label>Add requirements (one per line) <textarea name="text" required></textarea></label><button type="submit">Add requirements</button></form>
+    <form method="post" action="{{ base }}/brief-add" class="card"><input type="hidden" name="kind" value="criteria">
+      <label>Add marking criteria (one per line) <textarea name="text" required></textarea></label><button type="submit">Add criteria</button></form>
+  </div>
+  {% endif %}
+</div>
+
+<div class="section" id="materials">
+  <div class="section-head"><h2>Course materials the coach can search</h2><span class="kicker">{{ session.materials|length }} for {{ module.module_code }}</span></div>
+  {% if session.materials %}
+  <ul>{% for m in session.materials %}<li>{{ m.title }}{% if m.week %} (week {{ m.week }}){% endif %} — <span class="small">{{ m.note }}</span></li>{% endfor %}</ul>
+  {% else %}<p class="empty">No materials yet. <a href="/modules/{{ module.module_code }}#materials">Add the assignment brief and lecture files</a> so the coach can point you to them.</p>{% endif %}
+</div>
+
+<div class="section">
+  <div class="section-head"><h2>This session</h2></div>
+  <div class="row">
+    {% if live %}
+    <form method="post" action="{{ base }}/end"><button type="submit" class="quiet">End session (keeps everything, read-only)</button></form>
+    <form method="post" action="/modules/{{ module.module_code }}/assessments/{{ session.assessment_id }}/coach/start" onsubmit="return confirm('Start a fresh session? Your criteria, plan, evidence and questions carry over; this conversation is kept read-only.');"><input type="hidden" name="client_request_id" value="{{ new_turn_id }}"><input type="hidden" name="new" value="yes"><button type="submit" class="quiet">Start a fresh session (keeps your plan)</button></form>
+    {% else %}
+    <form method="post" action="{{ base }}/reopen"><button type="submit">Reopen to keep working</button></form>
+    {% endif %}
+    <form method="post" action="{{ base }}/delete" class="row"><label class="inline"><input type="checkbox" name="confirm" value="yes"> I want this session and its notes deleted</label><button type="submit" class="quiet">Delete session</button></form>
+  </div>
+  <p class="small">Started {{ session.created_at }} &middot; last saved {{ session.updated_at }}. Everything is stored in your private Serapis workspace on this device and is kept out of Git.</p>
+</div>
+</div>
+{% endblock %}

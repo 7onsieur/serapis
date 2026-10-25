@@ -185,7 +185,19 @@ def _pptx_slide_text_and_title(xml_bytes: bytes, slide_path: str) -> tuple[str, 
     except ET.ParseError as exc:
         raise SourceError(f"PPTX slide XML is malformed: {slide_path}: {exc}") from exc
 
-    text = "".join(node.text or "" for node in root.iter(f"{{{_PPTX_NS['a']}}}t"))
+    # Runs join within a paragraph, but paragraphs and shapes are separated: joining every run with nothing
+    # fuses the last word of one paragraph to the first word of the next ("conflictShareholders"), which
+    # breaks retrieval and quoted citations on real decks.
+    a_ns = _PPTX_NS["a"]
+    paragraphs = [
+        "".join(
+            (node.text or "") if node.tag == f"{{{a_ns}}}t" else " "  # a soft line break (a:br) is a space
+            for node in paragraph.iter()
+            if node.tag in (f"{{{a_ns}}}t", f"{{{a_ns}}}br")
+        )
+        for paragraph in root.iter(f"{{{a_ns}}}p")
+    ]
+    text = "\n".join(p for p in paragraphs if p)
 
     title: str | None = None
     for shape in root.iter("{%s}sp" % _PPTX_NS["p"]):

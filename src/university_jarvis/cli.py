@@ -264,6 +264,18 @@ def _parser() -> argparse.ArgumentParser:
         ),
     )
 
+    demo = subparsers.add_parser(
+        "demo",
+        help=(
+            "build a fully synthetic demonstration workspace (invented student, offline scripted replies, "
+            "no AI cost, no Blackboard/Drive); add --serve to open it in the Hub"
+        ),
+    )
+    demo.add_argument("--dir", default=None, help="demonstration folder (default: next to your Serapis data folder)")
+    demo.add_argument("--reset", action="store_true", help="rebuild a previous demonstration folder from scratch")
+    demo.add_argument("--serve", action="store_true", help="start the Hub on the demonstration data when it is ready")
+    demo.add_argument("--port", type=int, default=8766, help="Hub port for --serve (default: %(default)s)")
+
     hub = subparsers.add_parser(
         "hub",
         help=(
@@ -569,6 +581,44 @@ def _resolve_blackboard_client(base_url: str) -> contextlib.AbstractContextManag
     )
 
 
+def _run_demo(args: argparse.Namespace) -> int:
+    from pathlib import Path
+
+    from .demo import demo_environment, prepare_directory, seed_demo
+    from .state import personal_data_dir
+
+    home = Path(args.dir) if args.dir else personal_data_dir().with_name("serapis-demo")
+    try:
+        existing = (home.expanduser() / ".serapis-demo").is_file() and not args.reset
+        if not existing:
+            home = prepare_directory(home, reset=args.reset)
+            with demo_environment(home):
+                summary = seed_demo(home)
+            print(f"Synthetic demonstration created in {summary['home']}")
+            print(f"  modules: {', '.join(summary['modules'])}; weeks built: {summary['weeks_built']}; "
+                  f"Assignment Coach session with a saved plan and {summary['integrity_refusals']} refused request")
+        else:
+            home = home.expanduser().resolve()
+            print(f"Using the existing demonstration in {home}")
+        if args.serve:
+            import uvicorn
+
+            from .hub_web import create_app
+            from .scripted_provider import ScriptedStudyProvider
+
+            with demo_environment(home):
+                print(f"Serapis Hub (synthetic demonstration) — http://127.0.0.1:{args.port}")
+                print("Replies are scripted and offline. Stop with Ctrl+C. Your real Serapis data is not used.")
+                uvicorn.run(create_app(reasoning_provider=ScriptedStudyProvider(), demo_mode=True),
+                            host="127.0.0.1", port=args.port)
+        else:
+            print("Open it with:  serapis demo --serve")
+        return 0
+    except (StateError, OSError) as exc:
+        print(f"serapis demo: {exc}", file=sys.stderr)
+        return 2
+
+
 def main(
     argv: Sequence[str] | None = None,
     *,
@@ -643,6 +693,8 @@ def main(
         except (StateError, OSError) as exc:
             print(f"serapis setup: {exc}", file=sys.stderr)
             return 2
+    if args.command == "demo":
+        return _run_demo(args)
     try:
         state = load_state()
         if args.command == "status":
@@ -818,8 +870,8 @@ def main(
 
             from .hub_web import create_app
 
-            print(f"Serapis Hub — read-only — http://{args.host}:{args.port}")
-            print("No Blackboard/Drive/model call is made by loading any Hub page.")
+            print(f"Serapis Hub — http://{args.host}:{args.port}")
+            print("Loading a Hub page never calls an AI provider, Blackboard or Google Drive; each of those needs an explicit button press.")
             extra_hosts = () if args.host in {"127.0.0.1", "localhost", "::1", "0.0.0.0", "::"} else (args.host,)
             uvicorn.run(create_app(allowed_hosts=extra_hosts), host=args.host, port=args.port)
     except StateError as exc:

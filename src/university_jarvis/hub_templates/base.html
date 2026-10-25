@@ -366,6 +366,30 @@
       box-shadow: 0 0 0 3px var(--accent-dim);
     }
 
+
+    /* ---------- general form controls (module, profile and setup forms) ---------- */
+    main input:not([type="checkbox"]):not([type="radio"]):not([type="file"]),
+    main textarea, main select {
+      font: inherit;
+      color: var(--text-0);
+      background: var(--bg-1);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      padding: 0.45rem 0.65rem;
+      max-width: 100%;
+    }
+    main textarea { min-height: 4.5rem; width: min(100%, 36rem); }
+    main input:focus-visible, main textarea:focus-visible, main select:focus-visible { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-dim); }
+    main label { display: block; margin-bottom: 0.55rem; font-size: 0.85rem; color: var(--text-2); }
+    main form + form { margin-top: 0.4rem; }
+    .journey { list-style: none; margin: 0.6rem 0 0; padding: 0; }
+    .journey li { display: flex; gap: 0.7rem; align-items: baseline; padding: 0.45rem 0; border-bottom: 1px solid var(--border); }
+    .journey li:last-child { border-bottom: none; }
+    .journey .mark { font-family: var(--mono); width: 1.4rem; color: var(--text-3); }
+    .journey li.done .mark { color: var(--ok); }
+    .journey li.next .mark { color: var(--accent); }
+    .journey .detail { display: block; font-size: 0.8rem; color: var(--text-3); }
+
     button, .btn {
       appearance: none;
       border: 1px solid rgba(201, 157, 92, 0.62);
@@ -604,8 +628,10 @@
       <a href="/modules" class="{{ 'active' if active_nav == 'modules' else '' }}">Modules</a>
       <a href="/assessments" class="{{ 'active' if active_nav == 'assessments' else '' }}">Assessments</a>
       <a href="/check" class="{{ 'active' if active_nav == 'check' else '' }}">Check</a>
+      <a href="/profile" class="{{ 'active' if active_nav == 'profile' else '' }}">Profile</a>
     </nav>
   </header>
+  {% if demo_mode %}<div class="feature-panel" role="note" style="margin:0;border-radius:0;"><strong>SYNTHETIC DEMONSTRATION</strong>&nbsp;— invented student, modules and slides. AI replies are scripted by a deterministic stand-in, not a real model; nothing leaves this computer.</div>{% endif %}
   <main id="main">
     {% block content %}{% endblock %}
   </main>

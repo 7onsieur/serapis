@@ -16,7 +16,9 @@ Serapis is actively being developed. The current implementation is an early loca
 - **Materials:** associate supported PDF and PPTX files with a module/week, replace, reassign or remove them, and retain source IDs and extraction metadata. PPTX text extraction is portable. PDF text extraction uses macOS PDFKit.
 - **Learning evidence:** save attempts locally and optionally request a bounded AI evaluation against a supplied task/rubric and source context. A deterministic rule selects the next useful capability to address.
 - **Study workflows:** explicit AI actions support PREPARE, TEACH, QUIZ and REVISE in bounded, source-grounded ways. Generated outputs are study aids, and source references are checked against the context provided to the workflow.
-- **Assignment support:** a module-scoped, one-shot assignment planning brief can explain the prompt, constraints and marking criteria, identify relevant course material, suggest planning questions and work stages, and surface evidence needs and risks. It is not a resumable conversation or a stored assignment plan, and it does not produce a finished submission.
+- **Assignment Coach:** open any assessment in a persistent, resumable coaching session. You enter or confirm the requirements and marking criteria, keep your own plan (main argument, sections linked to requirements and criteria), list evidence you still need or have found, and track open questions. A student-led conversation retrieves relevant passages from the module's materials and cites them; gaps (unaddressed requirements, missing evidence, unverified facts, open questions) are computed deterministically. The coach refuses requests to write or rewrite assessed work before any AI call, discards replies that read like submission text or contain unsupported references, and can only *suggest* questions and evidence that you resolve. These checks are heuristics, not guarantees. The earlier one-off module planning brief remains available.
+- **Student journey:** the Hub's Home shows a checklist from profile to saved plan, derived from saved data, and a "Continue where you left off" list. Profile, modules, assessments, materials, study, tutoring and coaching all persist locally between visits.
+- **Synthetic demonstration:** `serapis demo --serve` builds an invented student's workspace with offline scripted replies (no AI cost, separate folder).
 - **Local Hub and CLI:** the Hub binds to `127.0.0.1` by default. Setup, state management, material import and ordinary Hub page views do not require a model call.
 
 ### Partial / limited
@@ -95,7 +97,7 @@ Extraction may also fail for damaged or textless files. Unextractable content is
 
 The immediate direction is practical and evidence-led:
 
-1. **Assignment Coach:** resumable planning and progressive coaching.
+1. **Assignment Coach:** real-model evaluation of the coach, brief/criteria extraction, plan export.
 2. **LMS / Blackboard:** safer discovery, change detection and reconciliation before considering scheduled features.
 3. **Materials:** cross-platform PDF extraction, OCR investigation and useful format coverage.
 4. **Learning quality:** student testing and evidence-led evaluation of generated teaching and questions.
@@ -103,6 +105,10 @@ The immediate direction is practical and evidence-led:
 6. **Provider flexibility:** preserve the option of future providers or local models; neither is implemented today.
 
 See [ROADMAP.md](ROADMAP.md) for the concise work list and current validation priorities.
+
+## Student pilot
+
+See `docs/pilot/`: `STUDENT_QUICKSTART.md`, `TESTING_PROTOCOL.md`, `PRIVACY_AND_INTEGRITY.md` and `PILOT_READINESS.md` (an evidence-based assessment, limitations and unsupported integrations). Serapis is ready only for a small, facilitated, moderated usability pilot; nothing here claims educational effectiveness or institutional endorsement.
 
 ## Contributing and testing
 
@@ -112,8 +118,10 @@ Run the offline test suite with:
 
 ```sh
 python3 -m pip install -e '.[test]'
-python3 -m pytest -q
+python3 -m pytest -q   # install the .[ai,blackboard,drive,test] extras for the full suite
 ```
+
+`tests/test_pilot_acceptance.py` is the repeatable end-to-end student journey (offline, scripted AI).
 
 The current suite uses synthetic data and fake/offline integration paths; a passing suite does not establish live-provider or live-institution reliability. Serapis does not autonomously monitor courses, predict grades, claim a mastery score or guarantee academic outcomes.
 

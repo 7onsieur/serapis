@@ -2,7 +2,7 @@
 
 Serapis is early-stage software. These are intended next areas of work, not promises or implemented capabilities. Validation with independent students is a priority; no educational outcomes are claimed yet.
 
-1. **Assignment Coach:** resumable conversational planning with a persistent assignment plan, progressive scaffolding and constructive challenge, while preserving student authorship and academic-integrity boundaries.
+1. **Assignment Coach:** a persistent, resumable coach with a student-authored plan now exists (offline-tested only). Next: evaluate it with the real provider and students, extract criteria from uploaded briefs with confirmation, plan export, and stronger scaffolding, while preserving student authorship and academic-integrity boundaries.
 2. **LMS / Blackboard maturity:** safer handling of incomplete discovery, stronger change detection and reliable reconciliation. Consider scheduled monitoring or notifications only after these foundations are dependable.
 3. **Material ingestion:** improve cross-platform PDF extraction, investigate OCR for scanned files, and add document formats based on student need.
 4. **Learning quality:** test with students, evaluate generated teaching and questions, and adapt from observed use rather than arbitrary scoring.

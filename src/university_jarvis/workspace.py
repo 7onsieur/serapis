@@ -25,6 +25,7 @@ from .reasoning import (
     PreparationResult,
     ReasoningProvider,
     TeachBrief,
+    generate_prepare_brief,
     generate_teach_brief,
     load_cached_prepare_brief,
 )
@@ -1411,11 +1412,20 @@ def materialize_week_workspace(
     provider: ReasoningProvider | None = None,
     cache_dir: Path | None = None,
     workspace_root: Path | None = None,
+    generate_if_missing: bool = False,
 ) -> WorkspaceResult:
-    """Create the canonical record and DOCX strictly from a matching local cache."""
+    """Create the canonical record and DOCX from a matching local PREPARE_ME result.
+
+    By default this is strictly cache-backed and never calls a model (the CLI runs ``prepare`` first).
+    With ``generate_if_missing`` a cache miss calls the provider once, caches the result and uses it, so
+    the Hub's single "Prepare" action works without a separate CLI step.
+    """
     context = build_prepare_context(state, module_code, week_number)
     selected_provider = provider or OpenAIReasoningProvider()
-    result = load_cached_prepare_brief(context, selected_provider, cache_dir=cache_dir)
+    if generate_if_missing:
+        result = generate_prepare_brief(context, selected_provider, cache_dir=cache_dir)
+    else:
+        result = load_cached_prepare_brief(context, selected_provider, cache_dir=cache_dir)
     record = build_academic_record(context, result, selected_provider)
 
     record_path, study_pack_path, notebooklm_path = _workspace_paths(

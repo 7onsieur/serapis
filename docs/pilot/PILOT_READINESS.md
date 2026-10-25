@@ -1,0 +1,55 @@
+# Pilot readiness assessment
+
+*Updated 2026-10-25 after an independent review and hardening pass (see `CHECKPOINT-2026-10-25.md` for the dated record). Based only on what was run in this repository. No educational effectiveness, university endorsement or production readiness is claimed.*
+
+## Verdict: READY WITH CONDITIONS
+
+Ready for a **small, facilitated, moderated usability pilot on one machine per participant, with synthetic or non-sensitive material**, provided the conditions below are met. **Not ready** for unsupervised use, live assessed work, any institutional rollout, or as evidence of learning benefit.
+
+### Conditions
+
+1. A facilitator is present for every session (the protocol is moderated by design).
+2. Either run the pilot on the scripted demo provider only (flow and usability, no AI cost), **or** before the first real-AI session run a smoke test with the real provider on synthetic material: one Prepare, one Quiz, one Tutor turn and several coach messages, and read the replies. The real provider has **never** been exercised against these prompts and checks; expect some coach replies to be discarded by the reply checks (a fixed fallback is shown after two).
+3. Participants give informed consent and read `PRIVACY_AND_INTEGRITY.md`; no live assessed work, credentials or private files; no Blackboard or Drive.
+4. Any coach reply that reads like usable submission text is logged as a high-severity incident and the pilot is paused (see `TESTING_PROTOCOL.md`).
+5. PDF participants are on macOS; otherwise use .pptx files.
+
+## What was verified (automated, offline)
+
+`python -m pytest -q` from the repository root with all optional extras installed: **834 passed, 0 failed, 0 skipped** (final tree). Highlights relevant to the pilot:
+
+- `tests/test_pilot_acceptance.py`: first run on the sample → own workspace → profile → module → assessment → .pptx and a junk PDF upload → Prepare (provider down once, then fine) → Quiz → answer → evaluation → Teach → Revise → Tutor hint/answer → Assignment Coach start → grounded cited reply → provider failure mid-message → app restart → Retry sends exactly once → plan, sections, evidence, questions → Home shows the saved session. Also: the demo command is rerunnable, refuses foreign folders and the home directory, and never touches the real data folder.
+- `tests/test_coach_hardening.py`: 27 known gate bypasses refused, 20 legitimate requests still allowed, fabricated years/quotes/dates/weightings rejected, parallel edits lose nothing, six simultaneous duplicate submissions call the model once, cross-module/cross-workspace and traversal ids refused, damaged session files fail cleanly, HTML escaping, cross-site/oversized/malformed requests, GET routes never write or call a provider.
+- `tests/test_assignment_coach.py`: lifecycle, persistence, gaps, recovery.
+
+The Hub pages (Home with journey and resume panel, coach page, plan) were inspected by eye in a desktop browser on the demo data. **Phone-width layout was not visually verified** (the browser window could not be narrowed), and no accessibility audit or screen-reader test was done.
+
+## Limits of that evidence
+
+- All AI behaviour came from `ScriptedStudyProvider` and fakes. How the real model behaves, how often it is blocked by the checks, and what a session costs are **unknown**.
+- The integrity checks are heuristics with documented residual risks (`PRIVACY_AND_INTEGRITY.md`). They were tested against the bypasses the reviewer could think of, not against motivated students.
+- Concurrency tests cover threads in one process; multi-process behaviour relies on the existing file locks and was not stress-tested.
+
+## Known limitations and unsupported integrations
+
+- **Blackboard and Google Drive: unsupported for the pilot** (offline tests only, never run live). The demo switches Blackboard off.
+- **PDF text extraction is macOS-only**; no OCR; DOCX and other formats unsupported. Unreadable files are listed on the coach page and skipped.
+- **OpenAI only**, the student's own key; no local model. Per-session coach cap of 40 AI calls; no overall spending cap.
+- Single user, single machine, no accounts, sync or backup. Deleting the data folder deletes everything.
+- Requirements and deadlines are student-entered ("Needs checking"); marking criteria are typed or pasted (no extraction from briefs).
+- The coach never sees the student's drafts unless pasted into a message (4,000 characters at a time).
+- Learning-evidence and tutoring logic is rule-based and unvalidated; no mastery score or grade prediction.
+- Installation needs a terminal and Python 3.11+.
+- The test suite must be run from the repository root (existing tests import the `tests` package by path).
+- `hub_web.py` (about 1,100 lines) and the coach routes inside it are large; they were left structurally unchanged to avoid churn.
+
+## Defects found in review and fixed (summary)
+
+Integrity gate bypasses (negation, zero-width/look-alike characters, spacing, "sample/model" phrasings, "do it all for me"); reply checks that accepted fabricated years, unverified quotations and invented dates/weightings/word limits; stale material snapshot hiding newly added files; no way out of an unfinished message when no AI key was set (now Retry or Discard); a 40-call/120-message dead end (now "Start a fresh session" carries the plan over); a race that could lose a late reply when starting a fresh session; reopen/start races; delete during an in-flight message; damaged session files causing server errors; unexpected provider errors becoming server errors; malformed form bytes causing a server error; unbounded form bodies; first-run confusion with the fictional sample (now "Start my own workspace"); Home journey buried below the hero; and an over-long module split into store, notes, analysis and integrity parts. Earlier-sprint fixes (Evaluate/Continue crash, Prepare button, PPTX paragraph fusion) are listed in the checkpoint.
+
+## Before each pilot session
+
+1. `pytest -q` green on the pilot machine; `serapis demo --serve` opens with the banner.
+2. Decide scripted vs real AI per session and record it.
+3. Fresh `SERAPIS_HOME` per participant; consent done; bug log ready.
+4. Any institutional conversation happens **before** involving students at that institution; this document is not approval.

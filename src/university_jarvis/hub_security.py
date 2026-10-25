@@ -34,6 +34,11 @@ MAX_UPLOAD_BYTES = 100 * 1024 * 1024
 MULTIPART_OVERHEAD_BYTES = 1024 * 1024
 MAX_REQUEST_BYTES = MAX_UPLOAD_BYTES + MULTIPART_OVERHEAD_BYTES
 
+#: Largest accepted non-upload form body. Every Hub form is a few short text fields (the longest are a
+#: 4,000-character coach message and 2,000-character plan notes), so this is generous while keeping a runaway
+#: body from being read into memory.
+MAX_FORM_BYTES = 1024 * 1024
+
 LOOPBACK_HOSTS = frozenset({"127.0.0.1", "localhost", "::1"})
 _SAFE_METHODS = frozenset({"GET", "HEAD", "OPTIONS"})
 _SINGLE_VALUE_HEADERS = frozenset({"host", "origin", "referer", "sec-fetch-site", "content-length"})
@@ -116,6 +121,14 @@ class HubSecurityMiddleware:
                     return 413, (
                         f"Upload too large. The limit is {MAX_UPLOAD_BYTES // (1024 * 1024)} MiB per file."
                     )
+            elif method.upper() in {"POST", "PUT", "PATCH", "DELETE"}:
+                if "transfer-encoding" in headers:
+                    return 411, "Requests must declare their size (Content-Length), not use chunked encoding."
+                declared = headers.get("content-length")
+                if declared is not None and not declared.isdigit():
+                    return 400, "Invalid Content-Length."
+                if declared is not None and int(declared) > MAX_FORM_BYTES:
+                    return 413, f"Request too large. Form submissions are limited to {MAX_FORM_BYTES // 1024} KiB."
         return None
 
     @staticmethod

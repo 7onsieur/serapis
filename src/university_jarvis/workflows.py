@@ -6,7 +6,7 @@ from typing import Any, Iterable
 
 from .mission import build_objective_context
 from .sources import build_retrieved_contexts, load_source_context, load_source_units
-from .state import get_module, get_sources, get_week, normalize_academic_truth
+from .state import StateError, get_module, get_sources, get_week, normalize_academic_truth
 
 
 def _load_sources(
@@ -143,5 +143,87 @@ def build_assignment_context(
         ],
         "sources": prepared_sources,
         "source_contexts": source_contexts,
+        "truth_sources": state.get("sources", []),
+    }
+
+
+_UNIT_CACHE: dict[tuple, tuple[dict[str, Any], list[str], dict[int, str | None]]] = {}
+_UNIT_CACHE_LIMIT = 32
+
+
+def _cached_source_units(source: dict[str, Any]) -> tuple[dict[str, Any], list[str], dict[int, str | None]]:
+    """``load_source_units`` with a small in-process cache keyed by file identity.
+
+    Every coach message re-reads every material of the module; PDF extraction shells out to macOS, so
+    repeating it for each message is slow. The key includes the file's size and modification time, so a
+    replaced or edited file is always re-read. Nothing is persisted and failures are never cached.
+    """
+    from .sources import resolve_source_path
+
+    path = resolve_source_path(source.get("locator") or "")
+    try:
+        stat = path.stat()
+    except OSError:
+        return load_source_units(source)  # let it raise the usual, student-readable SourceError
+    key = (str(path), stat.st_size, stat.st_mtime_ns, source.get("availability"))
+    hit = _UNIT_CACHE.get(key)
+    if hit is None:
+        hit = load_source_units(source)
+        if len(_UNIT_CACHE) >= _UNIT_CACHE_LIMIT:
+            _UNIT_CACHE.pop(next(iter(_UNIT_CACHE)))
+        _UNIT_CACHE[key] = hit
+    return hit
+
+
+def build_assignment_coach_context(
+    state: dict[str, Any], module_code: str, query: str
+) -> dict[str, Any]:
+    """Retrieve passages from every readable material of one module for a coaching turn.
+
+    Unlike ``build_assignment_context`` this is query-driven and covers materials that
+    are not attached to a week. A material that cannot be read here (unsupported format,
+    PDF on a platform without extraction, damaged file) is reported in ``unreadable``
+    rather than failing the turn. When nothing matches the query, ``source_contexts`` is
+    empty: leading excerpts of unrelated material are never offered as evidence.
+    """
+    state = normalize_academic_truth(state)
+    module = get_module(state, module_code)
+    source_ids = [
+        source["id"]
+        for source in state.get("sources", [])
+        if str(source.get("module_code", "")).upper() == module["code"].upper()
+    ]
+    loaded, unreadable = [], []
+    for source in get_sources(state, source_ids):
+        try:
+            extraction, units, titles = _cached_source_units(source)
+        except StateError as exc:
+            unreadable.append(
+                {"source_id": source["id"], "title": source.get("title"), "reason": str(exc)[:160]}
+            )
+            continue
+        if extraction.get("character_count", 0) == 0:
+            unreadable.append(
+                {"source_id": source["id"], "title": source.get("title"), "reason": "No extractable text."}
+            )
+            continue
+        loaded.append((source, extraction, units, titles))
+    contexts = build_retrieved_contexts(loaded, query) if loaded else []
+    status = contexts[0]["retrieval"]["status"] if contexts else "no_readable_material"
+    return {
+        "workflow": "ASSIGNMENT_COACH_TURN",
+        "objective_context": build_objective_context(state),
+        "module": {
+            "code": module["code"],
+            "title": module["title"],
+            "semester": module["semester"],
+            "academic_year": module["academic_year"],
+        },
+        "assessments": module.get("assessments", []),
+        "sources": [{**source, "extraction": extraction} for source, extraction, _u, _t in loaded],
+        "source_contexts": contexts if status == "matched" else [],
+        "retrieval_status": status,
+        "readable_source_count": len(loaded),
+        "unreadable": unreadable,
         "truth_sources": state.get("sources", []),
     }
