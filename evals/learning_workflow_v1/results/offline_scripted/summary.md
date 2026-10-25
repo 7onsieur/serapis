@@ -1,6 +1,6 @@
 # Learning Workflow Evaluation V1 — OFFLINE RUN: scripted/mock provider; token counts and cost are SYNTHETIC; says nothing about a real model
 
-Model: `scripted (offline)` · max output tokens 1500 · commit `266e9e3+uncommitted`
+Model: `scripted (offline)` · max output tokens 1500 · commit `66d6678+uncommitted`
 
 **Deterministic-check report. Not proof of educational effectiveness; subjective quality is unscored.**
 

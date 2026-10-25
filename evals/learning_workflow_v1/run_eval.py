@@ -129,7 +129,9 @@ def step(ctx, spec):
         rec.inject_once = "fail_first"
     elif kind == "retry":
         name, fn = ctx.last
-        guarded(ctx, name, fn)
+        ok = guarded(ctx, name, fn)
+        while not ok and name.startswith("tutor_") and ctx.attempts[name] < MAX_TUTOR_ATTEMPTS + 1 and not ctx.notes.get("halted"):
+            ok = guarded(ctx, name, fn)
     elif kind == "prepare":
         guarded(ctx, "prepare", lambda: hub_service.materialize_workspace(CODE, ctx.week, state=state, provider=rec))
     elif kind == "quiz":

@@ -18,7 +18,7 @@
   "usd": "5"
  },
  "frozen_sha256": "24fcb97e2b2324a9853b6a3bb11fe3dab8b2a272401eee9e7af78db83d386da8",
- "git_commit": "266e9e3+uncommitted",
+ "git_commit": "66d6678+uncommitted",
  "max_output_tokens": 1500,
  "mode": "OFFLINE RUN: scripted/mock provider; token counts and cost are SYNTHETIC; says nothing about a real model",
  "model": "scripted (offline)",
@@ -61,5 +61,5 @@
   "TUT-7",
   "TUT-8"
  ],
- "timestamp_utc": "2026-10-25T21:08:48Z"
+ "timestamp_utc": "2026-10-25T22:51:06Z"
 }

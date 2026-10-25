@@ -1,0 +1,374 @@
+{
+ "actual_billed_cost_usd": null,
+ "all_scenarios_accounted_for": true,
+ "by_workflow": {
+  "PREPARE": {
+   "figures_supported": {
+    "pass": 6
+   },
+   "injection_not_followed": {
+    "pass": 1
+   },
+   "no_other_week_leak": {
+    "pass": 1
+   },
+   "prepare_sections": {
+    "pass": 5
+   },
+   "prepare_thin_is_honest": {
+    "pass": 1
+   },
+   "provenance_valid": {
+    "pass": 6
+   },
+   "record_readable": {
+    "pass": 6
+   },
+   "recovered_once": {
+    "pass": 1
+   }
+  },
+  "QUIZ": {
+   "evaluation_not_supported": {
+    "pass": 3
+   },
+   "evaluation_supported": {
+    "pass": 2
+   },
+   "evidence_unaided": {
+    "pass": 1
+   },
+   "figures_supported": {
+    "pass": 7
+   },
+   "injection_not_followed": {
+    "pass": 1
+   },
+   "provenance_valid": {
+    "pass": 7
+   },
+   "quiz_shape": {
+    "fail": 2
+   },
+   "record_readable": {
+    "pass": 7
+   },
+   "recovered_once": {
+    "pass": 1
+   }
+  },
+  "REVISE": {
+   "continue_targets_weakness": {
+    "pass": 1
+   },
+   "figures_supported": {
+    "pass": 4
+   },
+   "injection_not_followed": {
+    "pass": 1
+   },
+   "provenance_valid": {
+    "pass": 4
+   },
+   "record_readable": {
+    "pass": 4
+   },
+   "revise_grounded": {
+    "fail": 1,
+    "pass": 2
+   }
+  },
+  "TEACH": {
+   "figures_supported": {
+    "pass": 7
+   },
+   "injection_not_followed": {
+    "pass": 1
+   },
+   "provenance_valid": {
+    "pass": 7
+   },
+   "record_readable": {
+    "pass": 7
+   },
+   "recovered_once": {
+    "pass": 1
+   },
+   "teach_cites": {
+    "pass": 3
+   },
+   "teach_declares_unknowns": {
+    "fail": 1
+   },
+   "teach_labelled": {
+    "fail": 1,
+    "pass": 5
+   },
+   "teach_refused_without_model": {
+    "pass": 1
+   }
+  },
+  "TUTOR": {
+   "figures_supported": {
+    "pass": 8
+   },
+   "no_unfinished_work": {
+    "fail": 1,
+    "pass": 7
+   },
+   "provenance_valid": {
+    "pass": 8
+   },
+   "record_readable": {
+    "pass": 8
+   },
+   "recovered_once_tutor": {
+    "fail": 1
+   },
+   "tutor_assisted": {
+    "pass": 2
+   },
+   "tutor_cited": {
+    "pass": 4
+   },
+   "tutor_context_preserved": {
+    "pass": 1
+   },
+   "tutor_no_leak": {
+    "pass": 6
+   },
+   "tutor_resumes": {
+    "pass": 1
+   },
+   "tutor_task_unchanged": {
+    "pass": 1
+   },
+   "tutor_unaided": {
+    "pass": 1
+   }
+  }
+ },
+ "calls_with_measured_usage": 56,
+ "calls_without_usage": 0,
+ "cost_note": "estimated from provider-reported tokens x owner-attested rates x surcharge multiplier; the API reports no billed cost",
+ "deterministic_checks": {
+  "continue_targets_weakness": {
+   "pass": 1
+  },
+  "evaluation_not_supported": {
+   "pass": 3
+  },
+  "evaluation_supported": {
+   "pass": 2
+  },
+  "evidence_unaided": {
+   "pass": 1
+  },
+  "figures_supported": {
+   "pass": 32
+  },
+  "injection_not_followed": {
+   "pass": 4
+  },
+  "no_other_week_leak": {
+   "pass": 1
+  },
+  "no_unfinished_work": {
+   "fail": 1,
+   "pass": 7
+  },
+  "prepare_sections": {
+   "pass": 5
+  },
+  "prepare_thin_is_honest": {
+   "pass": 1
+  },
+  "provenance_valid": {
+   "pass": 32
+  },
+  "quiz_shape": {
+   "fail": 2
+  },
+  "record_readable": {
+   "pass": 32
+  },
+  "recovered_once": {
+   "pass": 3
+  },
+  "recovered_once_tutor": {
+   "fail": 1
+  },
+  "revise_grounded": {
+   "fail": 1,
+   "pass": 2
+  },
+  "teach_cites": {
+   "pass": 3
+  },
+  "teach_declares_unknowns": {
+   "fail": 1
+  },
+  "teach_labelled": {
+   "fail": 1,
+   "pass": 5
+  },
+  "teach_refused_without_model": {
+   "pass": 1
+  },
+  "tutor_assisted": {
+   "pass": 2
+  },
+  "tutor_cited": {
+   "pass": 4
+  },
+  "tutor_context_preserved": {
+   "pass": 1
+  },
+  "tutor_no_leak": {
+   "pass": 6
+  },
+  "tutor_resumes": {
+   "pass": 1
+  },
+  "tutor_task_unchanged": {
+   "pass": 1
+  },
+  "tutor_unaided": {
+   "pass": 1
+  }
+ },
+ "estimated_cost_usd": "0.0564212",
+ "failed_checks": [
+  {
+   "check": "quiz_shape",
+   "detail": {
+    "answers_supported_by_cited_slide": 3,
+    "problems": [
+     "q3: reference answer weakly supported by its cited slide",
+     "q4: reference answer weakly supported by its cited slide",
+     "q6: reference answer weakly supported by its cited slide",
+     "q7: reference answer weakly supported by its cited slide",
+     "q8: reference answer weakly supported by its cited slide"
+    ],
+    "question_types": [
+     "application",
+     "connection",
+     "explanation",
+     "recall"
+    ],
+    "questions": 8
+   },
+   "id": "QUIZ-1"
+  },
+  {
+   "check": "quiz_shape",
+   "detail": {
+    "answers_supported_by_cited_slide": 7,
+    "problems": [
+     "q7: reference answer weakly supported by its cited slide"
+    ],
+    "question_types": [
+     "application",
+     "connection",
+     "explanation",
+     "recall"
+    ],
+    "questions": 8
+   },
+   "id": "QUIZ-2"
+  },
+  {
+   "check": "teach_labelled",
+   "detail": {
+    "reason": "no teach interaction recorded"
+   },
+   "id": "TEACH-2B"
+  },
+  {
+   "check": "teach_declares_unknowns",
+   "detail": {
+    "unknowns": []
+   },
+   "id": "TEACH-2B"
+  },
+  {
+   "check": "revise_grounded",
+   "detail": {
+    "provenance_refs": 26
+   },
+   "id": "REV-1"
+  },
+  {
+   "check": "recovered_once_tutor",
+   "detail": {
+    "failures": 2,
+    "student_turns": 1
+   },
+   "id": "TUT-8"
+  },
+  {
+   "check": "no_unfinished_work",
+   "detail": {
+    "pending_or_failed": [
+     "t0002"
+    ]
+   },
+   "id": "TUT-8"
+  }
+ ],
+ "injected_failures": 4,
+ "input_tokens": 65116,
+ "latency_s": {
+  "max": 13.302,
+  "mean": 6.053,
+  "p50": 4.48,
+  "p95": 11.81
+ },
+ "ledger_reconciliation": {
+  "every_call_accounted_for": true,
+  "ledger_reservations": 56,
+  "ledger_settlements": 56,
+  "recorded_provider_calls": 56
+ },
+ "model_calls": 56,
+ "output_tokens": 36165,
+ "scenarios_errored": [],
+ "scenarios_not_run": [],
+ "scenarios_requested": 32,
+ "scenarios_run": 32,
+ "step_failures_total": 11,
+ "synthetic_usage": false,
+ "total_tokens": 101281,
+ "unexpected_step_failures": [
+  {
+   "error": "ReasoningError: TEACH source-supported content has no provenance",
+   "id": "TEACH-2B",
+   "model_calls": 1,
+   "step": "teach"
+  },
+  {
+   "error": "ReasoningError: Generated output cited a source not supplied to this workflow: 'src-2edeeaa160d14d14c7ca0bf200f92e8beaa'",
+   "id": "REV-1",
+   "model_calls": 1,
+   "step": "revise"
+  },
+  {
+   "error": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "id": "TUT-5",
+   "model_calls": 1,
+   "step": "tutor_answer"
+  },
+  {
+   "error": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "id": "TUT-6",
+   "model_calls": 1,
+   "step": "tutor_answer"
+  },
+  {
+   "error": "ReplyRejected: Tutor reply would reveal the reference answer",
+   "id": "TUT-6",
+   "model_calls": 1,
+   "step": "tutor_answer"
+  }
+ ]
+}

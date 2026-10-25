@@ -581,6 +581,14 @@ def _ask_model(provider: ReasoningProvider, *, action: str, task: dict[str, Any]
         raise ReplyRejected(str(exc)) from exc
 
 
+def _readable_sources(text: str, context: dict[str, Any]) -> str:
+    """Show a material's file name where the model wrote its internal id (``src-…``), after every check has passed."""
+    for source in sorted(context["sources"], key=lambda s: -len(s["id"])):
+        if source.get("title"):
+            text = text.replace(source["id"], source["title"])
+    return text
+
+
 def _check_reply(raw: Any, *, action: str, task: dict[str, Any], context: dict[str, Any],
                  response: str | None, revealed: bool) -> dict[str, Any]:
     """Every check a model reply must pass before it can be stored or shown."""
@@ -618,7 +626,7 @@ def _check_reply(raw: Any, *, action: str, task: dict[str, Any], context: dict[s
         if diagnosis == "misconception" and misconception is None:
             # Safe fallback: an unsupported accusation becomes "could not be judged", never a wrong answer.
             diagnosis = "unclear"
-    return {"message": message.strip(), "diagnosis": diagnosis, "model_diagnosis": raw["diagnosis"],
+    return {"message": _readable_sources(message.strip(), context), "diagnosis": diagnosis, "model_diagnosis": raw["diagnosis"],
             "misconception": misconception, "misconception_dropped": dropped,
             "citations": citations}
 

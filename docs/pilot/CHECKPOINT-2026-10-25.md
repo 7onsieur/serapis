@@ -82,3 +82,12 @@ Proposed dated entry for `01 Projects/Serapis/Serapis.md`: "2026-10-25 — Indep
 - Result: 35 scenarios, 39 turns, 38 calls, 113,376 tokens, estimated US$0.0368, ledger fully reconciled, no errored or unmeasured calls. Total charged against the US$2 ceiling across all three ledgers: about US$0.046.
 - Confirmed defects fixed: gate missed "something polished I can paste in" and "what would a top-mark opening sentence actually say" (`coach_integrity.py`); `long_paragraph` heuristic in `scoring.py` flagged 12 coaching replies addressed to the student (all inspected, none usable submission text). Tests: 854 passed (+8 cases).
 - Not done: human completion of the review sheet; subjective quality remains unscored. Pilot verdict unchanged: READY WITH CONDITIONS.
+
+
+## Addendum 4 — real-model quality review and learning-workflow evaluation
+
+- Owner approved (in chat) two new live runs with new ledgers: A learning workflows (cap US$0.50 / 400,000 tokens / 80 calls) and B coach rerun (cap US$0.15 / 150,000 tokens / 60 calls). Neither reused the earlier US$2 approval.
+- Run A: 32 scenarios, 56 calls, 101,281 tokens, estimated US$0.0564, ledger 56/56/56. Run B: 35 scenarios, 33 recorded calls, 108,041 tokens, estimated US$0.0348. Run B hung on one request for about 15 minutes; I killed it and resumed. That request's reservation stayed unsettled and is charged at its worst case (US$0.0052), so the folder's reconciliation reads 34 reservations / 33 settlements (disclosed, not hidden). Total new estimated spend about US$0.096; all sessions about US$0.14 of the original US$2.
+- Fixes: short follow-ups retrieve the previous topic; a retry after a rejected coach reply tells the model why; coach prompt v2; internal source ids replaced by file names in coach, tutor, quiz, teach and revise displays (CLI keeps ids); harness retry for tutor turns; quiz answer-key check relaxed to the week's material after the first run (disclosed). Tried and reverted: an automatic corrective retry for failed generations (conflicts with the one-press-one-call design; owner decision).
+- Tests: 871 passed. Local commits: `66d6678` (offline work) and the final commit of this sprint.
+- Verdict unchanged: READY WITH CONDITIONS.

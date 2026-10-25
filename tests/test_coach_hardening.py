@@ -617,3 +617,15 @@ class HubCitationsShowFileNamesTests(unittest.TestCase):
                     page = client.post(f"{week}/{action}", data=data).text
                     self.assertNotRegex(page, r"\[src-[0-9a-f]{8}", action)
                     self.assertIn("lecture1.pptx, Slide", _re.sub(r"\s+", " ", page), action)
+
+
+class TutorCitationsShowFileNamesTests(unittest.TestCase):
+    """Live run: tutor replies showed '[src-009a01b8…, p. 1]' to the student."""
+
+    def test_tutor_reply_shows_file_name_not_internal_id(self):
+        from university_jarvis import tutoring
+        context = {"sources": [{"id": "src-" + "a" * 32, "title": "week1.pptx"}], "source_contexts": [{"source_id": "src-" + "a" * 32, "excerpts": [{"pdf_page": 1, "text": "x"}]}]}
+        task = {"task": "What is a stakeholder?", "expected_answer": "People and groups who affect or are affected by an organisation"}
+        raw = {"message": "Look again [src-" + "a" * 32 + ", p. 1].", "diagnosis": "none", "citations": [{"source_id": "src-" + "a" * 32, "pdf_page": 1}]}
+        out = tutoring._check_reply(raw, action="HINT", task=task, context=context, response=None, revealed=False)
+        self.assertEqual(out["message"], "Look again [week1.pptx, p. 1].")
