@@ -364,7 +364,11 @@ def _known_text(session: dict[str, Any]) -> str:
 def _bounded(session: dict[str, Any], turn: dict[str, Any], context: dict[str, Any]) -> dict[str, Any]:
     recent = [{"role": t["role"], "text": t["text"]} for t in session["turns"]
               if t.get("text") and t["turn_id"] != turn["turn_id"] and t.get("status", "COMPLETE") != "FAILED"]
+    feedback = {"previous_attempt_feedback": (
+        f"Your previous reply to this message was discarded by an automatic check: {turn['last_rejection']}. "
+        "Write a new reply that fixes this, keeping every other rule.")} if turn.get("last_rejection") else {}
     return {
+        **feedback,
         "workflow": "ASSIGNMENT_COACH_TURN", "prompt_version": PROMPT_VERSION,
         "objective_context": context["objective_context"], "stage": session["stage"],
         "assessment": {**session["assessment"]},
@@ -382,6 +386,7 @@ def _bounded(session: dict[str, Any], turn: dict[str, Any], context: dict[str, A
     }
 
 
+SHORT_FOLLOW_UP_WORDS = 10
 _ASSIGNMENT_INTENT = re.compile(
     r"\b(?:assign\w*|assess\w*|coursework|brief|submi\w*|hand(?:ing)? (?:it |this )?in|deadline|due|word limit|how long|length|"
     r"format|marking|marks?|criteri\w*|rubric|requirement\w*|asked|asking|expect\w*|task)\b", re.I)
@@ -399,6 +404,12 @@ def _query(session: dict[str, Any], text: str) -> str:
     """
     if _ASSIGNMENT_INTENT.search(text):
         return f"{text} {_BRIEF_TERMS} {session['assessment'].get('title') or ''}"
+    if len(text.split()) <= SHORT_FOLLOW_UP_WORDS:
+        # A short follow-up ("OK, so what should I do next?") carries no topic of its own: it continues the
+        # student's previous message, so retrieval also follows that message.
+        earlier = [t["text"] for t in _student_turns(session) if t.get("text") and t["text"] != text and t.get("status") != "BLOCKED"]
+        if earlier:
+            return f"{earlier[-1][:400]} {text}"
     return text
 
 
@@ -451,6 +462,7 @@ def _fail(path: Path, module_code: str, turn_id: str, exc: Exception) -> None:
         if turn["status"] == "PENDING":
             if isinstance(exc, ReplyRejected):
                 turn["rejected_replies"] = turn.get("rejected_replies", 0) + 1
+                turn["last_rejection"] = str(exc)[:200]
             turn["status"] = "FAILED"
             turn["error"] = (str(exc) if isinstance(exc, (ReasoningError, StateError)) else type(exc).__name__)[:200]
             _write(path, session)
@@ -473,6 +485,14 @@ def _locate(context: dict[str, Any], citations: list[dict[str, Any]]) -> list[di
         location = render_source_location(method, c["pdf_page"], title=titles.get((c["source_id"], c["pdf_page"]))).lstrip(", ")
         located.append({**c, "title": source.get("title") or c["source_id"], "location": location})
     return located
+
+
+def _readable_sources(text: str, context: dict[str, Any]) -> str:
+    """Show a material's title where the model wrote its internal id (``src-…``), after every check has passed."""
+    for source in sorted(context["sources"], key=lambda s: -len(s["id"])):
+        if source.get("title"):
+            text = text.replace(source["id"], source["title"])
+    return text
 
 
 def send_message(state: dict[str, Any], module_code: str, session_id: str, *, client_turn_id: str, text: str,
@@ -516,7 +536,7 @@ def send_message(state: dict[str, Any], module_code: str, session_id: str, *, cl
         return _finish(path, module_code, turn_id, status="COMPLETE", usage=usage, provider=provider_identity, materials=materials,
                        fields={"retrieval_status": context["retrieval_status"],
                                "unreadable_materials": [u["title"] for u in context["unreadable"]]},
-                       reply={"kind": "COACHING", "text": checked["message"],
+                       reply={"kind": "COACHING", "text": _readable_sources(checked["message"], context),
                               "citations": _locate(context, checked["citations"]),
                               "follow_up_questions": checked["follow_up_questions"],
                               "evidence_needs": checked["evidence_needs"], "grounded": grounded,

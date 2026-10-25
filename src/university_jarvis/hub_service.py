@@ -238,12 +238,12 @@ def teach_topic(
         workspace_root=workspace_root,
         taught_at=taught_at,
     )
-    rendered = render_teach_brief(
-        result.brief,
-        {"topic": result.topic},
-        result.student_context,
-        _record_source_location_index(result.record_path),
-    )
+    location_index = _record_source_location_index(result.record_path)
+    with result.record_path.open(encoding="utf-8") as handle:
+        for source in json.load(handle).get("sources", []):
+            if source.get("source_id") in location_index and source.get("title"):
+                location_index[source["source_id"]]["title"] = source["title"]  # students see file names, not ids
+    rendered = render_teach_brief(result.brief, {"topic": result.topic}, result.student_context, location_index)
     payload = _jsonable(result)
     payload["rendered"] = rendered
     return payload
@@ -286,7 +286,7 @@ def _run_sectioned_workflow(
 ) -> dict[str, Any]:
     selected_provider = provider or OpenAIReasoningProvider()
     result = generate_sectioned_brief(context, selected_provider, workflow, cache_dir=cache_dir)
-    location_index = build_source_location_index(context)
+    location_index = build_source_location_index(context, show_titles=True)
     rendered = render_sectioned_brief(result.brief, workflow, location_index)
     return {"cache_status": result.cache_status, "rendered": rendered}
 
@@ -309,7 +309,7 @@ def generate_quiz(
     context = build_week_context(resolved_state, module_code, week_number, "QUIZ")
     selected_provider = provider or OpenAIReasoningProvider()
     result = generate_quiz_brief(context, selected_provider, cache_dir=cache_dir)
-    location_index = build_source_location_index(context)
+    location_index = build_source_location_index(context, show_titles=True)
     rendered = render_quiz_brief(result.brief, location_index).split("\nAnswers", 1)[0]
     record_path = _workspace_paths(context["module"]["code"], week_number, workspace_root)[0]
     fingerprints = {s["id"]: s.get("extraction", {}).get("fingerprint") for s in context["sources"]}

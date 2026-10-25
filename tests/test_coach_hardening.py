@@ -546,3 +546,74 @@ class RetrievalIntentRegressionTests(CoachTestCase):
         self.assertEqual((status, titles), ("no_match", []))
         status, titles = self.retrieved("What is the difference between primary and secondary stakeholders?")
         self.assertNotIn("brief.pptx", titles)
+
+
+class RealModelReviewRegressionTests(CoachTestCase):
+    """Findings from the AI-assisted review of the first live run (gpt-5.6-luna, 2026-10-25)."""
+
+    BLOCK = ("Word " * 90).strip()
+
+    def test_a_retry_after_a_rejected_reply_tells_the_model_why(self):
+        sid = self.start()["session_id"]
+        bad = {"message": self.BLOCK, "follow_up_questions": [], "evidence_needs": [], "citations": []}
+        provider = Provider(bad)
+        with self.assertRaises(ci.ReplyRejected):
+            self.send(sid, "How do stakeholders conflict?", provider=provider)
+        self.assertNotIn("previous_attempt_feedback", provider.calls[0])
+        provider.reply = None
+        out = self.send(sid, "How do stakeholders conflict?", provider=provider)
+        self.assertEqual(out["coach"]["kind"], "COACHING")
+        self.assertIn("block of prose", provider.calls[1]["previous_attempt_feedback"])
+
+    def test_a_short_follow_up_retrieves_the_material_of_the_previous_question(self):
+        sid = self.start()["session_id"]
+        self.send(sid, "How do stakeholders conflict in organisations?", turn="t1")
+        self.send(sid, "OK, so what next?", turn="t2")
+        self.assertTrue(self.provider.calls[0]["source_contexts"])
+        self.assertTrue(self.provider.calls[1]["source_contexts"])
+
+    def test_a_short_first_message_with_no_topic_still_retrieves_nothing(self):
+        sid = self.start()["session_id"]
+        self.send(sid, "zyzzyva quokka")
+        self.assertEqual(self.provider.calls[0]["source_contexts"], [])
+
+    def test_internal_source_ids_are_shown_as_material_titles(self):
+        sid = self.start()["session_id"]
+
+        def reply(context):
+            source = context["source_contexts"][0]
+            page = source["excerpts"][0]["pdf_page"]
+            return {"message": f"Stakeholders can conflict [{source['source_id']}, p. {page}]. Which group matters most to you?",
+                    "follow_up_questions": [], "evidence_needs": [],
+                    "citations": [{"source_id": source["source_id"], "pdf_page": page}]}
+
+        out = self.send(sid, "How do stakeholders conflict in organisations?", provider=Provider(reply))
+        text = out["coach"]["text"]
+        self.assertNotIn("src-", text)
+        self.assertIn(out["coach"]["citations"][0]["title"], text)
+
+    def test_the_prompt_version_changed_with_the_prompt(self):
+        self.assertEqual(ac.PROMPT_VERSION, "assignment-coach-turn-v2")
+        self.assertIn("previous_attempt_feedback", ci.COACH_INSTRUCTIONS)
+
+
+class HubCitationsShowFileNamesTests(unittest.TestCase):
+    """Real-model review: quiz, teach and revise pages cited '[src-3711fa29…, Slide 1]' (an internal id)."""
+
+    def test_hub_workflow_pages_cite_file_names_not_internal_ids(self):
+        import re as _re
+        with tempfile.TemporaryDirectory() as tmp:
+            home = Path(tmp)
+            with demo_environment(home):
+                from university_jarvis.demo import BUS101_WEEK1, build_pptx
+                client = TestClient(create_app(reasoning_provider=ScriptedStudyProvider()), base_url="http://localhost")
+                client.post("/modules", data={"code": "BUS101", "title": "Business"})
+                build_pptx(home / "lecture1.pptx", BUS101_WEEK1[1])
+                with (home / "lecture1.pptx").open("rb") as handle:
+                    client.post("/modules/BUS101/materials", data={"week": "1"}, files={"file": ("lecture1.pptx", handle, "application/octet-stream")})
+                week = "/modules/BUS101/weeks/1"
+                client.post(f"{week}/build")
+                for action, data in (("quiz", {}), ("teach", {"topic": "stakeholders"}), ("revise", {})):
+                    page = client.post(f"{week}/{action}", data=data).text
+                    self.assertNotRegex(page, r"\[src-[0-9a-f]{8}", action)
+                    self.assertIn("lecture1.pptx, Slide", _re.sub(r"\s+", " ", page), action)

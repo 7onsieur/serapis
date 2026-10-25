@@ -349,3 +349,130 @@ class FlakyProvider(ScriptedStudyProvider):
             from university_jarvis.reasoning import ReasoningError
             raise ReasoningError("The AI service did not respond")
         return super().generate_structured_output(context, instructions, output_format)
+
+
+class FullJourneyConsistencyTests(unittest.TestCase):
+    """Setup -> module -> materials -> PREPARE -> TEACH -> QUIZ -> REVISE -> TUTOR -> Assignment Coach -> restart -> resume.
+
+    One student, one module, one set of fictional files, driven through the Hub. Checks that context, provenance and
+    evidence stay consistent across the steps, that a failure corrupts nothing, that generated content is labelled, and that
+    nothing the student sees carries an internal source id.
+    """
+
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.home = Path(self.temp.name) / "home"
+        self.home.mkdir()
+        env = demo_environment(self.home)
+        env.__enter__()
+        self.addCleanup(env.__exit__, None, None, None)
+        self.provider = FlakyProvider()
+        self.client = TestClient(create_app(reasoning_provider=self.provider))
+        build_pptx(self.home / "lecture.pptx", BUS101_WEEK1[1])
+        build_pptx(self.home / "brief.pptx", BUS101_BRIEF[1])
+        self.week = "/modules/BUS101/weeks/1"
+        self.record_path = self.home / "workspace" / "BUS101" / "week-01" / "academic-record.json"
+
+    def restart(self):
+        self.client = TestClient(create_app(reasoning_provider=self.provider))
+
+    def post(self, path, **data):
+        response = self.client.post(path, data=data, follow_redirects=False)
+        self.assertIn(response.status_code, (200, 303), f"{path}: {response.status_code}")
+        return response
+
+    def record(self):
+        return json.loads(self.record_path.read_text())
+
+    def test_the_whole_journey_stays_consistent_and_resumable(self):
+        self.post("/workspace/start")
+        self.post("/profile", university="Example University", programme="BA Testing")
+        self.post("/modules", code="BUS101", title="Business")
+        self.post("/modules/BUS101/assessments", title="Reflective report", deadline="2030-05-02", weight="40", requirements="Use two ideas")
+        for name, week in (("lecture.pptx", "1"), ("brief.pptx", "")):
+            with (self.home / name).open("rb") as handle:
+                self.client.post("/modules/BUS101/materials", data={"week": week}, files={"file": (name, handle, "application/octet-stream")})
+
+        # PREPARE, TEACH, QUIZ, answer, evaluate, REVISE
+        self.post(f"{self.week}/build")
+        record = self.record()
+        sources = {s["source_id"]: s["title"] for s in record["sources"]}
+        self.assertEqual(set(sources.values()), {"lecture.pptx"})  # the brief belongs to the assessment, not week 1
+        teach_page = _text(self.post(f"{self.week}/teach", topic="stakeholders").text)
+        quiz_page = _text(self.post(f"{self.week}/quiz").text)
+        quiz = self.record()["learning"]["quiz_history"]["attempts"][-1]
+        answer = next(a["answer"] for a in quiz["answers"] if a["question_id"] == "q1")
+        self.post(f"{self.week}/learning/quiz-answer", quiz_id=quiz["quiz_id"], question_id="q1", response=answer)
+        attempt = self.record()["learning"]["evidence"][-1]
+        self.post(f"{self.week}/learning/evaluate", attempt_id=attempt["attempt_id"])
+        revise_page = _text(self.post(f"{self.week}/revise").text)
+
+        # provenance: what the student is shown names real files, never internal ids, and every reference resolves
+        for label, page in (("teach", teach_page), ("quiz", quiz_page), ("revise", revise_page)):
+            self.assertNotRegex(page, r"src-[0-9a-f]{8}", label)
+            self.assertIn("lecture.pptx", page, label)
+        for refs in _walk(self.record(), "provenance"):
+            for ref in refs:
+                self.assertIn(ref["source_id"], sources)
+
+        # generated content is labelled as such, and is not filed as official source evidence
+        self.assertIn("check generated claims against their sources", teach_page)
+        self.assertIn("AI: Teach", teach_page)
+        interaction = self.record()["workflows"]["teach"]["interactions"][-1]
+        self.assertEqual(interaction["provenance"], {"classification": "generated_learning", "canonical_source_evidence": False})
+
+        # failure corrupts nothing: a failed TEACH leaves the record and the evidence exactly as they were
+        before = self.record()
+        self.provider.fail = 1
+        self.assertIn("Action failed", _text(self.post(f"{self.week}/teach", topic="influence and interest").text))
+        after = self.record()
+        self.assertEqual(before["learning"], after["learning"])
+        self.assertEqual(len(before["workflows"]["teach"]["interactions"]), len(after["workflows"]["teach"]["interactions"]))
+
+        # TUTOR: a hint makes the next answer assisted; the unaided quiz answer stays unaided
+        started = self.client.post(f"{self.week}/tutor/start", data={"intention": "TEST_ME", "client_request_id": "journey-1"}, follow_redirects=False)
+        tutor = started.headers["location"]
+        turn = lambda: re.search(r'name="client_turn_id" value="([0-9a-f]+)"', self.client.get(tutor).text).group(1)  # noqa: E731
+        self.post(f"{tutor}/hint", client_turn_id=turn())
+        self.post(f"{tutor}/answer", client_turn_id=turn(), response="People and groups affected by an organisation")
+        statuses = [a["assistance_status"] for a in self.record()["learning"]["evidence"]]
+        self.assertEqual(statuses[0], "UNAIDED")
+        self.assertNotEqual(statuses[-1], "UNAIDED")
+
+        # Assignment Coach: cites the imported file by name; facts about the assignment stay "Needs checking"
+        module_page = self.client.get("/modules/BUS101").text
+        aid = re.search(r"/assessments/([^/]+)/coach/start", module_page).group(1)
+        rid = re.search(r'name="client_request_id" value="([^"]+)"', module_page).group(1)
+        coach = self.client.post(f"/modules/BUS101/assessments/{aid}/coach/start", data={"client_request_id": rid}, follow_redirects=False).headers["location"]
+        coach_turn = re.search(r'name="client_turn_id" value="([0-9a-f]+)"', self.client.get(coach).text).group(1)
+        self.post(f"{coach}/message", client_turn_id=coach_turn, message="How do stakeholder interests conflict?")
+        coach_page = _text(self.client.get(coach).text)
+        self.assertIn("lecture.pptx", coach_page)
+        self.assertNotRegex(coach_page, r"src-[0-9a-f]{8}")
+        self.assertIn("Needs checking", coach_page)
+        self.post(f"{coach}/plan", main_argument="Balance matters", notes="")
+
+        # restart and resume: every part of the journey is still there, in agreement
+        evidence_before = self.record()["learning"]["evidence"]
+        self.restart()
+        self.assertEqual(self.record()["learning"]["evidence"], evidence_before)
+        self.assertIn("Demonstrated unaided", _text(self.client.get(self.week).text))
+        self.assertIn("Recorded as assisted", _text(self.client.get(tutor).text))
+        resumed_coach = _text(self.client.get(coach).text)
+        self.assertIn("Balance matters", resumed_coach)
+        self.assertEqual(resumed_coach.count("How do stakeholder interests conflict?"), 1)
+        home = _text(self.client.get("/").text)
+        self.assertIn("Continue where you left off", home)
+        self.assertIn("BUS101", home)
+
+
+def _walk(value, key):
+    if isinstance(value, dict):
+        for k, v in value.items():
+            if k == key and isinstance(v, list):
+                yield v
+            yield from _walk(v, k and key)
+    elif isinstance(value, list):
+        for v in value:
+            yield from _walk(v, key)

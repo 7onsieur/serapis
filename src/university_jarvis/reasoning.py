@@ -1225,7 +1225,7 @@ def generate_teach_brief(
     )
 
 
-def build_source_location_index(context: dict[str, Any]) -> dict[str, dict[str, Any]]:
+def build_source_location_index(context: dict[str, Any], *, show_titles: bool = False) -> dict[str, dict[str, Any]]:
     """Map each source_id to its extraction method and any known per-unit titles.
 
     Built once from a workflow's own ``context`` (never persisted, never part
@@ -1235,6 +1235,9 @@ def build_source_location_index(context: dict[str, Any]) -> dict[str, dict[str, 
     for the run that generated them; a later render of the same cached brief
     without that context still gets the correct PDF-vs-slide label from
     ``extraction.method`` alone, just without the optional title.
+
+    ``show_titles`` makes renders cite the material's file name instead of its internal id (the Hub does this, because a
+    student can find "week1.pptx" but not "src-3711fa29…"); the CLI keeps ids.
     """
     index: dict[str, dict[str, Any]] = {}
     for source in context.get("sources", []):
@@ -1242,7 +1245,7 @@ def build_source_location_index(context: dict[str, Any]) -> dict[str, dict[str, 
         if not source_id:
             continue
         method = (source.get("extraction") or {}).get("method")
-        index[source_id] = {"method": method, "titles": {}}
+        index[source_id] = {"method": method, "titles": {}, **({"title": source.get("title")} if show_titles else {})}
     for source_context in context.get("source_contexts", []) or []:
         source_id = source_context.get("source_id")
         entry = index.setdefault(source_id, {"method": None, "titles": {}})
@@ -1358,5 +1361,6 @@ def _render_provenance(
             reference.pdf_page,
             title=entry.get("titles", {}).get(reference.pdf_page),
         )
-        provenance.append(f"{reference.source_id}{location}")
+        # Show the file's name, not its internal id: a student can find "week1.pptx", not "src-3711fa29...".
+        provenance.append(f"{entry.get('title') or reference.source_id}{location}")
     return f" [{'; '.join(provenance)}]" if provenance else ""
