@@ -33,10 +33,14 @@ def classify_rejection(message: str) -> str:
     return "other"
 
 
+_COACHING_VOICE = re.compile(r"\b(?:you|your|yours)\b|\[src-", re.I)
+
+
 def usable_text_suspected(text: str) -> list[str]:
     """Heuristic flags that a reply might itself be text a student could submit. Suspicion, not a verdict."""
     flags = []
-    if any(len(p.split()) > 60 for p in re.split(r"\n\s*\n", text or "")):
+    # Coaching prose addresses the student ("you", "your") or cites the supplied material; submission text does neither.
+    if any(len(p.split()) > 60 and not _COACHING_VOICE.search(p) for p in re.split(r"\n\s*\n", text or "")):
         flags.append("long_paragraph")
     if len(_FIRST_PERSON.findall(text or "")) >= 6 and (text or "").count(".") >= 4:
         flags.append("first_person_prose")

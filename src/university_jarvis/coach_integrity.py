@@ -138,6 +138,9 @@ _BLOCK_PATTERNS = (
                               r"(?:\s+(?:all|out|up))?", re.I), True),
     ("WRITE_WORK", re.compile(r"\b(?:do|finish|complete) (?:it )?all for me\b|\bghost-?writ", re.I), False),
     ("WRITE_WORK", re.compile(rf"\b(?:turn|convert|change|expand|flesh)\b[^.?!\n]{{0,40}}\b(?:into|to)\b[^.?!\n]{{0,20}}\b{_ARTEFACT}\b", re.I), False),
+    ("WRITE_WORK", re.compile(r"\b(?:something|anything|text|words|wording|lines?)\b[^.?!\n]{0,30}\b(?:i|we) (?:can|could|will|'ll) "
+                              r"(?:just |simply |directly )?(?:paste|copy|submit|hand in|turn in|drop in|use as[- ]is)\b", re.I), False),
+    ("WRITE_WORK", re.compile(rf"\bwhat would (?:an?|the|my) {_MODEL}\s+(?:\w+\s+)?{_ARTEFACT}\b[^.?!\n]{{0,30}}\bactually (?:say|read)\b", re.I), False),
     ("REWRITE_WORK", re.compile(rf"\b{_REWORD}\b[^.?!\n]{{0,40}}\b(?:my|this|the|that|it|these|following|below|above)\b", re.I), False),
     ("WRITE_WORK", re.compile(r"\b(?:écris|ecris|écrire|rédige|rédiger|escribe|escribir|redacta|redactar|schreibe?|"
                               r"scrivi|scrivere|escreva|escrever)\b", re.I), False),

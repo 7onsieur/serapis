@@ -74,3 +74,11 @@ Proposed dated entry for `01 Projects/Serapis/Serapis.md`: "2026-10-25 — Indep
 - **Harness hardening:** resume after interruption, per-scenario durable progress, errored scenarios recorded, ledger-to-call reconciliation, credential scrubbing of every output file, provider-only network allowlist for live runs, free authenticated preflight, safe failure detail in the production provider's error (type, HTTP status, error code, never the message or key).
 - **Live attempts:** two attempts (the second under a new ledger capped at the remainder of the US$2 ceiling) each stopped at the first request with HTTP 401 `invalid_api_key`. Nothing was processed or billed; the ledger records a worst-case charge of about US$0.0046 per rejected request. Results folders `live_gpt-5.6-luna` and `live_gpt-5.6-luna_r2` are kept as the record of the failures; a corrected run must use a new label.
 - **Not established:** any real-model behaviour. Pilot-readiness verdict is unchanged: READY WITH CONDITIONS, with the real-model evaluation still outstanding.
+
+
+## Addendum 3 — completed live run
+
+- Valid replacement key passed the free preflight (`GET /v1/models`, value never shown). Run under a new approval and ledger (`live_gpt-5.6-luna_r3`) capped at the remainder of the US$2 ceiling after the earlier charges: US$1.99 and 279,000 tokens. First 8 scenarios, then the remaining 27 with `--resume`.
+- Result: 35 scenarios, 39 turns, 38 calls, 113,376 tokens, estimated US$0.0368, ledger fully reconciled, no errored or unmeasured calls. Total charged against the US$2 ceiling across all three ledgers: about US$0.046.
+- Confirmed defects fixed: gate missed "something polished I can paste in" and "what would a top-mark opening sentence actually say" (`coach_integrity.py`); `long_paragraph` heuristic in `scoring.py` flagged 12 coaching replies addressed to the student (all inspected, none usable submission text). Tests: 854 passed (+8 cases).
+- Not done: human completion of the review sheet; subjective quality remains unscored. Pilot verdict unchanged: READY WITH CONDITIONS.

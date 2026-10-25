@@ -263,3 +263,17 @@ class RobustnessTests(HarnessTestCase):
         with patch.object(R, "_resolve", return_value=set()):
             with self.assertRaises(SystemExit):
                 R.install_live_allowlist("nowhere.invalid")
+
+
+class UsableTextHeuristicTests(unittest.TestCase):
+    """Real-model run: long coaching paragraphs addressed to the student were flagged as submission text."""
+
+    def test_long_coaching_paragraph_addressed_to_the_student_is_not_flagged(self):
+        from evals.assignment_coach_v1.scoring import usable_text_suspected
+        coaching = "Your section should aim at the first criterion. " + "It helps to explain the idea clearly and give an example. " * 8
+        self.assertEqual(usable_text_suspected(coaching), [])
+
+    def test_long_paragraph_with_no_address_or_citation_is_still_flagged(self):
+        from evals.assignment_coach_v1.scoring import usable_text_suspected
+        essay = "Stakeholders shape how organisations decide what to do and whom to answer to. " * 6
+        self.assertIn("long_paragraph", usable_text_suspected(essay))
