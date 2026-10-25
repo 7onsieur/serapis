@@ -56,3 +56,21 @@ First-time setup → profile → module → assessment → .pptx import (and an 
 ## Suggested vault update (not written; needs owner approval per AGENTS.md)
 
 Proposed dated entry for `01 Projects/Serapis/Serapis.md`: "2026-10-25 — Independent review of the Assignment Coach and student-journey work found and fixed integrity-gate and reply-check gaps, session race conditions and first-run issues; 834 offline tests pass; verdict READY WITH CONDITIONS for a facilitated pilot; real-provider behaviour unverified. Source: `docs/pilot/CHECKPOINT-2026-10-25.md` (local checkpoint commit, unpushed)."
+
+
+## Addendum — real-AI validation sprint (same day, offline portion)
+
+- Checkpoint commit of the two earlier sprints: `1d29ae1` (local, unpushed). Pre-commit checks: no credentials or private data in the tree (only fake `test-credential` strings in existing tests), no stray artifacts, 834 tests passing.
+- New: `evals/assignment_coach_v1/` harness (35 fictional scenarios; deterministic checks separated from a blank subjective review sheet; per-call latency, input/output tokens, estimated cost; validator acceptance/rejection by category; retries; fallbacks; grounding failures; suspected integrity violations; incorrect refusals; recovery scenarios) running the production pipeline end to end, with `pilot_budget.py` write-ahead spending control. `tests/test_coach_eval.py` (10 tests).
+- Offline results (scripted provider, synthetic usage): 35 scenarios, 39 turns, 34 model calls, 5 turns refused by the gate, 0 incorrect refusals of 31 legitimate requests, both recovery scenarios recovered with exactly one student turn recorded. The scripted provider fails several honesty/citation checks by design of being naive; this shows the checks are sensitive. Self-checks: a mock that obeys everything is flagged for suspected integrity violations; a mock that fabricates is rejected by the validators, ends in the production fallback and never shows the invented reference.
+- Defects found by the harness and fixed: gate false positive on "my own draft paragraph … do not rewrite it"; assignment-intent questions retrieved nothing (query now widened with the brief's vocabulary for those questions only); `parse_approval` failed when `usd_cap` was omitted (Decimal default rejected by its own validator).
+- Test count: 846 passed, 0 failed, 0 skipped.
+- Live run: approved by the owner at a US$2 / 300,000-token / 70-call cap for model `gpt-5.6-luna`; the key is present in the environment (value never displayed). **Not run**: the owner chose to stay offline until model prices can be attested. The harness refuses to start without `SERAPIS_EVAL_LIVE=1`, an approval file with attested pricing, and a configured key.
+
+
+## Addendum 2 — model verification and live attempt
+
+- **Model and price verified** from OpenAI's official pages on 2026-10-25 (record: `evals/assignment_coach_v1/PRICING_VERIFIED_2026-10-25.md`). `gpt-5.6-luna` is a real API id; US$0.20 / US$1.20 per 1M input/output tokens; Responses API and Structured Outputs supported. The older models overview omits it; the model page and pricing page list it. A newer sibling `gpt-6-luna` (US$0.10 / US$0.50) exists and was not substituted.
+- **Harness hardening:** resume after interruption, per-scenario durable progress, errored scenarios recorded, ledger-to-call reconciliation, credential scrubbing of every output file, provider-only network allowlist for live runs, free authenticated preflight, safe failure detail in the production provider's error (type, HTTP status, error code, never the message or key).
+- **Live attempts:** two attempts (the second under a new ledger capped at the remainder of the US$2 ceiling) each stopped at the first request with HTTP 401 `invalid_api_key`. Nothing was processed or billed; the ledger records a worst-case charge of about US$0.0046 per rejected request. Results folders `live_gpt-5.6-luna` and `live_gpt-5.6-luna_r2` are kept as the record of the failures; a corrected run must use a new label.
+- **Not established:** any real-model behaviour. Pilot-readiness verdict is unchanged: READY WITH CONDITIONS, with the real-model evaluation still outstanding.

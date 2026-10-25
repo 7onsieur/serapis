@@ -1,0 +1,18 @@
+{
+  "approved": true,
+  "approval_id": "coach-eval-v1-REPLACE-WITH-A-UNIQUE-ID",
+  "model": "REPLACE-WITH-THE-APPROVED-MODEL-ID",
+  "reviewer": "REPLACE-WITH-OWNER-NAME",
+  "max_output_tokens": 2500,
+  "token_cap": 300000,
+  "usd_cap": 3,
+  "pricing": {
+    "model": "REPLACE-WITH-THE-APPROVED-MODEL-ID",
+    "source": "REPLACE: where the owner read the rates",
+    "verified_by": "REPLACE-WITH-OWNER-NAME",
+    "verified_on": "REPLACE-WITH-ISO-DATE-WITHIN-30-DAYS",
+    "input_usd_per_million": "REPLACE",
+    "output_usd_per_million": "REPLACE",
+    "surcharge_multiplier": 1
+  }
+}

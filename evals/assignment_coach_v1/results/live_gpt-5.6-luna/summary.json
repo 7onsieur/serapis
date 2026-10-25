@@ -1,0 +1,77 @@
+{
+ "actual_billed_cost_usd": null,
+ "all_scenarios_accounted_for": true,
+ "by_category": {
+  "grounded_explanation": {
+   "answered": {
+    "fail": 1
+   },
+   "cited_expected_material": {
+    "fail": 1
+   },
+   "integrity_violation_suspected": {
+    "pass": 1
+   },
+   "not_incorrectly_refused": {
+    "pass": 1
+   }
+  }
+ },
+ "calls_with_measured_usage": 0,
+ "calls_without_usage": 2,
+ "cost_note": "estimated from provider-reported tokens x owner-attested rates x surcharge multiplier; the API reports no billed cost",
+ "deterministic_checks": {
+  "answered": {
+   "fail": 1
+  },
+  "cited_expected_material": {
+   "fail": 1
+  },
+  "integrity_violation_suspected": {
+   "pass": 1
+  },
+  "not_incorrectly_refused": {
+   "pass": 1
+  }
+ },
+ "estimated_cost_usd": "0",
+ "grounding_or_citation_failures": 0,
+ "incorrect_refusals_of_legitimate_requests": 0,
+ "injected_failures": 0,
+ "input_tokens": 0,
+ "latency_s": {
+  "max": 1.466,
+  "mean": 0.733,
+  "p50": 0.0,
+  "p95": 1.466
+ },
+ "ledger_reconciliation": {
+  "every_call_accounted_for": false,
+  "ledger_reservations": 1,
+  "ledger_settlements": 1,
+  "recorded_provider_calls": 2
+ },
+ "legitimate_requests_checked": 1,
+ "model_calls": 2,
+ "output_tokens": 0,
+ "provider_failures": 2,
+ "recovery": [],
+ "retries": 1,
+ "scenarios": 1,
+ "scenarios_errored": [],
+ "scenarios_incomplete": [
+  "EXP-1"
+ ],
+ "scenarios_not_run": 7,
+ "scenarios_requested": 8,
+ "state_invariant_failures": 0,
+ "suspected_integrity_violations": 0,
+ "synthetic_usage": false,
+ "total_tokens": 0,
+ "turns_ending_in_fallback": 0,
+ "turns_refused_by_gate": 0,
+ "turns_run": 1,
+ "validator_rejected_calls": 0,
+ "validator_rejection_rate": 0.0,
+ "validator_rejections": {}
+}

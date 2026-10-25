@@ -602,6 +602,20 @@ class ReasoningProvider(Protocol):
     ) -> dict[str, Any]: ...
 
 
+def _safe_failure_detail(exc: BaseException) -> str:
+    """A short, secret-free hint about why a request failed: exception type, HTTP status and error code/parameter.
+
+    The message body is deliberately not included (it can echo request content); the credential is never part of any of
+    these fields. Without this, a rejected parameter, an invalid key and an unreachable network all looked identical.
+    """
+    parts = [type(exc).__name__]
+    for name in ("status_code", "code", "param"):
+        value = getattr(exc, name, None)
+        if isinstance(value, (str, int)) and not isinstance(value, bool) and str(value).strip():
+            parts.append(f"{name}={str(value)[:60]}")
+    return f" ({', '.join(parts)})"
+
+
 class OpenAIReasoningProvider:
     """Responses API implementation of the reasoning boundary."""
 
@@ -650,7 +664,7 @@ class OpenAIReasoningProvider:
             response = OpenAI(api_key=api_key, max_retries=0).responses.create(**request)
         except Exception as exc:
             raise ReasoningError(
-                "OpenAI reasoning request failed before a response was received"
+                "OpenAI reasoning request failed before a response was received" + _safe_failure_detail(exc)
             ) from exc
 
         self.last_usage = TokenUsage.from_value(getattr(response, "usage", None))

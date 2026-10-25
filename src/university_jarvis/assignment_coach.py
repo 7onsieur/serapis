@@ -101,6 +101,7 @@ from .reasoning import OBJECTIVE_INSTRUCTIONS, ReasoningError, ReasoningProvider
 from .sources import render_source_location
 from .state import StateError
 from .workflows import build_assignment_coach_context
+import re
 import uuid
 
 def start_session(state: dict[str, Any], module_code: str, assessment_id: str, *, client_request_id: str,
@@ -381,8 +382,24 @@ def _bounded(session: dict[str, Any], turn: dict[str, Any], context: dict[str, A
     }
 
 
+_ASSIGNMENT_INTENT = re.compile(
+    r"\b(?:assign\w*|assess\w*|coursework|brief|submi\w*|hand(?:ing)? (?:it |this )?in|deadline|due|word limit|how long|length|"
+    r"format|marking|marks?|criteri\w*|rubric|requirement\w*|asked|asking|expect\w*|task)\b", re.I)
+_BRIEF_TERMS = "assessment brief marking criteria submission requirements"
+
+
 def _query(session: dict[str, Any], text: str) -> str:
-    return text  # only what the student asked: the assignment's own title would make every message "match" the brief
+    """The retrieval query for one message: what the student asked.
+
+    A question about the assignment itself ("what is this assignment asking?", "how long should it be?") rarely
+    shares words with the brief ("assessment", "submission"), so a plain lexical match found nothing and the coach
+    claimed there was no course material. For those questions only, the query is widened with the brief's own
+    vocabulary and the assignment's title. Other questions are matched on their own words alone, so the title does
+    not make every message "match" the brief.
+    """
+    if _ASSIGNMENT_INTENT.search(text):
+        return f"{text} {_BRIEF_TERMS} {session['assessment'].get('title') or ''}"
+    return text
 
 
 def _finish(path: Path, module_code: str, turn_id: str, *, status: str, reply: dict[str, Any] | None,

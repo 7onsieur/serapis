@@ -124,7 +124,7 @@ _NEGATION = re.compile(r"\b(?:don'?t|do not|never|without|rather than|instead of
                        r"can'?t|cannot|not|stop)\s+(?:[\w']+\s+){0,3}$", re.I)
 _SELF_AUTHOR = re.compile(r"\b(?:I|we)(?:'m|'ll|'ve| am| will| shall| can| could| need| have| want| must| should| plan| am trying|"
                           r" try| tried| started| start| began| begin)(?: (?:going |trying |starting |ready |able |about |supposed |stuck )?(?:to|on|with))?\s+$", re.I)
-_NOUN_USE = re.compile(r"\b(?:my|your|our|his|her|their|the|a|an|this|that|first|second|initial|rough|early|latest|new|current)\s+$", re.I)
+_NOUN_USE = re.compile(r"\b(?:my|your|our|his|her|their|the|a|an|this|that|first|second|initial|rough|early|latest|new|current|own)\s+(?:\w+\s+)?$", re.I)
 _HOW_TO = re.compile(r"(?:\bhow (?:do|can|should|would|could|to)(?: (?:i|we|you|one|someone))?|\bexplain how(?: to)?|"
                      r"\btips? (?:for|on)|\badvice (?:for|on)|\bwhat (?:makes|should (?:go in|i (?:put|include in))))\s+$", re.I)
 _FOR_ME = re.compile(r"\b(?:for me|on my behalf|instead of me|in my place)\b", re.I)

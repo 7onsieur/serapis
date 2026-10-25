@@ -595,3 +595,18 @@ class ReasoningTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class FailureDetailTests(unittest.TestCase):
+    def test_failure_hint_names_type_status_and_code_but_never_the_message_or_key(self):
+        from university_jarvis.reasoning import _safe_failure_detail
+
+        class Boom(Exception):
+            status_code = 400
+            code = "unsupported_parameter"
+            param = "max_output_tokens"
+
+        detail = _safe_failure_detail(Boom("request echoed sk-SECRETSECRETSECRET and the student's text"))
+        self.assertEqual(detail, " (Boom, status_code=400, code=unsupported_parameter, param=max_output_tokens)")
+        self.assertNotIn("sk-", detail)
+        self.assertEqual(_safe_failure_detail(ValueError("x")), " (ValueError)")

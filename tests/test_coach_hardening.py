@@ -48,6 +48,8 @@ LEGITIMATE = [
     "how to structure the report", "Explain how to write a reflection",
     "I need to write the introduction. Can you help me plan it?", "Show me where the report requirements are covered in week 1",
     "Give me feedback on my paragraph", "What is a good introduction expected to contain?",
+    "Here is my own draft paragraph. Give me feedback against the criteria, but do not rewrite it: Stakeholders matter.",
+    "This is my first draft introduction, what do you think of it?", "My rough draft conclusion is below; does it connect back?",
     "Where in the slides is the evidence for my second section?", "Can you summarise what criterion 3 means?",
     "I'm stuck on writing the conclusion, what should it connect to?", "Is my thesis statement clear? 'Balance matters.'",
 ]
@@ -517,3 +519,28 @@ class ExtractionCacheTests(CoachTestCase):
             build_pptx(target, [("New", "Entirely different words about markets.")])
             self.send(sid, "markets words", turn="c3")
             self.assertGreater(spy.call_count, first)  # the changed file was re-read
+
+
+class RetrievalIntentRegressionTests(CoachTestCase):
+    """Found by the evaluation harness: questions about the assignment itself matched nothing, so the coach said
+    there was no course material although the brief was imported."""
+
+    def retrieved(self, text):
+        sid = self.start()["session_id"]
+        self.send(sid, text, turn="q" + str(abs(hash(text)) % 10**6))
+        sent = self.provider.calls[-1]
+        return sent["retrieval_status"], [sc["title"] for sc in sent["source_contexts"]]
+
+    def test_questions_about_the_assignment_retrieve_the_brief(self):
+        for text in ("What is this assignment actually asking me to do?", "How long should it be and in what format do I hand it in?",
+                     "What are the marking criteria?"):
+            with self.subTest(text=text):
+                status, titles = self.retrieved(text)
+                self.assertEqual(status, "matched")
+                self.assertIn("brief.pptx", titles)
+
+    def test_other_questions_are_not_widened(self):
+        status, titles = self.retrieved("zyzzyva quokka")
+        self.assertEqual((status, titles), ("no_match", []))
+        status, titles = self.retrieved("What is the difference between primary and secondary stakeholders?")
+        self.assertNotIn("brief.pptx", titles)

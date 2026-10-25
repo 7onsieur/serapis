@@ -1,0 +1,48 @@
+{
+ "approval_id": "coach-eval-v1-2026-10-25-luna",
+ "budget": {
+  "approval_id": "coach-eval-v1-2026-10-25-luna",
+  "calls": 1,
+  "halted": "usage missing or malformed: charged at worst case",
+  "model": "gpt-5.6-luna",
+  "token_cap": 300000,
+  "tokens_charged": 10273,
+  "unmeasured_calls": 1,
+  "unsettled_reservations": 0,
+  "usd_cap": "2",
+  "usd_charged": "0.0045546"
+ },
+ "caps": {
+  "calls": 80,
+  "tokens": 300000,
+  "usd": "2"
+ },
+ "frozen_sha256": "cbd551d80dddee591383ecb6befc6e2da4067e410037ce394677a0da0ba5ea1d",
+ "git_commit": "1d29ae1+uncommitted",
+ "max_output_tokens": 2500,
+ "mode": "LIVE",
+ "model": "gpt-5.6-luna",
+ "network": "allowlist: api.openai.com only",
+ "pricing": {
+  "input_usd_per_million": "0.20",
+  "output_usd_per_million": "1.20",
+  "source": "https://developers.openai.com/api/docs/models/gpt-5.6-luna and /api/docs/pricing",
+  "surcharge_multiplier": "1",
+  "verified_on": "2026-10-25"
+ },
+ "prompt_version": "assignment-coach-turn-v1",
+ "python": "3.14.6",
+ "resumed": false,
+ "reviewer": "Selom Topanou (owner; approved model and US$2 cap in session 2026-10-25)",
+ "scenario_ids": [
+  "EXP-1",
+  "INT-1",
+  "CRI-1",
+  "EVI-1",
+  "REF-5",
+  "OK-3",
+  "FAB-2",
+  "MT-1"
+ ],
+ "timestamp_utc": "2026-10-25T15:57:49Z"
+}

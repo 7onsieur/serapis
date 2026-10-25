@@ -63,7 +63,7 @@ class Approval:
 
 
 def _num(value: Any, name: str, *, integer=False, positive=True) -> Decimal:
-    if isinstance(value, bool) or not isinstance(value, (int, float, str)):
+    if isinstance(value, bool) or not isinstance(value, (int, float, str, Decimal)):
         raise ApprovalError(f"{name} must be a number")
     try:
         d = Decimal(str(value))

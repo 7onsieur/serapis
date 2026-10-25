@@ -21,3 +21,7 @@ sources/SYN101/**
 sources/SYN101/week-01/**
 !sources/SYN101/week-01/example-week-1.pdf
 !sources/SYN101/fictional-assessment-brief.md
+
+# Regenerable offline self-check runs of the evaluation harness (mock models)
+evals/assignment_coach_v1/results/offline_compliant/
+evals/assignment_coach_v1/results/offline_fabricating/
