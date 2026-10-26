@@ -382,7 +382,7 @@ class TeachTests(unittest.TestCase):
                         cache_dir=cache_dir,
                         workspace_root=workspace_root,
                     )
-            self.assertEqual(len(provider.calls), 1)
+            self.assertEqual(len(provider.calls), 2)  # one bounded retry; still rejected, nothing saved
             self.assertEqual(record_path.read_bytes(), before)
             self.assertFalse(any(cache_dir.glob("*.tmp")))
 

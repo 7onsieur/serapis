@@ -73,3 +73,8 @@ Open questions: What was the most confusing moment? What did you expect that was
 ## After the pilot
 
 Summarise task completion and recurring blockers, list fixes, and report the limits of the evidence (small, self-selected, moderated, short). Do not state learning gains, user numbers beyond the participants, or institutional endorsement.
+
+
+## Owner acceptance test
+
+Before any facilitated student session, the owner completes `OWNER_ACCEPTANCE_TEST.md` (30–45 minutes, fictional material, scored) and records the result in `PILOT_READINESS.md`.

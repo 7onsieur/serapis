@@ -4,12 +4,15 @@ from __future__ import annotations
 
 import json
 import os
+import re
 from dataclasses import asdict, dataclass
 from hashlib import sha256
 from pathlib import Path
 from typing import Any, Callable, Protocol
 
 from .credentials import get_openai_api_key
+from .generation_retry import run_checked
+from .source_alias import aliased
 from .sources import PROJECT_ROOT, render_source_location
 from .state import StateError, personal_data_dir
 
@@ -19,9 +22,9 @@ PREPARE_MAX_OUTPUT_TOKENS = 4_000
 PREPARE_PROMPT_VERSION = "prepare-grounding-v2"
 PREPARATION_SCHEMA_VERSION = 1
 WORKFLOW_SCHEMA_VERSION = 1
-TEACH_SCHEMA_VERSION = 2
-TEACH_PROMPT_VERSION = "teach-tutoring-v1.1"
-OBJECTIVE_INSTRUCTION_VERSION = "mission-objectives-v1"
+TEACH_SCHEMA_VERSION = 3
+TEACH_PROMPT_VERSION = "teach-tutoring-v2"
+OBJECTIVE_INSTRUCTION_VERSION = "mission-objectives-v2"
 
 
 OBJECTIVE_INSTRUCTIONS = """Use objective_context as shared decision guidance. Genuine learning
@@ -32,15 +35,28 @@ information. Prefer the smallest useful response and avoid unnecessary AI work.
 
 Academic facts are explicitly grouped as CONFIRMED, NEEDS_VERIFICATION, or UNKNOWN. Treat only
 CONFIRMED values as established academic facts. Describe NEEDS_VERIFICATION values as unverified
-claims and UNKNOWN values as unknown. Never promote, reconcile, or change a fact's trust status."""
+claims and UNKNOWN values as unknown. Never promote, reconcile, or change a fact's trust status.
+Mention an unverified or unknown value only where you actually rely on it, once and briefly; do not
+append a verification disclaimer to content that does not use one.
+
+Keep two kinds of statement apart. Anything about what the course material, module or assessment says
+must come from the supplied sources and cite them. General study advice (how to revise, plan or practise)
+is welcome where it helps, but an item containing it must begin "General study advice (not from your
+course materials):" and carry an empty provenance list. Never present general knowledge as a course
+requirement, and never invent deadlines, marking criteria, references, quotations, requirements or
+institutional policies."""
 
 
 class ReasoningError(StateError):
     """Raised when a preparation brief cannot be generated or loaded."""
 
-    def __init__(self, message: str, *, usage: "TokenUsage | None" = None) -> None:
+    def __init__(
+        self, message: str, *, usage: "TokenUsage | None" = None, retryable: bool = False
+    ) -> None:
         super().__init__(message)
         self.usage = usage
+        # True only when a second attempt could plausibly succeed (see generation_retry); the default is no retry.
+        self.retryable = retryable
 
 
 @dataclass(frozen=True)
@@ -144,6 +160,9 @@ class TeachingMove:
     explanation: str
     why_it_follows: str | None
     provenance: list[SourceReference]
+    # SOURCE: a claim grounded in the cited course material. GENERAL_GUIDANCE: study advice that is not a claim
+    # about the course (only allowed for likely_confusion moves, never cited, rendered with its own label).
+    basis: str = "SOURCE"
 
 
 @dataclass(frozen=True)
@@ -189,6 +208,10 @@ class TeachBrief:
         ]
         for item in references:
             provenance = item.provenance
+            if getattr(item, "basis", "SOURCE") == "GENERAL_GUIDANCE":
+                if provenance:
+                    raise ReasoningError("TEACH general guidance must not carry source provenance")
+                continue
             if not provenance:
                 raise ReasoningError("TEACH source-supported content has no provenance")
             if any(
@@ -360,6 +383,7 @@ _TEACH_MOVE_SCHEMA = {
         "explanation": {"type": "string"},
         "why_it_follows": {"type": ["string", "null"]},
         "provenance": {"type": "array", "items": _REFERENCE_SCHEMA},
+        "basis": {"type": "string", "enum": ["SOURCE", "GENERAL_GUIDANCE"]},
     },
     "required": [
         "move_type",
@@ -367,6 +391,7 @@ _TEACH_MOVE_SCHEMA = {
         "explanation",
         "why_it_follows",
         "provenance",
+        "basis",
     ],
     "additionalProperties": False,
 }
@@ -522,12 +547,29 @@ confused concepts; explain why a relationship or conclusion follows; anticipate 
 or connect to the module or assessment when the supplied sources genuinely support it. Do not force
 every move type into every response.
 
+Every teaching move has a basis. Use SOURCE for anything that states what the course material says; it
+must cite a supplied source_id and page. Use GENERAL_GUIDANCE only for a likely_confusion move that is
+study advice about how learners commonly go wrong (for example, mixing up two terms); it must have an
+empty provenance list, must not state facts about the subject, must not present itself as something the
+lecturer or reading said, and must not invent deadlines, marking criteria or requirements.
+If a likely confusion IS visible in the supplied material, make it a SOURCE move and cite it.
+
 When a source supplies an example or case, a worked_example must walk through what happens, which
 source-supported concept applies, and why the example demonstrates that concept; do not merely name
 or summarise the case. For contrast, reasoning_step, worked_example, supported_connection, and
 assessment_connection moves, why_it_follows must explicitly give the supported reasoning. Finish with
 a concise mental_model the student can use to organise the idea, then provide 2 to 4 unscored
 retrieval or self-explanation questions. Never claim or imply that the student now understands it.
+
+If learning_evidence is supplied, it is a record of this student's own earlier answers on this module's
+material. You may use it only to choose which part to explain first, how much worked detail to give and
+how hard the check questions should be: slow down and use an extra worked step where an item shows a
+NOT_SUPPORTED or PARTLY_SUPPORTED observation, and do not repeat what an item shows as demonstrated
+unaided. Say plainly, in one sentence, which recorded observation shaped the explanation (for example,
+"Your earlier answer on stakeholder types was not supported, so this starts from that distinction"),
+and do not state anything about the student that is not in learning_evidence: no learning style,
+confidence, motivation, ability or mastery. Observations are about specific answers, not about the person.
+If learning_evidence is absent or empty, teach generally and do not suggest the lesson was personalised.
 
 The cached PREPARE_ME material may guide emphasis and structure, but it is not a new source:
 citations must refer to identified university source IDs. student_context is the student's own report
@@ -540,7 +582,7 @@ available. Do not write assessed work for submission."""
 REVISE_WORKFLOW = SectionWorkflow(
     name="REVISE",
     cache_name="revise_brief",
-    prompt_version="revise-grounding-v1",
+    prompt_version="revise-grounding-v2",
     sections=(
         ("essential_knowledge", "Essential knowledge"),
         ("concepts_definitions", "Key concepts/definitions"),
@@ -554,7 +596,21 @@ REVISE_WORKFLOW = SectionWorkflow(
 Prioritise essential, high-value knowledge over trivia. Distinguish lecture and assigned reading where
 relevant, preserve source_id/PDF page provenance, and state when information cannot be determined.
 Assessment relevance must be supported by the supplied context. Do not write assessed work for
-submission. Use no outside knowledge, web content, or tools.""",
+submission. Use no outside knowledge, web content, or tools.
+
+If learning_evidence is supplied it lists this student's recorded answers (observed) and a rule-based
+priority_order. Use it as follows. Order areas_to_revisit by priority_order and start each item with
+"Observed:" when it rests on a listed answer (say what the answer showed, in plain words, never quote
+the student) or "Not yet tested:" for a capability in untested_capabilities or a topic with no recorded
+answer, or "Suggested:" for anything you add yourself. Every item must still cite the course material.
+Put the material behind NOT_SUPPORTED, PARTLY_DEMONSTRATED and MIXED_EVIDENCE items first in
+essential_knowledge and recall_questions too. For each such item recommend one concrete activity (re-read
+a cited page, explain it aloud, retry the question unaided, ask Tutor for TEACH_ME) rather than generic
+advice. Never say or imply the student has mastered, knows well, or is weak at a topic: a supported
+answer is one provisional judgement of one answer, and absence of an answer is an evidence gap. Where
+items disagree (MIXED_EVIDENCE) or only one answer exists, say the evidence is thin. Do not mention
+learning_evidence at all if it is absent; then write a general revision brief and do not suggest it has
+been personalised.""",
 )
 
 ASSIGNMENT_WORKFLOW = SectionWorkflow(
@@ -616,6 +672,28 @@ def _safe_failure_detail(exc: BaseException) -> str:
     return f" ({', '.join(parts)})"
 
 
+REQUEST_TIMEOUT_SECONDS = 120.0
+_BILLING_CODES = {"insufficient_quota", "billing_hard_limit_reached", "billing_not_active", "access_terminated"}
+
+
+def _classify_request_failure(exc: BaseException) -> tuple[str, bool]:
+    """(student-facing advice, retryable) for an exception raised before any response arrived."""
+    status = getattr(exc, "status_code", None)
+    code = str(getattr(exc, "code", "") or "")
+    name = type(exc).__name__
+    if status in (401, 403) or name in ("AuthenticationError", "PermissionDeniedError"):
+        return ("The AI key was not accepted. Check the key in your settings; retrying will not help.", False)
+    if status == 402 or code in _BILLING_CODES:
+        return ("The AI account has no remaining quota or billing is not active. Check the account; retrying will not help.", False)
+    if status == 400 or status == 404 or status == 422 or name in ("BadRequestError", "NotFoundError", "UnprocessableEntityError"):
+        return ("The AI service rejected the request. Retrying will not help; please report this.", False)
+    if status == 429 or status == 408 or status == 409 or (isinstance(status, int) and status >= 500) or name in (
+        "RateLimitError", "APITimeoutError", "APIConnectionError", "InternalServerError", "TimeoutError", "ConnectionError",
+    ):
+        return ("The AI service was busy or unreachable.", True)
+    return ("The AI request failed.", False)
+
+
 class OpenAIReasoningProvider:
     """Responses API implementation of the reasoning boundary."""
 
@@ -661,10 +739,15 @@ class OpenAIReasoningProvider:
             request["max_output_tokens"] = self.max_output_tokens
 
         try:
-            response = OpenAI(api_key=api_key, max_retries=0).responses.create(**request)
+            response = OpenAI(
+                api_key=api_key, max_retries=0, timeout=REQUEST_TIMEOUT_SECONDS
+            ).responses.create(**request)
         except Exception as exc:
+            advice, retryable = _classify_request_failure(exc)
             raise ReasoningError(
-                "OpenAI reasoning request failed before a response was received" + _safe_failure_detail(exc)
+                "OpenAI reasoning request failed before a response was received"
+                + _safe_failure_detail(exc) + f". {advice}",
+                retryable=retryable,
             ) from exc
 
         self.last_usage = TokenUsage.from_value(getattr(response, "usage", None))
@@ -682,6 +765,7 @@ class OpenAIReasoningProvider:
                 message = "OpenAI reasoning response was interrupted by the content filter"
             else:
                 message = "OpenAI reasoning response was incomplete for another provider reason"
+            # A content-filter stop may be a refusal on integrity grounds; a truncation would repeat. Neither is retried.
             raise ReasoningError(message, usage=self.last_usage)
 
         if status != "completed":
@@ -689,7 +773,7 @@ class OpenAIReasoningProvider:
                 message = f"OpenAI reasoning response ended with provider status: {status}"
             else:
                 message = "OpenAI reasoning response returned an unrecognised provider status"
-            raise ReasoningError(message, usage=self.last_usage)
+            raise ReasoningError(message, usage=self.last_usage, retryable=status == "failed")
 
         for output_item in getattr(response, "output", None) or ():
             if getattr(output_item, "type", None) != "message":
@@ -706,6 +790,7 @@ class OpenAIReasoningProvider:
             raise ReasoningError(
                 "OpenAI reasoning response completed without structured output",
                 usage=self.last_usage,
+                retryable=True,
             )
 
         try:
@@ -714,6 +799,7 @@ class OpenAIReasoningProvider:
             raise ReasoningError(
                 "OpenAI reasoning response completed with malformed structured JSON",
                 usage=self.last_usage,
+                retryable=True,
             ) from exc
 
     def generate_prepare_brief(self, context: dict[str, Any]) -> PreparationBrief:
@@ -730,7 +816,8 @@ class PreparationResult:
     brief: Any
     cache_status: str
     cache_key: str
-    usage: TokenUsage | None = None
+    usage: TokenUsage | None = None  # summed over every attempt that was paid for
+    attempts: tuple[dict[str, Any], ...] = ()  # one entry per model call: number, usage, error
 
 
 def _parse_items(value: Any, field: str) -> list[BriefItem]:
@@ -762,9 +849,14 @@ def _parse_teaching_move(value: Any, index: int) -> TeachingMove:
         "why_it_follows",
         "provenance",
     }
-    if not isinstance(value, dict) or set(value) != expected:
+    if not isinstance(value, dict) or set(value) not in (expected, expected | {"basis"}):
         raise ReasoningError(f"Invalid TEACH teaching move: {index}")
+    basis = value.get("basis", "SOURCE")
+    if basis not in ("SOURCE", "GENERAL_GUIDANCE"):
+        raise ReasoningError(f"Invalid TEACH move basis: {basis}")
     move_type = value["move_type"]
+    if basis == "GENERAL_GUIDANCE" and move_type != "likely_confusion":
+        raise ReasoningError("Only a likely_confusion move may be general guidance")
     if move_type not in _TEACH_MOVE_TYPES:
         raise ReasoningError(f"Invalid TEACH move type: {move_type}")
     why_it_follows = value["why_it_follows"]
@@ -789,6 +881,7 @@ def _parse_teaching_move(value: Any, index: int) -> TeachingMove:
         ),
         why_it_follows=why_it_follows,
         provenance=_parse_references(value["provenance"], "teaching_sequence"),
+        basis=basis,
     )
 
 
@@ -941,6 +1034,7 @@ def build_reasoning_context(context: dict[str, Any]) -> dict[str, Any]:
         "teach_request",
         "prepare_me",
         "student_context",
+        "learning_evidence",
     ):
         if key in context:
             reasoning_context[key] = context[key]
@@ -1045,6 +1139,12 @@ def _load_cached_result(
     )
 
 
+def _recovery_message(reason: str, attempts: int) -> str:
+    """What the student reads when generation fails: the reason, whether it was retried, and what to do."""
+    tried = " Serapis tried twice." if attempts > 1 else ""
+    return f"{reason}.{tried} Nothing was saved. Press the button again; if it keeps failing, check the AI key and try later.".replace("..", ".")
+
+
 def _generate_cached(
     reasoning_context: dict[str, Any],
     provider: ReasoningProvider,
@@ -1076,18 +1176,34 @@ def _generate_cached(
     if cache_path.is_file():
         return _load_cached_result(cache_path, cache_key, checked_parser)
 
-    raw_brief = provider.generate_structured_output(
-        reasoning_context,
-        f"{OBJECTIVE_INSTRUCTIONS}\n\n{instructions}",
-        output_format,
-    )
-    usage = getattr(provider, "last_usage", None)
-    if not isinstance(usage, TokenUsage):
-        usage = None
+    full_instructions = f"{OBJECTIVE_INSTRUCTIONS}\n\n{instructions}"
+    safe_provider = aliased(provider)
+
+    def call(note: str | None) -> dict[str, Any]:
+        context = reasoning_context
+        if note:
+            context = {**reasoning_context, "previous_attempt_refused_because": note}
+        return safe_provider.generate_structured_output(context, full_instructions, output_format)
+
+    def validated(raw: dict[str, Any]) -> Any:
+        try:
+            return checked_parser(raw)
+        except ReasoningError as exc:
+            # The model's output broke a grounding rule. A fresh sample may not, and is checked identically.
+            raise ReasoningError(str(exc), usage=exc.usage, retryable=True) from exc
+
     try:
-        brief = checked_parser(raw_brief)
+        outcome = run_checked(call, validated, last_usage=lambda: getattr(provider, "last_usage", None))
     except ReasoningError as exc:
-        raise ReasoningError(str(exc), usage=usage) from exc
+        total = getattr(exc, "total_usage", None)
+        failed = ReasoningError(
+            _recovery_message(str(exc), len(getattr(exc, "attempts", ()))),
+            usage=TokenUsage.from_value(total) if total else exc.usage,
+        )
+        failed.attempts = [a.to_dict() for a in getattr(exc, "attempts", [])]  # type: ignore[attr-defined]
+        raise failed from exc
+    brief = outcome.value
+    usage = TokenUsage.from_value(outcome.usage)
     target_dir.mkdir(parents=True, exist_ok=True)
     cache_record = {
         "cache_key": cache_key,
@@ -1108,6 +1224,7 @@ def _generate_cached(
         cache_status="generated",
         cache_key=cache_key,
         usage=usage,
+        attempts=tuple(a.to_dict() for a in outcome.attempts),
     )
 
 
@@ -1319,6 +1436,8 @@ def render_teach_brief(
     lines.extend(["", "Build the idea"])
     for number, move in enumerate(brief.teaching_sequence, start=1):
         move_label = move.move_type.replace("_", " ").title()
+        if move.basis == "GENERAL_GUIDANCE":
+            move_label = "General study guidance, not from your course materials"
         lines.append(
             f"{number}. {move.title} ({move_label})\n"
             f"   {move.explanation}{_render_provenance(move.provenance, location_index)}"
@@ -1338,15 +1457,25 @@ def render_teach_brief(
     return "\n".join(lines).rstrip()
 
 
+_ABSENCE = re.compile(
+    r"\b(?:no|not|cannot|can't|unknown|missing|none|neither)\b.{0,80}\b(?:supplied|provided|available|determined|"
+    r"stated|given|included|specified|identified|found)\b", re.I)
+_GENERAL_LABEL = "General study advice"
+UNSOURCED_NOTE = " (not from your course materials)"
+
+
 def _render_items(
     items: list[BriefItem], location_index: dict[str, dict[str, Any]] | None = None
 ) -> list[str]:
     if not items:
         return ["- No source-grounded information was provided."]
-    return [
-        f"- {item.text}{_render_provenance(item.provenance, location_index)}"
-        for item in items
-    ]
+    lines = []
+    for item in items:
+        note = ""
+        if not item.provenance and not item.text.startswith(_GENERAL_LABEL) and not _ABSENCE.search(item.text):
+            note = UNSOURCED_NOTE  # an item with no citation is not a claim about the course; say so
+        lines.append(f"- {item.text}{_render_provenance(item.provenance, location_index)}{note}")
+    return lines
 
 
 def _render_provenance(

@@ -1,6 +1,6 @@
 # Pilot readiness assessment
 
-*Updated 2026-10-25 after an independent review and hardening pass (see `CHECKPOINT-2026-10-25.md` for the dated record). Based only on what was run in this repository. No educational effectiveness, university endorsement or production readiness is claimed.*
+*Updated 2026-10-26 after the final learning-experience hardening sprint (Addendum 5 in `CHECKPOINT-2026-10-25.md`); earlier update 2026-10-25 after an independent review. Based only on what was run in this repository. No educational effectiveness, university endorsement or production readiness is claimed.*
 
 ## Verdict: READY WITH CONDITIONS
 
@@ -13,6 +13,8 @@ Ready for a **small, facilitated, moderated usability pilot on one machine per p
 3. Participants give informed consent and read `PRIVACY_AND_INTEGRITY.md`; no live assessed work, credentials or private files; no Blackboard or Drive.
 4. Any coach reply that reads like usable submission text is logged as a high-severity incident and the pilot is paused (see `TESTING_PROTOCOL.md`).
 5. PDF participants are on macOS; otherwise use .pptx files.
+6. **The owner-led acceptance test (`OWNER_ACCEPTANCE_TEST.md`) has not been run.** Nothing here substitutes for it. Do not involve a student before the owner has completed it with the real model and scored 26 or more with no zero.
+7. **The prompts and validators changed in the 2026-10-26 sprint (tutor v3, teach v2, revise v2, coach v3, objective v2) have only been exercised offline.** No paid model call was made in that sprint. A real-model smoke run (a small, separately authorised spend) should precede the first real-AI session, and the Tutor transcripts it produces should be read by the owner.
 
 ## Real-model evaluation status
 
@@ -37,21 +39,32 @@ Kept separate on purpose. Nothing below is evidence of educational effectiveness
 | **Owner-reviewed evidence** | **None yet.** The blank review sheets in each results folder are unfilled | |
 | **Unverified** | Educational effectiveness; behaviour with real student material; variance between runs (one run per scenario); phone-width layout (the browser window could not be narrowed in this session); screen-reader use | |
 
-### Product gaps found (not fixed; owner decisions)
-- **REVISE and TEACH ignore recorded learning evidence.** REVISE is a source summary; a recorded wrong answer does not reach it. The evidence-driven next-task recommendation (Continue) does work. Do not describe REVISE as personalised.
-- **A failed generation is not retried automatically** (one button press = one paid call). In the live runs 2 of about 56 learning calls failed validation (source id mis-copied; missing provenance). The student sees a technical message and clicks again.
-- **Tutor feedback can paraphrase the reference answer closely** (passes the lexical leak check); owner should read the tutor transcripts.
-- Misconception notes in the tutor page still print an internal source id.
+### Product gaps found in the second real-model sprint, and their status on 2026-10-26
+
+| Gap | Status | Evidence |
+|---|---|---|
+| REVISE and TEACH ignored recorded learning evidence | **Fixed offline.** `learning_digest.py` builds a bounded digest (observed outcomes, rule-based priority order, evidence gaps; never the student's own words) that REVISE and TEACH receive and that REVISE also renders deterministically as "Based on your recorded answers". Single answers are never called mastery; contradictory or disputed evidence is flagged; no evidence means a general brief that says so | `tests/test_learning_digest.py` (21 tests). **Not yet seen with a real model** |
+| A failed generation was not retried | **Fixed offline.** One bounded automatic retry (max 2 calls, 150 s window) for validator refusals, malformed output and transient provider faults; never for authentication, billing, refusals, content filters, truncation, spending/call limits or integrity-related reply checks; every attempt's usage is summed; state is written only after a pass | `tests/test_evidence_and_retry.py` |
+| REVISE source-id mis-copy | **Root cause fixed.** The model copied a 36-character id with one character wrong. The model now sees `SRC1`, `SRC2`… and the output schema restricts `source_id` to those values; ids are translated back before any validator runs, so validation is unchanged | `source_alias.py`, `SourceAliasTests` |
+| TEACH "no provenance" | **Root cause fixed.** The prompt asked for an uncited "likely confusion" move while the validator required citations everywhere. Moves now declare a `basis`: `SOURCE` (must cite) or `GENERAL_GUIDANCE` (only for likely-confusion, must not cite, rendered as "General study guidance, not from your course materials"). The validator is stricter, not looser | `TeachBasisTests` |
+| Tutor replies refused by the leak check (4 of 23) | **Investigated.** All four were genuine restatements of the reference answer, produced when the student's answer was off-topic (validator correct, 0 false positives). Cause: model behaviour plus a prompt that said "never paraphrase" without showing how to redirect. Prompt v3 prescribes what to say instead (acknowledge what is right, point at the question, send to the page, one guiding question, invite another try, with a worked good/bad example); a refused reply is retried once with a safe reason; if both fail the student gets a plain, model-free reply that points to the cited page instead of an error | `tests/test_tutor_integrity_v2.py`. **Prompt v3 not yet seen with a real model** |
+| Internal source id in tutor misconception notes | **Fixed.** Notes show the file name | `NoInternalIdsTests` |
+| General advice mixed with course claims | **Fixed in prompts and display.** General study advice is allowed but must carry the label "General study advice (not from your course materials)"; uncited items are rendered "(not from your course materials)"; verification boilerplate is limited to values actually relied on | `GeneralGuidanceRuleTests`; prompt changes unverified with a real model |
+
+Still open: the tutor's lexical leak check does not detect a paraphrase in different vocabulary (documented residual risk); owner reading of real tutor transcripts is still needed.
 
 ## What was verified (automated, offline)
 
-`python -m pytest -q` from the repository root with all optional extras installed: **871 passed, 0 failed, 0 skipped** (final tree). Highlights relevant to the pilot:
+`python -m pytest -q` from the repository root with all optional extras installed: **945 passed, 0 failed, 0 skipped** (final tree, 2026-10-26; 871 before this sprint). Highlights relevant to the pilot:
 
 - `tests/test_pilot_acceptance.py`: first run on the sample → own workspace → profile → module → assessment → .pptx and a junk PDF upload → Prepare (provider down once, then fine) → Quiz → answer → evaluation → Teach → Revise → Tutor hint/answer → Assignment Coach start → grounded cited reply → provider failure mid-message → app restart → Retry sends exactly once → plan, sections, evidence, questions → Home shows the saved session. Also: the demo command is rerunnable, refuses foreign folders and the home directory, and never touches the real data folder.
 - `tests/test_coach_hardening.py`: 27 known gate bypasses refused, 20 legitimate requests still allowed, fabricated years/quotes/dates/weightings rejected, parallel edits lose nothing, six simultaneous duplicate submissions call the model once, cross-module/cross-workspace and traversal ids refused, damaged session files fail cleanly, HTML escaping, cross-site/oversized/malformed requests, GET routes never write or call a provider.
 - `tests/test_assignment_coach.py`: lifecycle, persistence, gaps, recovery.
 
-The Hub pages (Home with journey and resume panel, coach page, plan) were inspected by eye in a desktop browser on the demo data. **Phone-width layout was not visually verified** (the browser window could not be narrowed), and no accessibility audit or screen-reader test was done.
+The Hub pages (Home with journey and resume panel, coach page, plan) were inspected by eye in a desktop browser on the demo data.
+
+**Browser checks, 2026-10-26 (Chrome via the automation extension, synthetic demo data).** The browser window could not be physically narrowed (`resize_window` reported success but the viewport stayed 1470 px), so phone width was measured by loading each page in a 360 px-wide same-origin iframe, which applies the page's media queries to that width. Result: Home, Modules, Assessments, Check, Profile, a module page and two week pages had no horizontal page overflow; the Assignment Coach page overflowed (document width 488 px) because citation tags and anchor links did not wrap. **Fixed** and re-measured at 356 px. Also checked: one `h1`, `main`/`nav`/`header` landmarks, skip link, language set, no unlabeled inputs on Home/Modules, no positive tabindex, no click handlers on non-controls on the week page. Found and fixed: answer boxes had only placeholders (now labelled with their question), several buttons were indistinguishable ("Generate with AI" twice; now "Create revision brief with AI"), error boxes were not announced, results now take focus and scroll into view, and the button copy no longer says "cache-first". REVISE was run end to end in the real app on the scripted provider: the evidence card rendered with file names and no ids.
+**Not verified:** a real narrow window or phone, screen-reader speech output, keyboard-only walkthrough by a person, other browsers, 200% zoom, colour-contrast measurement. Touch targets under 24 px exist in the coach page (44 small links/buttons at 360 px) and were not enlarged. Submitting an action leaves the address on the POST URL (`…/revise`), so reloading asks to resubmit.
 
 ## Limits of that evidence
 

@@ -593,7 +593,7 @@ class RealModelReviewRegressionTests(CoachTestCase):
         self.assertIn(out["coach"]["citations"][0]["title"], text)
 
     def test_the_prompt_version_changed_with_the_prompt(self):
-        self.assertEqual(ac.PROMPT_VERSION, "assignment-coach-turn-v2")
+        self.assertEqual(ac.PROMPT_VERSION, "assignment-coach-turn-v3")
         self.assertIn("previous_attempt_feedback", ci.COACH_INSTRUCTIONS)
 
 

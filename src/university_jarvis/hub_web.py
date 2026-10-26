@@ -126,7 +126,8 @@ _FRIENDLY_LABELS = {
 # Internal sequence-counter ids (teach_id/capture_id): traceability keys in
 # the real academic-record.json, not information a student needs on this
 # page -- omitted here, never deleted from the underlying record.
-_OMITTED_ACTION_RESULT_KEYS = {"teach_id", "capture_id", "rendered"}
+_OMITTED_ACTION_RESULT_KEYS = {"teach_id", "capture_id", "rendered", "evidence_rendered", "evidence_status",
+                               "evidence_items", "evidence_used", "attempts", "usage"}
 
 
 def _present_action_result(action_result: dict[str, Any] | None) -> list[tuple[str, str]]:
@@ -155,6 +156,11 @@ def _present_action_result(action_result: dict[str, Any] | None) -> list[tuple[s
 
 def _action_rendered_text(action_result: dict[str, Any] | None) -> str | None:
     return action_result.get("rendered") if action_result else None
+
+
+def _action_evidence_text(action_result: dict[str, Any] | None) -> str | None:
+    """The deterministic 'what your recorded answers show' block that accompanies REVISE and TEACH."""
+    return action_result.get("evidence_rendered") if action_result else None
 
 
 async def _form_fields(request: Request) -> dict[str, str]:
@@ -321,6 +327,7 @@ def create_app(
                 "imported": request.query_params.get("imported") == "1",
                 "action_rows": _present_action_result(action_result),
                 "action_rendered": _action_rendered_text(action_result),
+                "action_evidence": _action_evidence_text(action_result),
                 "action_error": action_error,
             },
             status_code=status_code,
@@ -371,6 +378,7 @@ def create_app(
                 "active_nav": "modules",
                 "action_rows": _present_action_result(action_result),
                 "action_rendered": _action_rendered_text(action_result),
+                "action_evidence": _action_evidence_text(action_result),
                 "action_error": action_error,
                 "learning": learning,
                 "quiz_questions": quiz_questions,
@@ -897,6 +905,7 @@ def create_app(
                 state=request.app.state.hub_state,
                 provider=request.app.state.hub_reasoning_provider,
                 cache_dir=request.app.state.hub_cache_dir,
+                workspace_root=request.app.state.hub_workspace_root,
             )
         except StateError as exc:
             action_error = str(exc)

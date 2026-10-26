@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 from university_jarvis.cli import main
 from university_jarvis.credentials import get_openai_api_key
 from university_jarvis.reasoning import (
+    REQUEST_TIMEOUT_SECONDS,
     GROUNDING_INSTRUCTIONS,
     OpenAIReasoningProvider,
     PREPARE_MAX_OUTPUT_TOKENS,
@@ -257,7 +258,7 @@ class ReasoningTests(unittest.TestCase):
                 )
 
         openai_client.assert_called_once_with(
-            api_key="test-credential", max_retries=0
+            api_key="test-credential", max_retries=0, timeout=REQUEST_TIMEOUT_SECONDS
         )
         responses.create.assert_called_once()
         self.assertEqual(
@@ -385,12 +386,16 @@ class ReasoningTests(unittest.TestCase):
                                     bounded_context(), provider, cache_dir
                                 )
 
-                    openai_client.assert_called_once_with(
-                        api_key="test-credential", max_retries=0
+                    # Only transient or malformed responses are retried; refusals, filters and truncation never are.
+                    attempts = 2 if label in {"provider failure", "malformed completed JSON", "missing output"} else 1
+                    openai_client.assert_called_with(
+                        api_key="test-credential", max_retries=0, timeout=REQUEST_TIMEOUT_SECONDS
                     )
-                    responses.create.assert_called_once()
+                    self.assertEqual(responses.create.call_count, attempts)
                     self.assertEqual(provider.last_usage, expected_usage)
-                    self.assertEqual(raised.exception.usage, expected_usage)
+                    self.assertEqual(raised.exception.usage, TokenUsage(
+                        expected_usage.input_tokens * attempts, expected_usage.output_tokens * attempts,
+                        expected_usage.total_tokens * attempts))
                     self.assertNotIn("private", str(raised.exception))
                     self.assertEqual(list(cache_dir.iterdir()), [])
 
@@ -435,16 +440,16 @@ class ReasoningTests(unittest.TestCase):
             self.assertEqual(result, 2)
             self.assertIn("completed with malformed structured JSON", stderr.getvalue())
             self.assertIn(
-                "input_tokens=2000, output_tokens=4000, total_tokens=6000",
+                "input_tokens=4000, output_tokens=8000, total_tokens=12000",  # two paid attempts
                 stderr.getvalue(),
             )
             self.assertNotIn("private_response_body", stderr.getvalue())
             self.assertNotIn("test-credential", stderr.getvalue())
             self.assertEqual(list(Path(temporary_directory).iterdir()), [])
-            openai_client.assert_called_once_with(
-                api_key="test-credential", max_retries=0
+            openai_client.assert_called_with(
+                api_key="test-credential", max_retries=0, timeout=REQUEST_TIMEOUT_SECONDS
             )
-            responses.create.assert_called_once()
+            self.assertEqual(responses.create.call_count, 2)
 
     def test_completed_schema_failure_keeps_usage_and_never_caches(self) -> None:
         responses = Mock()
@@ -480,14 +485,15 @@ class ReasoningTests(unittest.TestCase):
                     ) as raised:
                         generate_prepare_brief(bounded_context(), provider, cache_dir)
 
-            expected_usage = TokenUsage(1_500, 250, 1_750)
-            self.assertEqual(raised.exception.usage, expected_usage)
-            self.assertEqual(provider.last_usage, expected_usage)
+            # A schema failure is a recoverable model error: one retry, both paid calls accounted for.
+            self.assertEqual(raised.exception.usage, TokenUsage(3_000, 500, 3_500))
+            self.assertEqual(provider.last_usage, TokenUsage(1_500, 250, 1_750))
+            self.assertEqual(len(raised.exception.attempts), 2)
             self.assertEqual(list(cache_dir.iterdir()), [])
-            openai_client.assert_called_once_with(
-                api_key="test-credential", max_retries=0
+            self.assertEqual(responses.create.call_count, 2)
+            openai_client.assert_called_with(
+                api_key="test-credential", max_retries=0, timeout=REQUEST_TIMEOUT_SECONDS
             )
-            responses.create.assert_called_once()
 
     def test_provider_failure_makes_only_one_configured_request(self) -> None:
         responses = Mock()
@@ -508,7 +514,7 @@ class ReasoningTests(unittest.TestCase):
                     )
 
         openai_client.assert_called_once_with(
-            api_key="test-credential", max_retries=0
+            api_key="test-credential", max_retries=0, timeout=REQUEST_TIMEOUT_SECONDS
         )
         responses.create.assert_called_once()
         self.assertIsNone(provider.last_usage)

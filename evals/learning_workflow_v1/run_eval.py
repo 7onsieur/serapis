@@ -252,7 +252,7 @@ def run_checks(ctx):
         elif name == "revise_reflects_evidence_info":
             calls = [c for c in ctx.recorder.calls if c["tag"].startswith(f"{scenario['id']}/revise")]
             out[name] = {"pass": None, "revise_call_saw_student_evidence": any(c["context_has_student_evidence"] for c in calls),
-                         "note": "informational: REVISE is built from the sources only; a recorded wrong answer does not reach it"}
+                         "note": "informational: REVISE now receives a digest of recorded answers (learning_evidence), never the raw answers"}
         elif name == "continue_targets_weakness":
             res = ctx.result_payloads.get("continue") or {}
             task = res.get("task") or {}

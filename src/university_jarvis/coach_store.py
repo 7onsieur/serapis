@@ -20,7 +20,7 @@ from .state import StateError, get_module, normalize_academic_truth
 from .workspace import _safe_component, default_workspace_root
 
 SESSION_SCHEMA_VERSION = 1
-PROMPT_VERSION = "assignment-coach-turn-v2"
+PROMPT_VERSION = "assignment-coach-turn-v3"
 STAGES = ("UNDERSTAND", "PLAN", "EVIDENCE", "DRAFT", "REVIEW")
 SECTION_STATUSES = ("PLANNED", "DRAFTING", "DONE")
 EVIDENCE_KINDS = ("COURSE_MATERIAL", "EXTERNAL_SOURCE", "OWN_WORK")

@@ -75,8 +75,9 @@
 </div>
 
 {% if action_error %}
-<div class="action-error">
+<div class="action-error" role="alert">
   <strong>Action failed:</strong> {{ action_error }}
+  <p class="note">Nothing was changed by this failure. You can press the same button again.</p>
 </div>
 {% endif %}
 {% if learning %}
@@ -92,12 +93,12 @@
     {% if active_task.assistance_status == 'PROMPTED' %}<p>Prompted task: the TEACH explanation was shown before this question.</p>{% else %}<p>Unaided task: no answer or help has been shown for this question.</p>{% endif %}
     <label><input type="checkbox" name="prompted" value="yes"> I received other substantive help before answering</label>
     <label>Help shown <input name="prompt_help"></label>
-    <textarea name="response" required rows="3" placeholder="Your answer"></textarea><button type="submit">Save response</button>
+    <textarea name="response" required rows="3" placeholder="Your answer" aria-label="Your answer to: {{ active_task.task|e }}"></textarea><button type="submit">Save response</button>
   </form>{% endif %}
   {% for question in quiz_questions %}
   <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/learning/quiz-answer">
     <p>{{ question.question }}</p><input type="hidden" name="quiz_id" value="{{ question.quiz_id }}"><input type="hidden" name="question_id" value="{{ question.question_id }}">
-    <textarea name="response" required rows="3" placeholder="Your answer"></textarea><button type="submit">Save quiz response</button>
+    <textarea name="response" required rows="3" placeholder="Your answer" aria-label="Your answer to: {{ question.question|e }}"></textarea><button type="submit">Save quiz response</button>
   </form>{% endfor %}
   <h3>Answer a TEACH check question</h3>
   {% for teach_question in learning.teach_questions %}
@@ -108,7 +109,7 @@
     <input type="hidden" name="capability" value="EXPLANATION"><input type="hidden" name="origin" value="TEACH">
     <label><input type="checkbox" name="prompted" value="yes"> I received substantive help before answering</label>
     <label>Help shown <input name="prompt_help"></label>
-    <textarea name="response" required rows="3" placeholder="Your answer"></textarea><button type="submit">Save response</button>
+    <textarea name="response" required rows="3" placeholder="Your answer" aria-label="Your answer to: {{ teach_question.task|e }}"></textarea><button type="submit">Save response</button>
   </form>{% endfor %}
   {% if not learning.teach_questions %}
   <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/learning/response">
@@ -117,7 +118,7 @@
     <input type="hidden" name="origin" value="TEACH">
     <label><input type="checkbox" name="prompted" value="yes"> I received substantive help before answering</label>
     <label>Help shown <input name="prompt_help"></label>
-    <textarea name="response" required rows="3" placeholder="Your answer"></textarea><button type="submit">Save response</button>
+    <textarea name="response" required rows="3" placeholder="Your answer" aria-label="Your answer to: your own question"></textarea><button type="submit">Save response</button>
   </form>
   {% endif %}
   {% if learning.latest_unevaluated %}<form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/learning/evaluate"><input type="hidden" name="attempt_id" value="{{ learning.latest_unevaluated }}"><button type="submit">Evaluate with AI</button></form>{% endif %}
@@ -155,8 +156,8 @@
   </div>
 </section>
 {% endif %}
-{% if action_rows or action_rendered %}
-<div class="action-result">
+{% if action_rows or action_rendered or action_evidence %}
+<div class="action-result" role="status">
   <strong>Action succeeded.</strong>
   {% if action_rows %}
   <ul>
@@ -164,6 +165,12 @@
     <li>{{ label }}: {{ value }}</li>
   {% endfor %}
   </ul>
+  {% endif %}
+  {% if action_evidence %}
+  <div class="response-card" role="region" aria-label="What your recorded answers show">
+    <div class="response-label"><span class="dot"></span>Based on your recorded answers</div>
+    <pre class="rendered-output">{{ action_evidence }}</pre>
+  </div>
   {% endif %}
   {% if action_rendered %}
   <div class="response-card">
@@ -199,17 +206,17 @@
 
     <div class="action-form">
       <h3><span aria-hidden="true">?</span> AI: Quiz <span class="badge ephemeral">Sends selected sources to AI</span></h3>
-      <p class="note">Cache-first model call, generated fresh for this view only.</p>
+      <p class="note">Sends this week's selected sources to the AI and saves the new questions (without their answers) so you can answer them here.</p>
       <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/quiz">
         <button type="submit">Generate quiz with AI</button>
       </form>
     </div>
 
     <div class="action-form">
-      <h3><span aria-hidden="true">↻</span> AI: Revision brief <span class="badge ephemeral">Sends selected sources to AI</span></h3>
-      <p class="note">Cache-first model call, generated fresh for this view only.</p>
+      <h3><span aria-hidden="true">↻</span> AI: Revision brief (uses your recorded answers) <span class="badge ephemeral">Sends selected sources to AI</span></h3>
+      <p class="note">Sends this week's selected sources and your recorded answers to the AI. Nothing is added to your record.</p>
       <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/revise">
-        <button type="submit">Generate with AI</button>
+        <button type="submit">Create revision brief with AI</button>
       </form>
     </div>
 

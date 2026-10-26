@@ -42,6 +42,7 @@ from .coach_integrity import (
     ReplyRejected,
     check_reply,
     classify_request,
+    is_integrity_rejection,
 )
 from .coach_notes import (  # noqa: F401  (re-exported: the public API of this feature)
     add_brief_items,
@@ -96,8 +97,10 @@ from .coach_store import (  # noqa: F401
     material_report,
     view,
 )
+from .generation_retry import run_checked
 from .locking import record_lock
 from .reasoning import OBJECTIVE_INSTRUCTIONS, ReasoningError, ReasoningProvider
+from .source_alias import aliased
 from .sources import render_source_location
 from .state import StateError
 from .workflows import build_assignment_coach_context
@@ -461,10 +464,12 @@ def _fail(path: Path, module_code: str, turn_id: str, exc: Exception) -> None:
         turn = next(t for t in session["turns"] if t["turn_id"] == turn_id)
         if turn["status"] == "PENDING":
             if isinstance(exc, ReplyRejected):
-                turn["rejected_replies"] = turn.get("rejected_replies", 0) + 1
+                turn["rejected_replies"] = turn.get("rejected_replies", 0) + max(1, len(getattr(exc, "attempts", ())))
                 turn["last_rejection"] = str(exc)[:200]
             turn["status"] = "FAILED"
             turn["error"] = (str(exc) if isinstance(exc, (ReasoningError, StateError)) else type(exc).__name__)[:200]
+            for key, value in (getattr(exc, "total_usage", None) or {}).items():  # a failed attempt was still paid for
+                session["usage"][key] = session["usage"].get(key, 0) + value
             _write(path, session)
 
 
@@ -523,15 +528,34 @@ def send_message(state: dict[str, Any], module_code: str, session_id: str, *, cl
                            reply={"kind": "FALLBACK", "text": FALLBACK_REPLY, "citations": [], "follow_up_questions": [],
                                   "evidence_needs": [], "grounded": False})
         bounded = _bounded(session, turn, context)
-        raw = provider.generate_structured_output(bounded, f"{OBJECTIVE_INSTRUCTIONS}\n\n{COACH_INSTRUCTIONS}", COACH_FORMAT)
-        usage = getattr(provider, "last_usage", None)
-        usage = usage.to_dict() if hasattr(usage, "to_dict") else None
-        try:
-            checked = check_reply(raw, context=context, student_text=text, known_text=_known_text(session))
-        except ReplyRejected:
-            raise
-        except ReasoningError as exc:
-            raise ReplyRejected(str(exc)) from exc
+        safe = aliased(provider)
+
+        def call(note: str | None) -> Any:
+            ask = {**bounded, "previous_attempt_feedback": (
+                f"Your previous reply to this message was discarded by an automatic check: {note}. "
+                "Write a new reply that fixes this, keeping every other rule.")} if note else bounded
+            return safe.generate_structured_output(ask, f"{OBJECTIVE_INSTRUCTIONS}\n\n{COACH_INSTRUCTIONS}", COACH_FORMAT)
+
+        def checked_reply(raw: Any) -> dict[str, Any]:
+            try:
+                return check_reply(raw, context=context, student_text=text, known_text=_known_text(session))
+            except ReplyRejected as exc:
+                # Integrity-related refusals are never retried automatically; grounding and format faults may be.
+                raise ReplyRejected(str(exc), retryable=not is_integrity_rejection(str(exc))) from exc
+            except ReasoningError as exc:
+                raise ReplyRejected(str(exc), retryable=True) from exc
+
+        def charge() -> None:
+            with record_lock(path, create_dir=True):
+                current = _read(path, module_code)
+                if current["model_calls"] >= MAX_MODEL_CALLS:
+                    raise CoachSessionError("This session has reached its AI-call limit.")
+                current["model_calls"] += 1
+                _write(path, current)
+
+        outcome = run_checked(call, checked_reply, last_usage=lambda: getattr(provider, "last_usage", None),
+                              charge=charge)
+        checked, usage = outcome.value, outcome.usage
         grounded = bool(checked["citations"])
         return _finish(path, module_code, turn_id, status="COMPLETE", usage=usage, provider=provider_identity, materials=materials,
                        fields={"retrieval_status": context["retrieval_status"],

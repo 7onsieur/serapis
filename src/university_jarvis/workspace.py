@@ -7,7 +7,7 @@ import json
 import os
 import re
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from hashlib import sha256
 from pathlib import Path
@@ -124,6 +124,7 @@ class TeachResult:
     brief: TeachBrief
     student_context: list[dict[str, Any]]
     cache_status: str
+    evidence_used: list[dict[str, Any]] = field(default_factory=list)
 
 
 def default_workspace_root() -> Path:
@@ -361,6 +362,8 @@ def _render_teach_interaction(
         _paragraph(body, _citation_text(direct["provenance"], source_by_id), style="Citation")
         for move in generated["teaching_sequence"]:
             _paragraph(body, move["title"], style="Heading3")
+            if move.get("basis") == "GENERAL_GUIDANCE":
+                _paragraph(body, "General study guidance, not from your course materials", style="StudyNote")
             _paragraph(body, move["explanation"])
             if move.get("why_it_follows"):
                 _paragraph(body, f"Why it follows: {move['why_it_follows']}", style="StudyNote")
@@ -891,7 +894,10 @@ def _notebooklm_markdown(record: dict[str, Any]) -> str:
             direct = generated["direct_explanation"]
             lines.extend([direct["text"], "", _markdown_citation(direct["provenance"], source_by_id), ""])
             for move in generated["teaching_sequence"]:
-                lines.extend([f"### {move['title']}", "", move["explanation"], ""])
+                lines.extend([f"### {move['title']}", ""])
+                if move.get("basis") == "GENERAL_GUIDANCE":
+                    lines.extend(["> General study guidance, not from your course materials", ""])
+                lines.extend([move["explanation"], ""])
                 if move.get("why_it_follows"):
                     lines.extend([f"> Why it follows: {move['why_it_follows']}", ""])
                 lines.extend([_markdown_citation(move["provenance"], source_by_id), ""])
@@ -1342,6 +1348,12 @@ def teach_week(
         "result": deepcopy(record["workflows"]["prepare_me"]["result"]),
     }
     context["student_context"] = deepcopy(student_context)
+    from .learning_digest import build_learning_digest, model_view, relevant_to_topic
+
+    digest = relevant_to_topic(build_learning_digest(record), teach_request["topic"])
+    if (evidence := model_view(digest)) is not None:
+        context["learning_evidence"] = evidence  # only answers about this topic; absent means no personalisation
+    evidence_used = [{"task": i["task"], "standing": i["standing"], "attempts": i["attempts"]} for i in digest["items"]]
     selected_provider = provider or OpenAIReasoningProvider()
     result = generate_teach_brief(context, selected_provider, cache_dir=cache_dir)
 
@@ -1372,6 +1384,7 @@ def teach_week(
                 "addressed_learning_item_id": teach_request["learning_item_id"],
                 "selection": teach_request["selection"],
                 "student_context": deepcopy(student_context),
+                "evidence_used": deepcopy(evidence_used),
                 "generated_learning": generated_learning,
                 "provenance": {
                     "classification": "generated_learning",
@@ -1384,6 +1397,7 @@ def teach_week(
                     "schema_version": TEACH_SCHEMA_VERSION,
                     "provider": selected_provider.cache_identity(),
                     "usage": usage,
+                    "attempts": list(result.attempts),
                 },
             }
         )
@@ -1400,6 +1414,7 @@ def teach_week(
         topic=teach_request["topic"],
         brief=result.brief,
         student_context=student_context,
+        evidence_used=evidence_used,
         cache_status=result.cache_status,
     )
 

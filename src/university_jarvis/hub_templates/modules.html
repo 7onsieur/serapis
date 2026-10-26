@@ -24,7 +24,7 @@
 {% else %}
 <div class="card"><p class="empty">No modules yet. Add a module to start organizing your course information and materials.</p></div>
 {% endif %}
-{% if error %}<div class="action-error">{{ error }}</div>{% endif %}
+{% if error %}<div class="action-error" role="alert">{{ error }}</div>{% endif %}
 <div class="section card">
   <h2>Add a module</h2>
   <form method="post" action="/modules">

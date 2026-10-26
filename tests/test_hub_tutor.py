@@ -490,7 +490,8 @@ class HubTutorDiagnosisTests(unittest.TestCase):
         self.answer(url)
         html = self.page(url)
         self.assertNotIn(SECRET, html)
-        self.assertIn("did not finish", html)
+        self.assertNotIn("did not finish", html)  # retried once, then a plain reply: no error page
+        self.assertIn("passed my safety checks", html)
         self.assertIn(self.WRONG, html)  # the answer itself is safe
 
     def test_a_fallback_reply_gave_no_help_so_the_page_does_not_say_answers_are_assisted(self):

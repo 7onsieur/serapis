@@ -32,7 +32,7 @@ Open http://127.0.0.1:8765. **First time only:** until you start your own worksp
 2. **Modules** — add a module code and title.
 3. **Assessments** — on the module page add each assessment. Deadline, weight and requirements are optional; whatever you type is shown as *Needs checking* until supported by a source.
 4. **Materials** — add .pptx/PDF files to the module, ideally with the week number. Also add your **assignment brief** if you have it as a file.
-5. **Study a week** — open the week, press *Prepare with AI*, then use *Teach*, *Quiz*, *Revise* or start a *Tutor* session. Answers are saved as study evidence; you can ask for an AI evaluation of each.
+5. **Study a week** — open the week, press *Prepare with AI*, then use *Teach*, *Quiz*, *Revise* or start a *Tutor* session. Answers are saved as study evidence; you can ask for an AI evaluation of each. *Revise* then puts the questions you found hardest first and says what it observed versus what it suggests; with no answers recorded it is a general brief and says so. General study advice is always labelled as not coming from your course materials.
 6. **Assignment Coach** — on the module page press *Open in Assignment Coach* next to the assessment. Copy the requirements and marking criteria from your official brief, plan in your own words, and talk it through with the coach.
 
 Everything is saved on your computer. Close the browser or stop the Hub whenever you like; **Home → Continue where you left off** takes you back.

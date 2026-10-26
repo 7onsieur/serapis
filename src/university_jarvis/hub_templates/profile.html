@@ -6,8 +6,8 @@
   <h1>Profile</h1>
   <p class="lede">Tell Serapis where you study. This is optional, stays on this device, and is only used to label your record and give AI actions context. It is entered by you, so it is not treated as verified.</p>
 </div>
-{% if saved %}<div class="action-result"><strong>Profile saved.</strong> <a href="/">Back to Home</a> or <a href="/modules">add a module</a>.</div>{% endif %}
-{% if error %}<div class="action-error"><strong>Profile was not saved:</strong> {{ error }}</div>{% endif %}
+{% if saved %}<div class="action-result" role="status"><strong>Profile saved.</strong> <a href="/">Back to Home</a> or <a href="/modules">add a module</a>.</div>{% endif %}
+{% if error %}<div class="action-error" role="alert"><strong>Profile was not saved:</strong> {{ error }}</div>{% endif %}
 <div class="section card">
   <form method="post" action="/profile">
     <label>University <input name="university" value="{{ student.get('university', '') }}" maxlength="200" placeholder="e.g. Example University"></label>

@@ -57,6 +57,7 @@ from .reasoning import (
     render_teach_brief,
 )
 from .reconcile import CHANGED, METADATA_CHANGED, MISSING_SINCE_LAST_CHECK, NEW, UNCHANGED
+from .learning_digest import build_learning_digest, model_view, render_digest, render_teach_evidence
 from .locking import record_lock
 from .state import StateError, load_state
 from .tutor_policy import reference_problem, requires_calculation
@@ -246,6 +247,7 @@ def teach_topic(
     rendered = render_teach_brief(result.brief, {"topic": result.topic}, result.student_context, location_index)
     payload = _jsonable(result)
     payload["rendered"] = rendered
+    payload["evidence_rendered"] = render_teach_evidence(result.evidence_used)
     return payload
 
 
@@ -643,20 +645,34 @@ def generate_revision_brief(
     state: dict[str, Any] | None = None,
     provider: ReasoningProvider | None = None,
     cache_dir: Path | None = None,
+    workspace_root: Path | None = None,
 ) -> dict[str, Any]:
     """MODEL CALL (cache-first): a source-grounded revision brief for one module/week.
 
-    Delegates entirely to ``reasoning.generate_sectioned_brief`` (with
-    ``REVISE_WORKFLOW``) + ``reasoning.render_sectioned_brief``. Ephemeral,
-    same boundary as ``generate_quiz``: only the local reasoning cache is
-    touched, never the workspace record.
+    Delegates to ``reasoning.generate_sectioned_brief`` (with ``REVISE_WORKFLOW``) +
+    ``reasoning.render_sectioned_brief``. The week's recorded learning evidence (quiz and tutor answers)
+    is summarised by ``learning_digest`` and passed to the model so revision is prioritised from what the
+    student actually answered; the same digest is rendered deterministically (``evidence_rendered``) so
+    the student always sees what was observed versus suggested, whatever the model wrote. With no
+    recorded answers the brief is general and says so. New evidence changes the context, so it is not
+    served from a stale cache. Ephemeral: only the local reasoning cache is touched, never the record.
     """
     resolved_state = state if state is not None else load_state()
     context = build_week_context(resolved_state, module_code, week_number, "REVISE")
+    try:
+        record, *_ = _learning_record(context["module"]["code"], week_number, workspace_root)
+    except StateError:
+        record = None  # no workspace yet: nothing has been recorded
+    digest = build_learning_digest(record)
+    evidence = model_view(digest)
+    if evidence is not None:
+        context["learning_evidence"] = evidence
     result = _run_sectioned_workflow(
         context, REVISE_WORKFLOW, provider=provider, cache_dir=cache_dir
     )
-    return {"module_code": context["module"]["code"], "week": week_number, **result}
+    return {"module_code": context["module"]["code"], "week": week_number, **result,
+            "evidence_rendered": render_digest(digest), "evidence_status": digest["status"],
+            "evidence_items": [{k: v for k, v in i.items() if k != "source_references"} for i in digest["items"]]}
 
 
 def generate_assignment_coaching(

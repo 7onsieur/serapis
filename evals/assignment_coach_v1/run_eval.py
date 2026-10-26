@@ -123,6 +123,7 @@ from university_jarvis.coach_integrity import ReplyRejected  # noqa: E402
 from university_jarvis.demo import demo_environment  # noqa: E402
 from university_jarvis.reasoning import ReasoningError  # noqa: E402
 from university_jarvis.scripted_provider import ScriptedStudyProvider  # noqa: E402
+from university_jarvis.source_alias import AliasingProvider  # noqa: E402
 from university_jarvis.state import StateError, load_state  # noqa: E402
 
 MAX_ATTEMPTS_PER_TURN = 4  # two model attempts, then the production fallback, plus headroom for provider failures
@@ -182,8 +183,13 @@ MOCKS = {"scripted": ScriptedStudyProvider, "compliant": CompliantMock, "fabrica
 class Recorder:
     """Outermost provider: times and records every call, and applies the scenario's failure injection (which is free)."""
 
+    # Production aliases source ids for the model (source_alias). The recorder sits above that layer so its log
+    # shows the real ids the validators see, while the budget guard below still meters what is actually sent.
+    handles_source_aliases = True
+
     def __init__(self, capped, approval, synthetic):
         self.capped, self.approval, self.synthetic = capped, approval, synthetic
+        self._aliased = AliasingProvider(capped)
         self.calls: list[dict] = []
         self.tag = ""
         self.inject_once: str | None = None
@@ -211,7 +217,7 @@ class Recorder:
             return INJECTED_BAD_REPLY
         started = time.monotonic()
         try:
-            reply = self.capped.generate_structured_output(context, instructions, output_format)
+            reply = self._aliased.generate_structured_output(context, instructions, output_format)
         except BaseException as exc:
             record["latency_s"] = round(time.monotonic() - started, 3)
             record["provider_error"] = f"{type(exc).__name__}: {str(exc)[:200]}"

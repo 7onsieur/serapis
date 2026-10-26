@@ -35,7 +35,7 @@
 <p class="section-note">Each AI turn sends the relevant excerpts from this week's sources and your messages to the configured AI provider. Judgements are provisional AI opinions, not grades. Answers after a hint, an explanation, feedback or a revealed answer are recorded as assisted &mdash; only an answer given with no help counts as unaided.</p>
 
 {% if error %}
-<div class="action-error"><strong>Something went wrong:</strong> {{ error }}</div>
+<div class="action-error" role="alert"><strong>Something went wrong:</strong> {{ error }} <span class="note">Your earlier answers are saved; repeat the action to try again.</span></div>
 {% endif %}
 
 <div class="section">
@@ -81,7 +81,7 @@
       <div class="note">
         {% if t.misconception.status == "DISPUTED" %}<strong>Possible misunderstanding: disputed by you.</strong> The tutor's reading ({{ t.misconception.label }}) stays in the record marked as disputed; it is not counted against you and your answer is unchanged.
         {% else %}<strong>Possible misunderstanding (provisional, {{ t.misconception.confidence }} confidence):</strong> {{ t.misconception.label }}<br>
-        From your words: &ldquo;{{ t.misconception.quote }}&rdquo;{% if t.misconception.citations %} &middot; see {% for c in t.misconception.citations %}{{ c.source_id }}{% if c.pdf_page %} p. {{ c.pdf_page }}{% endif %}{% if not loop.last %}, {% endif %}{% endfor %}{% endif %}.
+        From your words: &ldquo;{{ t.misconception.quote }}&rdquo;{% if t.misconception.citations %} &middot; see {% for c in t.misconception.citations %}{{ c.title or 'your course material' }}{% if c.pdf_page %}, page/slide {{ c.pdf_page }}{% endif %}{% if not loop.last %}; {% endif %}{% endfor %}{% endif %}.
         {% endif %}
       </div>
       {% if t.can_dispute %}
@@ -123,7 +123,7 @@
       <h3>Your answer</h3>
       <form method="post" action="{{ post }}/answer">
         <input type="hidden" name="client_turn_id" value="{{ new_turn_id }}">
-        <textarea name="response" required rows="5" maxlength="2000" placeholder="Answer in your own words"></textarea>
+        <textarea name="response" required rows="5" maxlength="2000" placeholder="Answer in your own words" aria-label="Your answer to the current question"></textarea>
         <label>How sure are you? <span class="note">(optional &mdash; this is your own view; it does not change how your answer is judged)</span>
           <select name="confidence"><option value="">Prefer not to say</option><option value="SURE">Sure</option><option value="UNSURE">Unsure</option><option value="GUESSING">Guessing</option></select></label>
         <button type="submit">Send answer</button>

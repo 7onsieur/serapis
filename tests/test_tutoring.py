@@ -250,10 +250,12 @@ class TutoringTests(unittest.TestCase):
                 session = self.create(request=name)
                 provider = FakeProvider()
                 provider.override = bad
-                with self.assertRaises(ReasoningError):
-                    self.answer(session, "t", provider=provider)
+                done = self.answer(session, "t", provider=provider)  # retried once, then a safe model-free reply
+                self.assertEqual(len(provider.calls), 2)
                 attempt = self.learning()["evidence"][0]
-                self.assertIsNone(attempt["evaluation"])
+                self.assertEqual((attempt["evaluation"]["outcome"], attempt["evaluation"]["basis"]),
+                                 ("UNCLEAR", "TUTOR_REPLY_REJECTED"))  # never a judgement from an invalid reply
+                self.assertEqual(done["diagnosis"], "unclear")
                 self.assertEqual(attempt["student_response"], "my answer")
 
     def test_interrupted_pending_turn_is_recoverable_only_after_the_lease_expires(self):
@@ -317,14 +319,14 @@ class TutoringTests(unittest.TestCase):
         leaky = FakeProvider()
         leaky.override = {"message": f"Basically: {ANSWER_TEXT}.", "diagnosis": "none",
                           "citations": [{"source_id": "s1", "pdf_page": 1}]}
-        with self.assertRaisesRegex(ReasoningError, "reveal the reference answer"):
-            tutoring.request_hint({}, "BIO101", 1, session["session_id"], client_turn_id="h2",
-                                  provider=leaky, workspace_root=self.root)
-        self.assertEqual(len(leaky.calls), 1)
+        done = tutoring.request_hint({}, "BIO101", 1, session["session_id"], client_turn_id="h2",
+                                     provider=leaky, workspace_root=self.root)
+        self.assertEqual(len(leaky.calls), 2)  # one bounded retry, then a plain fallback
         shown = tutoring.load_session("BIO101", 1, session["session_id"], workspace_root=self.root)
         self.assertNotIn("Basically", json.dumps(shown))
+        self.assertNotIn(ANSWER_TEXT, json.dumps(done))
         self.assertEqual(shown["hint_level"], 1)
-        self.assertEqual(shown["recovery"]["state"], "RETRY")
+        self.assertIsNone(shown["recovery"])
 
     def test_revealed_answer_can_never_become_fresh_unaided_evidence(self):
         session = self.create()
@@ -522,13 +524,19 @@ class TutoringTests(unittest.TestCase):
     def test_failed_or_rejected_hint_records_no_exposure(self):
         session = self.create()
         self.hint(session, "h1")
-        for bad in (FakeProvider(fail_times=1), self._leaky()):
-            with self.assertRaises(ReasoningError):
-                tutoring.request_hint({}, "BIO101", 1, session["session_id"], client_turn_id="h2",
-                                      provider=bad, workspace_root=self.root)
-            self.assertEqual([e["hint_level"] for e in self.learning()["task_exposures"]], [1])
-            self.assertEqual(tutoring.load_session("BIO101", 1, session["session_id"], workspace_root=self.root)["hint_level"], 1)
-        self.assertEqual(self.hint(session, "h2")["tutor"]["hint_level"], 2)
+        with self.assertRaises(ReasoningError):  # a provider failure fails the turn, retryable by the student
+            tutoring.request_hint({}, "BIO101", 1, session["session_id"], client_turn_id="h2",
+                                  provider=FakeProvider(fail_times=1), workspace_root=self.root)
+        self.assertEqual([e["hint_level"] for e in self.learning()["task_exposures"]], [1])
+        # A hint that leaks twice is replaced by a plain fallback: no level-2 help is shown or counted.
+        leaky = self._leaky()
+        done = tutoring.request_hint({}, "BIO101", 1, session["session_id"], client_turn_id="h2",
+                                     provider=leaky, workspace_root=self.root)
+        self.assertEqual(len(leaky.calls), 2)
+        self.assertNotIn(ANSWER_TEXT, json.dumps(done))
+        self.assertEqual([e["hint_level"] for e in self.learning()["task_exposures"]], [1])
+        self.assertEqual(tutoring.load_session("BIO101", 1, session["session_id"], workspace_root=self.root)["hint_level"], 1)
+        self.assertEqual(self.hint(session, "h3")["tutor"]["hint_level"], 2)
         self.assertEqual([e["hint_level"] for e in self.learning()["task_exposures"]], [1, 2])
 
     def _leaky(self):

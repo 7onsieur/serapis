@@ -68,7 +68,8 @@ class OfflineRunTests(HarnessTestCase):
         folder = self.run_label("test_offline_leaky", "--mock", "leaky_tutor", "--only", "TUT-1")
         result = self.load(folder, "scenarios.json")[0]
         self.assertTrue(result["checks"]["tutor_no_leak"]["pass"])
-        self.assertTrue(any("reveal" in f["error"].lower() for f in result["step_failures"]), result["step_failures"])
+        # The leak is refused, retried once, then replaced by a plain reply: no step fails and nothing leaks.
+        self.assertFalse(any("reveal" in f["error"].lower() for f in result["step_failures"]), result["step_failures"])
 
     def test_freeze_guard_refuses_changed_scenarios(self):
         self.run_label("test_offline_freeze", "--only", "PREP-1")

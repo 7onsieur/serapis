@@ -20,7 +20,8 @@
   .coach .grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr)); gap: 0.9rem; }
   .coach .gap-list li { margin: 0.3rem 0; }
   .coach .turn-you { border-left: 3px solid var(--accent); }
-  .coach .anchors a { margin-right: 0.9rem; font-size: 0.85rem; }
+  .coach .anchors { display: flex; flex-wrap: wrap; gap: 0.35rem 0.9rem; }
+  .coach .anchors a { font-size: 0.85rem; padding: 0.25rem 0; }
   .coach .cite { display: inline-block; margin: 0.15rem 0.35rem 0 0; }
   .coach button.quiet { background: transparent; border-color: var(--border-strong); font-weight: 500; }
   .coach .stagebar { display: flex; flex-wrap: wrap; gap: 0.4rem; }
@@ -55,7 +56,7 @@
   {% if live %}<form method="post" action="{{ base }}/sync" style="display:inline;"><button type="submit" class="quiet">Update requirements from the assessment</button></form>{% endif %}</div></div>
 {% endif %}
 {% if session.assessment_missing %}
-<div class="action-error"><strong>This assessment is no longer in your module.</strong> Your notes here are kept; you can still read and edit them.</div>
+<div class="action-error" role="alert"><strong>This assessment is no longer in your module.</strong> Your notes here are kept; you can still read and edit them.</div>
 {% endif %}
 
 <div class="section" id="progress">
@@ -117,7 +118,7 @@
 
   {% if live %}
     {% if session.recovery and session.recovery.state == "RETRY" %}
-    <div class="action-error"><strong>Your last message didn't finish.</strong> It is saved, and nothing was sent twice. Retrying sends it once.
+    <div class="action-error" role="alert"><strong>Your last message didn't finish.</strong> It is saved, and nothing was sent twice. Retrying sends it once.
       <div class="row"><form method="post" action="{{ base }}/retry"><button type="submit">Retry my last message</button></form>
       <form method="post" action="{{ base }}/discard"><button type="submit" class="quiet">Discard it</button></form></div>
       {% if session.recovery.text %}<p class="small">Your unsent message: {{ session.recovery.text[:300] }}{{ "…" if session.recovery.text|length > 300 }}</p>{% endif %}</div>

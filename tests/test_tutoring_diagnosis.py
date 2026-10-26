@@ -265,47 +265,62 @@ class DiagnosisTests(unittest.TestCase):
         self.assertEqual(turn["next_action"], "CHECK_REASONING")
 
     # --- answer-leak guard -------------------------------------------------------------------
-    def test_feedback_that_reveals_the_reference_answer_is_rejected_and_recoverable(self):
-        session = self.create()
+    def test_feedback_that_reveals_the_reference_answer_is_refused_retried_once_and_never_displayed(self):
         for leak in (f"Not quite. The answer is: {ANSWER_TEXT}.",
                      "Close, but note the basic structural and functional unit of all living things is what matters."):
             with self.subTest(leak=leak[:30]):
+                self.setUp()
+                session = self.create()
                 self.provider.override = reply("partial", message=leak)
-                with self.assertRaisesRegex(ReasoningError, "reveal the reference answer"):
-                    tutoring.submit_response({}, "BIO101", 1, session["session_id"], client_turn_id="a1", text=WRONG,
-                                             provider=self.provider, workspace_root=self.root)
-                self.assertEqual(self.learning()["evidence"][0]["student_response"], WRONG)  # answer kept
-                self.assertIsNone(self.learning()["evidence"][0]["evaluation"])
+                done = tutoring.submit_response({}, "BIO101", 1, session["session_id"], client_turn_id="a1", text=WRONG,
+                                                provider=self.provider, workspace_root=self.root)
+                # Two paid calls (original + one bounded retry), both refused: the student still gets a useful reply.
+                self.assertEqual(len(self.provider.calls), 2)
+                self.assertEqual(done["session"]["model_calls"], 2)
+                self.assertEqual((done["status"], done["diagnosis"]), ("COMPLETE", "unclear"))
+                self.assertTrue(done["tutor"]["text"].startswith(tutoring.FALLBACK_FEEDBACK))
+                self.assertNotIn(ANSWER_TEXT, json.dumps(done))
+                self.assertNotIn("structural and functional unit", json.dumps(done))
+                evidence = self.learning()["evidence"]
+                self.assertEqual(evidence[0]["student_response"], WRONG)  # answer kept, once
+                self.assertEqual(evidence[0]["evaluation"]["basis"], "TUTOR_REPLY_REJECTED")
+                self.assertEqual(len(evidence), 1)
                 self.assertNotIn("task_exposures", self.learning())  # leaked text was never shown or counted
-                view = tutoring.load_session("BIO101", 1, session["session_id"], workspace_root=self.root)
-                self.assertEqual(view["recovery"]["state"], "RETRY")
-                self.assertNotIn(ANSWER_TEXT, json.dumps(view))
-        self.provider.override = reply("partial", message="Think about what living things are built from.")
-        done = tutoring.submit_response({}, "BIO101", 1, session["session_id"], client_turn_id="a1", text=WRONG,
-                                        provider=self.provider, workspace_root=self.root)
-        self.assertEqual(done["status"], "COMPLETE")
-        self.assertEqual(len(self.learning()["evidence"]), 1)  # retry never duplicated the attempt
+                self.assertGreater(done["session"]["usage"].get("total_tokens", 1), 0)
+
+    def test_a_leak_followed_by_a_clean_retry_completes_with_the_clean_reply_and_tells_the_model_why(self):
+        session = self.create()
+        seen = []
+        original = self.provider.generate_structured_output
+
+        def script(context, instructions, output_format):
+            seen.append(context.get("previous_reply_refused_because"))
+            self.provider.override = (reply("partial", message=f"The answer is: {ANSWER_TEXT}.") if len(seen) == 1
+                                      else reply("partial", message="You have part of it; re-read page 1 and try again."))
+            return original(context, instructions, output_format)
+        with patch.object(self.provider, "generate_structured_output", side_effect=script):
+            done = tutoring.submit_response({}, "BIO101", 1, session["session_id"], client_turn_id="a1", text=WRONG,
+                                            provider=self.provider, workspace_root=self.root)
+        self.assertEqual(done["diagnosis"], "partial")
+        self.assertEqual(done["tutor"]["text"], "You have part of it; re-read page 1 and try again.")
+        self.assertIsNone(seen[0])
+        self.assertIn("private reference answer", seen[1])
+        self.assertNotIn(ANSWER_TEXT, seen[1])  # the note never repeats the refused reply
+        self.assertEqual(done["session"]["model_calls"], 2)
+        self.assertEqual(len(self.learning()["evidence"]), 1)
 
     def submit(self, session, turn="a1", text=WRONG):
         return tutoring.submit_response({}, "BIO101", 1, session["session_id"], client_turn_id=turn, text=text,
                                         provider=self.provider, workspace_root=self.root)
 
-    def test_repeated_rejected_feedback_ends_in_a_safe_fallback_not_an_endless_retry(self):
+    def test_rejected_feedback_ends_in_a_safe_fallback_after_one_retry_and_replays_stably(self):
         session = self.create()
         self.provider.override = reply("partial", message=f"The answer is: {ANSWER_TEXT}.")
-        for _ in range(tutoring.MAX_REJECTED_REPLIES):
-            with self.assertRaises(ReasoningError):
-                self.submit(session)
-        view = tutoring.load_session("BIO101", 1, session["session_id"], workspace_root=self.root)
-        self.assertEqual(view["recovery"]["state"], "RETRY")
-        self.assertTrue(view["recovery"]["fallback_next"])
-        calls, counted = len(self.provider.calls), view["model_calls"]
-        done = self.submit(session)  # next try: no model call, a fixed reply
+        done = self.submit(session)
+        self.assertEqual(len(self.provider.calls), 2)
         self.assertEqual(done["status"], "COMPLETE")
-        self.assertEqual(len(self.provider.calls), calls)
-        self.assertEqual(done["session"]["model_calls"], counted)
         self.assertEqual(done["diagnosis"], "unclear")
-        self.assertEqual(done["tutor"]["text"], tutoring.FALLBACK_FEEDBACK)
+        self.assertTrue(done["tutor"]["text"].startswith(tutoring.FALLBACK_FEEDBACK))
         self.assertEqual(done["tutor"]["citations"], [])
         self.assertNotIn(ANSWER_TEXT, json.dumps(done))
         self.assertIsNone(done["session"]["recovery"])
@@ -319,7 +334,9 @@ class DiagnosisTests(unittest.TestCase):
         self.assertNotIn("task_exposures", self.learning())  # nothing was shown, so nothing is assisted
         turn = next(t for t in done["session"]["turns"] if t["turn_id"] == done["turn_id"])
         self.assertEqual(turn["next_action"], "OFFER_HINT")  # advice matches the situation
-        self.assertEqual(self.submit(session)["turn_id"], done["turn_id"])  # replay is stable
+        calls = len(self.provider.calls)
+        self.assertEqual(self.submit(session)["turn_id"], done["turn_id"])  # replay is stable and free
+        self.assertEqual(len(self.provider.calls), calls)
         self.provider.override = reply("partial")  # a healthy model later: a new answer is judged normally
         later = self.submit(session, turn="a2", text="Another try")
         self.assertEqual((later["assistance_status"], later["diagnosis"]), ("UNAIDED", "partial"))
@@ -333,17 +350,18 @@ class DiagnosisTests(unittest.TestCase):
         done = self.submit(session)  # a real model call finally succeeds
         self.assertEqual(done["tutor"]["text"], "FEEDBACK reply")
 
-    def test_rejections_still_count_against_the_session_call_limit(self):
+    def test_retries_and_rejections_count_against_the_session_call_limit(self):
         session = self.create()
         self.provider.override = reply("partial", message=f"The answer is: {ANSWER_TEXT}.")
         with patch.object(tutoring, "MAX_MODEL_CALLS", 1):
-            with self.assertRaises(ReasoningError):
-                self.submit(session)
+            done = self.submit(session)  # the limit refuses the retry; the student still gets the safe reply
+            self.assertEqual(len(self.provider.calls), 1)
+            self.assertTrue(done["tutor"]["text"].startswith(tutoring.FALLBACK_FEEDBACK))
             with self.assertRaisesRegex(StateError, "AI-call limit"):
-                self.submit(session)
+                self.submit(session, turn="a2")
         self.assertEqual(self.learning()["evidence"][0]["student_response"], WRONG)
 
-    def test_each_kind_of_invalid_reply_is_bounded_the_same_way(self):
+    def test_each_kind_of_invalid_reply_is_retried_once_then_ends_in_the_fallback(self):
         bad = [reply("partial", message=""), reply("partial", citations=[{"source_id": "nope", "pdf_page": 1}]),
                {"message": "x"}, reply("none")]
         for scripted in bad:
@@ -351,20 +369,17 @@ class DiagnosisTests(unittest.TestCase):
                 self.setUp()
                 session = self.create()
                 self.provider.override = scripted
-                for _ in range(tutoring.MAX_REJECTED_REPLIES):
-                    with self.assertRaises(ReasoningError):
-                        self.submit(session)
-                self.assertEqual(self.submit(session)["tutor"]["text"], tutoring.FALLBACK_FEEDBACK)
+                done = self.submit(session)
+                self.assertEqual(len(self.provider.calls), 2)
+                self.assertTrue(done["tutor"]["text"].startswith(tutoring.FALLBACK_FEEDBACK))
 
     def test_a_hint_that_keeps_leaking_ends_in_a_plain_fallback_with_no_help_recorded(self):
         session = self.create()
         self.hint(session, "h1")
         self.provider.override = reply("none", message=f"It is: {ANSWER_TEXT}")
-        for _ in range(tutoring.MAX_REJECTED_REPLIES):
-            with self.assertRaises(ReasoningError):
-                self.hint(session, "h2")
         done = self.hint(session, "h2")
-        self.assertEqual(done["tutor"]["text"], tutoring.FALLBACK_HINT)
+        self.assertEqual(done["status"], "COMPLETE")
+        self.assertNotIn(ANSWER_TEXT, json.dumps(done))
         self.assertEqual(done["session"]["hint_level"], 1)  # no level-2 help was given or counted
 
     def test_feedback_may_echo_the_students_own_words_but_not_the_answer_they_did_not_give(self):

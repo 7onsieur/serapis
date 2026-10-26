@@ -601,6 +601,8 @@
       .topbar { padding: 0.7rem 1rem; }
       main { padding: var(--sp-4) 1rem var(--sp-6); }
       .brand-text span { display: none; }
+      .tag { white-space: normal; max-width: 100%; }
+      .response-card, .rendered-output { max-width: 100%; }
     }
 
     @media (max-width: 48rem) {
@@ -646,9 +648,18 @@
         if (button && !button.disabled) {
           button.disabled = true;
           button.textContent = "Working…";
+          button.setAttribute("aria-busy", "true");
         }
       });
     });
+    // After an action the result (or the error) may be far below the buttons: bring it into view and
+    // give it keyboard/screen-reader focus so the student does not have to hunt for it.
+    var outcome = document.querySelector(".action-error, .action-result");
+    if (outcome) {
+      outcome.setAttribute("tabindex", "-1");
+      outcome.scrollIntoView({ block: "start" });
+      outcome.focus({ preventScroll: true });
+    }
   </script>
 </body>
 </html>
