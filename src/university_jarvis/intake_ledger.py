@@ -16,7 +16,7 @@ from pathlib import Path
 from typing import Any
 
 from .sources import PROJECT_ROOT
-from .state import StateError, personal_data_dir
+from .state import env_setting, StateError, personal_data_dir
 
 LEDGER_SCHEMA_VERSION = 1
 
@@ -26,7 +26,7 @@ class LedgerError(StateError):
 
 
 def default_ledger_path() -> Path:
-    configured = os.environ.get("JARVIS_LEDGER_FILE")
+    configured = env_setting("LEDGER_FILE")
     if configured:
         return Path(configured)
     legacy = PROJECT_ROOT / "data" / "intake-ledger.json"

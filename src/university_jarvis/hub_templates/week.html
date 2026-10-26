@@ -1,5 +1,6 @@
 {% extends "base.html" %}
-{% block title %}{{ module.module_code }} Week {{ week.week }} — Serapis by Limitless Hub{% endblock %}
+{% block title %}{{ module.module_code }} Week {{ week.week }} — Serapis by Limitless Hub
+{% endblock %}
 {% block content %}
 <p class="breadcrumb"><a href="/modules">Modules</a> &rarr; <a href="/modules/{{ module.module_code }}">{{ module.module_code }}</a> &rarr; Week {{ week.week }}</p>
 <div class="page-head">
@@ -14,6 +15,19 @@
     {% if not week.in_academic_state and not week.in_intake_ledger %}<span class="unknown">neither source</span>{% endif %}
   </p>
 </div>
+
+
+<nav class="section" id="path" aria-label="Study path for this week">
+  <div class="section-head"><h2>Your path this week</h2><span class="kicker">Prepare &rarr; Attend &rarr; Reflect &rarr; TEACH &rarr; Quiz &rarr; REVISE &rarr; Export</span></div>
+  {% if journey.next %}<p><strong>Next:</strong> {{ journey.next.label }} &mdash; {{ journey.next.detail }}</p>{% endif %}
+  <ol class="journey">
+    {% for step in journey.steps %}
+    <li class="{{ 'done' if step.done else ('next' if step == journey.next else '') }}"><span class="mark" aria-hidden="true">{{ '✓' if step.done else ('→' if step == journey.next else '·') }}</span>
+      <span>{% if step.href %}<a href="{{ step.href }}">{{ step.label }}</a>{% else %}{{ step.label }}{% endif %}{% if step.done %} <span class="tag trust-confirmed">done</span>{% elif step.offline %} <span class="tag">offline</span>{% elif step.optional %} <span class="tag">any time</span>{% endif %}<span class="detail">{{ step.detail }}</span></span></li>
+    {% endfor %}
+  </ol>
+  <p class="section-note">A step is marked done only when saved data shows it. Reflecting needs no AI and is the quickest way to make TEACH and REVISE fit you.</p>
+</nav>
 
 <div class="section">
   <div class="section-head">
@@ -73,6 +87,72 @@
     </div>
   {% endif %}
 </div>
+
+
+<section class="section" id="reflect">
+  <div class="section-head"><h2>Reflect after the lecture</h2><span class="kicker">Your words &middot; saved on this device &middot; no AI</span></div>
+  <p class="section-note">Write what you remember while it is fresh. Everything here is <strong>student-reported</strong>: it is your recollection, not verified university material. Fill in only what you want to; each save adds a new dated entry, and nothing you saved earlier is overwritten.</p>
+  <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/after-lecture" class="reflect-form">
+    <label for="r-covered">What did the lecture cover?</label>
+    <textarea id="r-covered" name="covered" rows="3" maxlength="8000" placeholder="The main topics, in your own words"></textarea>
+    <label for="r-understood">What did you understand? <span class="hint">(one point per line)</span></label>
+    <textarea id="r-understood" name="understood" rows="3" maxlength="8000"></textarea>
+    <label for="r-uncertainty">What was confusing? <span class="hint">(one per line &mdash; these become open items TEACH can pick up)</span></label>
+    <textarea id="r-uncertainty" name="uncertainty" rows="3" maxlength="8000"></textarea>
+    <label for="r-question">What questions do you want answered? <span class="hint">(one per line)</span></label>
+    <textarea id="r-question" name="question" rows="3" maxlength="8000"></textarea>
+    <label for="r-examples">Examples the lecturer mentioned <span class="hint">(one per line)</span></label>
+    <textarea id="r-examples" name="examples" rows="2" maxlength="8000"></textarea>
+    <label for="r-emphasis">What did the lecturer emphasise? <span class="hint">(one per line)</span></label>
+    <textarea id="r-emphasis" name="emphasis" rows="2" maxlength="8000"></textarea>
+    <label for="r-assessment">Anything said about assessments? <span class="hint">(one per line)</span></label>
+    <textarea id="r-assessment" name="assessment" rows="2" maxlength="8000"></textarea>
+    <p class="note">Assessment remarks are saved as things you heard. They never become a deadline, weighting or requirement; check those with Blackboard, the module handbook or your lecturer.</p>
+    <label for="r-notes">Your own notes and reflections</label>
+    <textarea id="r-notes" name="notes" rows="4" maxlength="8000" placeholder="Free-form notes. A line starting &quot;Question:&quot; or &quot;Uncertainty:&quot; is also recorded as an open item."></textarea>
+    <button type="submit">Save reflection</button>
+  </form>
+
+  <h3>Your reflections so far{% if reflections.count %} <span class="tag">{{ reflections.count }} saved</span>{% endif %}</h3>
+  {% if not reflections.captures %}
+  <div class="card"><p class="empty">Nothing saved yet. After your lecture, use the form above.</p></div>
+  {% endif %}
+  {% for capture in reflections.captures %}
+  <div class="card reflection-capture">
+    <p class="note"><strong>Student-reported</strong> &middot; saved {{ capture.captured_at }}</p>
+    {% for entry in capture.entries %}
+    <div class="reflection-entry status-{{ entry.status }}">
+      <p><span class="kicker">{{ entry.label }}</span>
+        {% if entry.status == 'corrected' %}<span class="tag">corrected</span>{% elif entry.status == 'withdrawn' %}<span class="tag">withdrawn</span>{% elif entry.status == 'resolved' %}<span class="tag trust-confirmed">marked answered</span>{% endif %}<br>
+        <span class="{{ 'struck' if entry.status == 'withdrawn' else '' }}" style="white-space: pre-wrap">{{ entry.text }}</span></p>
+      {% if entry.history %}
+      <details><summary>History ({{ entry.history|length }})</summary>
+        <p class="note">Originally written: <span style="white-space: pre-wrap">{{ entry.original_text }}</span></p>
+        <ul>{% for h in entry.history %}<li>{{ h.corrected_at }} &mdash; {{ h.action }}{% if h.corrected_text %}: {{ h.corrected_text }}{% endif %}{% if h.reason %} (reason: {{ h.reason }}){% endif %}</li>{% endfor %}</ul>
+      </details>
+      {% endif %}
+      <details><summary>Correct or update this entry</summary>
+        <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/reflections/correct">
+          <input type="hidden" name="entry_id" value="{{ entry.entry_id }}">
+          <label for="c-{{ entry.entry_id }}">{{ 'Write the entry again' if entry.status == 'withdrawn' else 'Corrected wording' }}</label>
+          <textarea id="c-{{ entry.entry_id }}" name="new_text" rows="2" maxlength="8000">{{ entry.text }}</textarea>
+          <label for="w-{{ entry.entry_id }}">Why? <span class="hint">(optional)</span></label>
+          <input type="text" id="w-{{ entry.entry_id }}" name="reason" maxlength="500">
+          <button type="submit" name="action" value="correct">Save correction</button>
+          {% if entry.status != 'withdrawn' %}<button type="submit" name="action" value="withdraw">Withdraw entry</button>{% endif %}
+          {% if entry.can_resolve and entry.status in ('active', 'corrected') %}<button type="submit" name="action" value="resolve">Mark answered</button>{% endif %}
+          {% if entry.can_resolve and entry.status == 'resolved' %}<button type="submit" name="action" value="reopen">Reopen</button>{% endif %}
+        </form>
+        <p class="note">The original wording stays in your record; a correction is added beside it.</p>
+      </details>
+    </div>
+    {% endfor %}
+  </div>
+  {% endfor %}
+  {% if learning and learning.reflection_step %}
+  <div class="card"><strong>From your reflections:</strong> {{ learning.reflection_step.action }}: &ldquo;{{ learning.reflection_step.topic }}&rdquo;. {{ learning.reflection_step.reason }}</div>
+  {% endif %}
+</section>
 
 {% if action_error %}
 <div class="action-error" role="alert">
@@ -181,7 +261,7 @@
 </div>
 {% endif %}
 
-<div class="section">
+<div class="section" id="actions">
   <div class="section-head"><h2>Actions</h2></div>
 
   <div class="action-grid">
@@ -220,22 +300,26 @@
       </form>
     </div>
 
-    <div class="action-form wide">
-      <h3><span aria-hidden="true">✎</span> After-lecture note <span class="badge writes">Writes to your record</span></h3>
-      <p class="note">Local write only -- no network or model call. Requires an existing workspace for this week; label a line "Uncertainty: ..." or "Question: ..." to record it as open, or use the fields below.</p>
-      <form method="post" action="/modules/{{ module.module_code }}/weeks/{{ week.week }}/after-lecture">
-        <label>Notes
-          <textarea name="notes" rows="4" placeholder="Free-form lecture notes"></textarea>
-        </label>
-        <label>Uncertainty
-          <input type="text" name="uncertainty" placeholder="Something you did not understand">
-        </label>
-        <label>Question
-          <input type="text" name="question" placeholder="An unresolved question">
-        </label>
-        <button type="submit">Save note</button>
-      </form>
-    </div>
   </div>
 </div>
+
+<section class="section" id="export">
+  <div class="section-head"><h2>Export your study material</h2><span class="kicker">Built from your record &middot; no AI, no cost</span></div>
+  {% if has_record %}
+  <div class="action-grid">
+    <div class="action-form">
+      <h3><span aria-hidden="true">▤</span> Word study pack</h3>
+      <p class="note">A formatted .docx with sources, preparation, your reflections, taught topics, practice questions (no answers), revision priorities and open questions. Source material, your notes and AI-generated aids are labelled separately. Download again any time after you add more.</p>
+      <a class="button" href="/modules/{{ module.module_code }}/weeks/{{ week.week }}/export/study-pack" download>Download study pack (.docx)</a>
+    </div>
+    <div class="action-form">
+      <h3><span aria-hidden="true">▥</span> NotebookLM source</h3>
+      <p class="note">A Markdown file to upload yourself in Google NotebookLM (add it as a source there). Serapis does not connect to NotebookLM. Whatever NotebookLM says is a study aid, not university evidence, and is never imported back.</p>
+      <a class="button" href="/modules/{{ module.module_code }}/weeks/{{ week.week }}/export/notebooklm" download>Download NotebookLM file (.md)</a>
+    </div>
+  </div>
+  {% else %}
+  <div class="card"><p class="empty">Save a reflection or prepare this week first, then your exports appear here.</p></div>
+  {% endif %}
+</section>
 {% endblock %}

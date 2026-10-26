@@ -572,20 +572,29 @@ class FullWorkspaceLifecycleTests(unittest.TestCase):
             self.assertIn("teach", week_page)
             self.assertIn("recorded", week_page)
 
-    def test_after_lecture_before_any_build_reports_honest_error_not_a_crash(self) -> None:
+    def test_after_lecture_before_any_build_saves_reflection_without_ai_provider(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             workspace_root = Path(tmp) / "workspace"
-            app = create_app(state=self._state(), ledger=new_ledger(), workspace_root=workspace_root)
+            app = create_app(state=self._state(), ledger=new_ledger(), workspace_root=workspace_root,
+                             reasoning_provider=NoCallProvider())
             client = TestClient(app)
-
             response = client.post(
                 "/modules/SYN101/weeks/1/after-lecture", data={"notes": "Some free notes"}
             )
+            self.assertEqual(response.status_code, 200)
+            self.assertNotIn("Action failed", response.text)
+            record = json.loads((workspace_root / "SYN101" / "week-01" / "academic-record.json").read_text())
+            self.assertEqual(record["workflows"]["prepare_me"]["status"], "not_generated")
+            self.assertEqual(record["workflows"]["after_lecture"]["captures"][0]["entries"]["lecture_notes"],
+                             ["Some free notes"])
 
-        self.assertEqual(response.status_code, 200)
-        self.assertIn("Action failed", response.text)
-        self.assertIn("run workspace first", response.text)
-        self.assertFalse(workspace_root.exists())  # no partial/corrupt write
+    def test_empty_reflection_before_any_build_writes_nothing(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            workspace_root = Path(tmp) / "workspace"
+            client = TestClient(create_app(state=self._state(), ledger=new_ledger(), workspace_root=workspace_root))
+            response = client.post("/modules/SYN101/weeks/1/after-lecture", data={"notes": "  "})
+            self.assertIn("Action failed", response.text)
+            self.assertFalse((workspace_root / "SYN101" / "week-01" / "academic-record.json").exists())  # no partial write
 
     def test_after_lecture_with_no_fields_reports_honest_validation_error(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -379,7 +379,7 @@ def _private_dir(directory: Path) -> None:
 
     Sessions hold transcripts and reference answers. A ``.gitignore`` containing ``*``
     keeps every file here (sessions, locks, temp files) out of any repository the
-    workspace sits in, whatever ``JARVIS_WORKSPACE_DIR`` points at.
+    workspace sits in, whatever ``SERAPIS_WORKSPACE_DIR`` points at.
     """
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
     ignore = directory / ".gitignore"

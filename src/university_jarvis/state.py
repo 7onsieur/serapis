@@ -69,8 +69,13 @@ def normalize_academic_truth(state: dict[str, Any]) -> dict[str, Any]:
     return normalized
 
 
+def env_setting(name: str) -> str | None:
+    """``SERAPIS_<name>``, falling back to the legacy ``JARVIS_<name>`` so earlier setups keep working."""
+    return os.environ.get(f"SERAPIS_{name}") or os.environ.get(f"JARVIS_{name}") or None
+
+
 def default_state_path() -> Path:
-    configured = os.environ.get("JARVIS_STATE_FILE")
+    configured = env_setting("STATE_FILE")
     if configured:
         return Path(configured)
 

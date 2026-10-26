@@ -26,6 +26,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from .reflections import CLOSED_ITEM_STATUSES
 from .academic_picture import AcademicPicture
 
 STUDY_STATE_UNKNOWN = "STUDY_STATE_UNKNOWN"
@@ -86,6 +87,8 @@ def _open_unresolved_items(picture: AcademicPicture) -> list[AttentionItem]:
             if study_state.unresolved_items_status != "open":
                 continue
             for entry in study_state.unresolved_items:
+                if isinstance(entry, dict) and entry.get("status") in CLOSED_ITEM_STATUSES:
+                    continue  # superseded, withdrawn or answered by the student: history, not attention
                 items.append(
                     AttentionItem(
                         kind=OPEN_UNRESOLVED_ITEM,

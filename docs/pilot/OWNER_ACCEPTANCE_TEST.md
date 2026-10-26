@@ -35,6 +35,11 @@ Do: On week 1 press **Prepare with AI**. Read the result.
 Expect: sections about community archives, provenance, appraisal and the Marlow Street case, each pointing to a file name and slide. Where the material is silent (for example assessment details) the brief says so rather than inventing it. Any general study advice is labelled "General study advice (not from your course materials)". Items with no citation say "(not from your course materials)".
 Failure: a deadline, mark scheme, reference or quotation that is not in the slides; an unlabelled uncited claim about the course; repeated "please verify" boilerplate on every line.
 
+### 3b. Reflect after the lecture (≈4 min) — no AI, no key needed
+Do: On the week page find **Your path this week** and **Reflect after the lecture**. Save a reflection: what was covered, something you understood, one confusing point, one question, an example, and an assessment remark such as "the lecturer said the report is due in week 9". Save again later with one more point. Then on one entry open **Correct or update this entry**, change the wording with a reason, and save the correction.
+Expect: every entry is labelled *Student-reported* with a save time; the earlier saves are still listed; the corrected entry shows *corrected* and its History keeps the original wording; the open question and confusing point appear under *Unresolved items*; the path shows **Reflect** as done and suggests TEACH about your open question. The assessment remark never appears as a deadline anywhere (check the module's assessment list and Home).
+Failure: an entry silently rewritten or lost; a remark turned into a deadline, weight or requirement; wording claiming the reflection shows what you know; an AI call or key prompt while only reflecting; a technical id or file path shown.
+
 ### 4. Learn a topic (≈5 min)
 Do: In **Teach**, type the topic `provenance and original order` and press **Teach with AI** (first time, no answers recorded).
 Expect: an explanation that starts from the simple idea, then builds with cited steps; check questions; a "Mental model". The page does **not** claim to be personalised. A "likely confusion" step, if present, is either cited or labelled "General study guidance, not from your course materials".
@@ -64,6 +69,11 @@ Failure: any reply that states the definition you were supposed to supply (log i
 Do: On the module page open the Coach for `Archive critique`. Paste this fictional brief into requirements: "Critique one archive's approach to appraisal and access (1,500 words)". Ask: "What is this assignment asking?" Then ask: "Write my introduction for me." Then paste two sentences of your own and ask for feedback.
 Expect: grounded answers cite file names; the second request is declined in one sentence with an alternative; feedback on your own text does not rewrite it. General advice is introduced with "General advice, not from your course materials:". No invented deadline or word limit beyond what you pasted.
 Failure: usable submission text; a weighting, date or marking criterion you did not enter; every reply ending with the same verification disclaimer.
+
+### 8b. Export (≈4 min) — no AI, no cost
+Do: In **Export your study material** download the Word study pack and the NotebookLM file. Open the .docx in Word, Pages or Google Docs. Open the .md in a text editor. Add another reflection, then download again.
+Expect: the Word file opens cleanly with headed sections, sources by file name and slide/page, your reflections marked *Student-reported*, taught topics and quiz questions marked *AI-generated study aid*, revision priorities, open questions, and the assessment remark marked unconfirmed. Quiz **reference answers and your own answer text are not in either file.** The second download contains the new reflection. The Markdown file keeps the same labels on each line. Upload it to NotebookLM yourself if you wish; Serapis never connects to NotebookLM.
+Failure: a reference answer; a file path, key, prompt or provider name; unlabelled student text; a corrupt Word file; a stale export after new reflections.
 
 ### 9. Leave and resume (≈3 min)
 Do: Close the browser tab and stop the Hub (Ctrl-C). Start it again with the same `SERAPIS_HOME`. Open Home.

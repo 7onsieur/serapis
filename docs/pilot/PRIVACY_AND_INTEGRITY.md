@@ -12,6 +12,7 @@ Your profile, modules, assessments, imported files, study attempts, tutor transc
 |---|---|---|
 | Prepare, Teach, Quiz, Revise, Tutor turn, evaluate an answer, one-off assignment brief | OpenAI | selected excerpts from your course files for that week or question, assessment details, and (for evaluation/tutoring) your answer |
 | Message the Assignment Coach | OpenAI | your message, your plan notes, evidence list and open questions, the requirements and criteria, recent turns, and a few retrieved excerpts from your module's files |
+| Reflections, corrections and the Word / NotebookLM downloads | nobody | — (built on your computer; a reflection is sent to the AI only if you later press Revise, which sends your open questions, confusing points and unconfirmed remarks along with the sources) |
 | Everything else (setup, import, plan editing, viewing pages, demo) | nobody | — |
 
 Check your institution's rules on putting course material into third-party AI services **before** using AI buttons, and the provider's terms. Blackboard and Google Drive integrations exist but are **out of scope for the pilot**; do not use them.
@@ -41,3 +42,11 @@ Passwords or API keys in the Hub, other people's personal data, or confidential 
 - With "sharing my own wording" the coach is asked for feedback, not a rewrite, but a reply that models better wording in a few sentences may pass. Treat any such text as a suggestion to think about, not words to paste.
 - Everything you type, including pasted drafts, is stored locally in plain text in your Serapis folder and sent to the AI provider with each message.
 - Nothing here detects plagiarism or AI use, and nothing replaces your institution's rules. Declare AI assistance where required.
+
+## Reflections and exports
+
+- Reflections are *student-reported*. They are never promoted to university facts: an assessment remark cannot become a deadline, weight or requirement, and exports label it unconfirmed.
+- Corrections are appended; the original wording stays in your local record. Exports show the current wording and mark it "corrected by student".
+- Exports are built from your local record when you download them. They exclude quiz reference answers, the text of your own answers, provider and prompt details, cache keys, file paths and credentials. They do include your own reflection text, so treat a downloaded file as personal data.
+- The NotebookLM file is for you to upload manually. Serapis has no NotebookLM connection and only accepts PDF and PowerPoint as materials, so NotebookLM output cannot come back in as evidence.
+- Pasted text is escaped so it cannot add headings, links, HTML or fake "University source" labels to an export.

@@ -13,17 +13,17 @@ from typing import Any
 
 from .locking import record_lock
 from .sources import PROJECT_ROOT
-from .state import StateError, _validate_state, normalize_academic_truth, personal_data_dir, save_state
+from .state import env_setting, StateError, _validate_state, normalize_academic_truth, personal_data_dir, save_state
 
 
 def personal_state_path() -> Path:
-    override = os.environ.get("JARVIS_STATE_FILE")
+    override = env_setting("STATE_FILE")
     if override:
         target = Path(override).expanduser()
         if target.is_file():
             try:
                 if json.loads(target.read_text(encoding="utf-8")).get("dataset_kind") == "fictional_example":
-                    raise StateError("JARVIS_STATE_FILE points to the read-only fictional sample. Unset that override before creating personal setup data.")
+                    raise StateError("SERAPIS_STATE_FILE points to the read-only fictional sample. Unset that override before creating personal setup data.")
             except json.JSONDecodeError:
                 pass
         return target

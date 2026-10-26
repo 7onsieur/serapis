@@ -360,6 +360,9 @@ def create_app(
             quizzes = record.get("learning", {}).get("quiz_history", {}).get("attempts", [])
             if quizzes:
                 quiz_questions = [{"quiz_id": quizzes[-1]["quiz_id"], **q} for q in quizzes[-1].get("questions", [])]
+        root = request.app.state.hub_workspace_root
+        reflections = hub_service.reflection_overview(module["module_code"], week["week"], workspace_root=root)
+        journey = hub_service.week_journey(module["module_code"], week["week"], workspace_root=root)
         tutor = None
         if learning is not None:
             # Read-only: lists session files; never writes or calls the provider.
@@ -381,6 +384,9 @@ def create_app(
                 "action_evidence": _action_evidence_text(action_result),
                 "action_error": action_error,
                 "learning": learning,
+                "reflections": reflections,
+                "journey": journey,
+                "has_record": bool(week.get("study_state", {}).get("record_found")),
                 "quiz_questions": quiz_questions,
                 "active_task": active_task,
                 "learning_recommendation": learning_recommendation,
@@ -944,18 +950,31 @@ def create_app(
             return found
         module, _week = found
         form = await _form_fields(request)
-        notes_text = form.get("notes", "").strip()
-        uncertainty_text = form.get("uncertainty", "").strip()
-        question_text = form.get("question", "").strip()
+
+        def lines(name: str) -> list[str] | None:
+            """One entry per non-empty line; a blank field records nothing."""
+            values = [line.strip() for line in form.get(name, "").splitlines() if line.strip()]
+            return values or None
+
+        def block(name: str) -> list[str] | None:
+            text = form.get(name, "").strip()
+            return [text] if text else None
+
         action_result: dict[str, Any] | None = None
         action_error: str | None = None
         try:
             action_result = hub_service.capture_after_lecture_note(
                 module["module_code"],
                 week_number,
-                notes=[notes_text] if notes_text else None,
-                uncertainties=[uncertainty_text] if uncertainty_text else None,
-                questions=[question_text] if question_text else None,
+                covered=block("covered"),
+                notes=block("notes"),
+                understood=lines("understood"),
+                uncertainties=lines("uncertainty"),
+                questions=lines("question"),
+                examples_cases=lines("examples"),
+                assessment_comments=lines("assessment"),
+                lecturer_emphasis=lines("emphasis"),
+                state=_state(request),
                 workspace_root=request.app.state.hub_workspace_root,
             )
         except StateError as exc:
@@ -965,6 +984,62 @@ def create_app(
             return refreshed
         module, week = refreshed
         return _render_week(request, module, week, action_result=action_result, action_error=action_error)
+
+    @app.post(
+        "/modules/{module_code}/weeks/{week_number}/reflections/correct", response_class=HTMLResponse
+    )
+    async def correct_reflection(request: Request, module_code: str, week_number: int) -> HTMLResponse:
+        """LOCAL WRITE only. Appends a correction; the original reflection is never edited."""
+        found = _week_or_404(request, module_code, week_number)
+        if isinstance(found, HTMLResponse):
+            return found
+        module, _week = found
+        form = await _form_fields(request)
+        action_result: dict[str, Any] | None = None
+        action_error: str | None = None
+        try:
+            action_result = hub_service.correct_reflection(
+                module["module_code"],
+                week_number,
+                form.get("entry_id", ""),
+                action=form.get("action", ""),
+                new_text=form.get("new_text"),
+                reason=form.get("reason"),
+                workspace_root=request.app.state.hub_workspace_root,
+            )
+        except StateError as exc:
+            action_error = str(exc)
+        refreshed = _week_or_404(request, module_code, week_number)
+        if isinstance(refreshed, HTMLResponse):
+            return refreshed
+        module, week = refreshed
+        return _render_week(request, module, week, action_result=action_result, action_error=action_error)
+
+    @app.get("/modules/{module_code}/weeks/{week_number}/export/{kind}")
+    def export_download(request: Request, module_code: str, week_number: int, kind: str) -> Response:
+        """READ-ONLY download of the week's study pack (.docx) or NotebookLM source (.md).
+
+        Built in memory from the current record on every request: no local write, no model call, no
+        network. The NotebookLM file is for manual upload only; nothing is ever imported back.
+        """
+        found = _week_or_404(request, module_code, week_number)
+        if isinstance(found, HTMLResponse):
+            return found
+        module, _week = found
+        try:
+            filename, media_type, content = hub_service.export_week(
+                module["module_code"], week_number, kind, workspace_root=request.app.state.hub_workspace_root)
+        except StateError as exc:
+            return _not_found(request, str(exc))
+        return Response(
+            content,
+            media_type=media_type,
+            headers={
+                "Content-Disposition": f'attachment; filename="{filename}"',
+                "Cache-Control": "no-store",
+                "X-Content-Type-Options": "nosniff",
+            },
+        )
 
     # ----- Assignment Coach ------------------------------------------------------------------------------
     # GET is read-only. Every POST is one explicit action; only ``message``/``retry`` can call the model,

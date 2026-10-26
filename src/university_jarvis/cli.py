@@ -76,7 +76,7 @@ from .reasoning import (
     render_sectioned_brief,
     render_teach_brief,
 )
-from .state import StateError, get_module, load_state
+from .state import env_setting, StateError, get_module, load_state
 from .workflows import build_assignment_context, build_prepare_context, build_week_context
 from .workspace import capture_after_lecture, materialize_week_workspace, teach_week
 
@@ -123,6 +123,7 @@ def _parser() -> argparse.ArgumentParser:
     after_lecture.add_argument("--week", required=True, type=int, help="teaching week number")
     after_lecture.add_argument("--notes", action="append", help="free-form lecture notes")
     after_lecture.add_argument("--notes-file", type=Path, help="UTF-8 local notes file")
+    after_lecture.add_argument("--covered", action="append", help="what the lecture covered")
     after_lecture.add_argument("--emphasis", action="append", help="lecturer emphasis")
     after_lecture.add_argument("--example", action="append", help="example or case discussed")
     after_lecture.add_argument("--understood", action="append", help="something you understood")
@@ -167,8 +168,8 @@ def _parser() -> argparse.ArgumentParser:
         help="text to match against your Blackboard course memberships; defaults to the module code",
     )
     blackboard_fetch.add_argument(
-        "--base-url", default=os.environ.get("JARVIS_BLACKBOARD_BASE_URL"),
-        help="Blackboard host (or set JARVIS_BLACKBOARD_BASE_URL)"
+        "--base-url", default=env_setting("BLACKBOARD_BASE_URL"),
+        help="Blackboard host (or set SERAPIS_BLACKBOARD_BASE_URL)"
     )
 
     intake = subparsers.add_parser(
@@ -185,8 +186,8 @@ def _parser() -> argparse.ArgumentParser:
         help="text to match against your Blackboard course memberships; defaults to the module code",
     )
     intake.add_argument(
-        "--base-url", default=os.environ.get("JARVIS_BLACKBOARD_BASE_URL"),
-        help="Blackboard host (or set JARVIS_BLACKBOARD_BASE_URL)"
+        "--base-url", default=env_setting("BLACKBOARD_BASE_URL"),
+        help="Blackboard host (or set SERAPIS_BLACKBOARD_BASE_URL)"
     )
     intake.add_argument(
         "--no-drive-sync",
@@ -209,8 +210,8 @@ def _parser() -> argparse.ArgumentParser:
         help="text to match against your Blackboard course memberships; defaults to the module code",
     )
     check.add_argument(
-        "--base-url", default=os.environ.get("JARVIS_BLACKBOARD_BASE_URL"),
-        help="Blackboard host (or set JARVIS_BLACKBOARD_BASE_URL)"
+        "--base-url", default=env_setting("BLACKBOARD_BASE_URL"),
+        help="Blackboard host (or set SERAPIS_BLACKBOARD_BASE_URL)"
     )
     check.add_argument(
         "--sync-to-drive",
@@ -227,8 +228,8 @@ def _parser() -> argparse.ArgumentParser:
         ),
     )
     check_university.add_argument(
-        "--base-url", default=os.environ.get("JARVIS_BLACKBOARD_BASE_URL"),
-        help="Blackboard host (or set JARVIS_BLACKBOARD_BASE_URL)"
+        "--base-url", default=env_setting("BLACKBOARD_BASE_URL"),
+        help="Blackboard host (or set SERAPIS_BLACKBOARD_BASE_URL)"
     )
     check_university.add_argument(
         "--sync-to-drive",
@@ -244,8 +245,8 @@ def _parser() -> argparse.ArgumentParser:
         ),
     )
     blackboard_auth.add_argument(
-        "--base-url", default=os.environ.get("JARVIS_BLACKBOARD_BASE_URL"),
-        help="Blackboard host (or set JARVIS_BLACKBOARD_BASE_URL)"
+        "--base-url", default=env_setting("BLACKBOARD_BASE_URL"),
+        help="Blackboard host (or set SERAPIS_BLACKBOARD_BASE_URL)"
     )
 
     drive_sync = subparsers.add_parser(
@@ -566,7 +567,7 @@ def _resolve_blackboard_client(base_url: str) -> contextlib.AbstractContextManag
     """
     if not base_url:
         raise BlackboardError(
-            "Blackboard host is required. Set JARVIS_BLACKBOARD_BASE_URL or pass --base-url."
+            "Blackboard host is required. Set SERAPIS_BLACKBOARD_BASE_URL or pass --base-url."
         )
     if browser_profile_exists():
         return open_browser_client(base_url=base_url)
@@ -737,6 +738,7 @@ def main(
                 args.week,
                 notes=args.notes,
                 notes_file=args.notes_file,
+                covered=args.covered,
                 lecturer_emphasis=args.emphasis,
                 examples_cases=args.example,
                 understood=args.understood,
@@ -824,7 +826,7 @@ def main(
         elif args.command == "blackboard-auth":
             if not args.base_url:
                 raise BlackboardError(
-                    "Blackboard host is required. Set JARVIS_BLACKBOARD_BASE_URL or pass --base-url."
+                    "Blackboard host is required. Set SERAPIS_BLACKBOARD_BASE_URL or pass --base-url."
                 )
             run_interactive_authentication(base_url=args.base_url)
             print("Serapis browser profile authenticated (Auth V2).")

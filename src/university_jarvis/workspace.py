@@ -30,23 +30,29 @@ from .reasoning import (
     load_cached_prepare_brief,
 )
 from .locking import record_lock
+from .reflections import (
+    ASSESSMENT_CAVEAT,
+    CAPTURE_FIELDS,
+    CLOSED_ITEM_STATUSES,
+    CORRECTION_ACTIONS,
+    MAX_ENTRIES_PER_FIELD,
+    MAX_ENTRY_CHARS,
+    OPEN_ITEM_FIELDS,
+    effective_entries,
+    effective_values,
+    make_entry_id,
+    parse_entry_id,
+    resolved_values,
+)
 from .sources import PROJECT_ROOT, render_source_location
-from .state import StateError, personal_data_dir
+from .state import env_setting, StateError, personal_data_dir
 from .workflows import build_prepare_context, build_week_context
 
 
 WORKSPACE_SCHEMA_VERSION = 4
 LEARNING_CAPABILITIES = ("RECALL", "EXPLANATION", "APPLICATION")
 
-_CAPTURE_FIELDS = (
-    ("lecture_notes", "Lecture notes"),
-    ("lecturer_emphasis", "Lecturer emphasis"),
-    ("examples_cases", "Examples and cases discussed"),
-    ("understood", "What I understood"),
-    ("uncertainties", "What I did not understand"),
-    ("questions", "Questions I still have"),
-    ("assessment_comments", "Assessment comments"),
-)
+_CAPTURE_FIELDS = CAPTURE_FIELDS
 
 
 def _knowledge_classification() -> dict[str, dict[str, str]]:
@@ -128,7 +134,7 @@ class TeachResult:
 
 
 def default_workspace_root() -> Path:
-    configured = os.environ.get("JARVIS_WORKSPACE_DIR")
+    configured = env_setting("WORKSPACE_DIR")
     if configured:
         return Path(configured)
     legacy = PROJECT_ROOT / "workspace"
@@ -174,13 +180,7 @@ def _source_record(source: dict[str, Any]) -> dict[str, Any]:
     }
 
 
-def build_academic_record(
-    context: dict[str, Any],
-    result: PreparationResult,
-    provider: ReasoningProvider,
-) -> dict[str, Any]:
-    """Build the canonical record from known state and one cached brief."""
-    usage = result.usage.to_dict() if result.usage else None
+def _base_record(context: dict[str, Any], prepare_me: dict[str, Any]) -> dict[str, Any]:
     return {
         "workspace_schema_version": WORKSPACE_SCHEMA_VERSION,
         "record_type": "academic_week",
@@ -194,20 +194,7 @@ def build_academic_record(
         },
         "sources": [_source_record(source) for source in context["sources"]],
         "workflows": {
-            "prepare_me": {
-                "status": "completed",
-                "result": result.brief.to_dict(),
-                "generation": {
-                    "source": "matching_local_cache",
-                    "cache_status": result.cache_status,
-                    "cache_key": result.cache_key,
-                    "prompt_version": PREPARE_PROMPT_VERSION,
-                    "objective_instruction_version": OBJECTIVE_INSTRUCTION_VERSION,
-                    "schema_version": PREPARATION_SCHEMA_VERSION,
-                    "provider": provider.cache_identity(),
-                    "usage": usage,
-                },
-            },
+            "prepare_me": prepare_me,
             "after_lecture": {"status": "not_recorded", "captures": []},
             "teach": {"status": "not_recorded", "interactions": []},
             "quiz": {"status": "not_recorded"},
@@ -230,12 +217,56 @@ def build_academic_record(
     }
 
 
+def build_academic_record(
+    context: dict[str, Any],
+    result: PreparationResult,
+    provider: ReasoningProvider,
+) -> dict[str, Any]:
+    """Build the canonical record from known state and one cached brief."""
+    usage = result.usage.to_dict() if result.usage else None
+    return _base_record(
+        context,
+        {
+            "status": "completed",
+            "result": result.brief.to_dict(),
+            "generation": {
+                "source": "matching_local_cache",
+                "cache_status": result.cache_status,
+                "cache_key": result.cache_key,
+                "prompt_version": PREPARE_PROMPT_VERSION,
+                "objective_instruction_version": OBJECTIVE_INSTRUCTION_VERSION,
+                "schema_version": PREPARATION_SCHEMA_VERSION,
+                "provider": provider.cache_identity(),
+                "usage": usage,
+            },
+        },
+    )
+
+
+def _bare_record(state: dict[str, Any], module_code: str, week_number: int) -> dict[str, Any]:
+    """An in-memory record with no AI preparation, so reflections work without a provider.
+
+    Built only from local state and the week's selected sources (a local text extraction, no model call).
+    A later "Prepare" fills in ``prepare_me`` and keeps everything else.
+    """
+    context = build_prepare_context(state, module_code, week_number)
+    return _base_record(context, {"status": "not_generated", "result": {}})
+
+
 def _qn(namespace: str, local: str) -> str:
     return f"{{{namespace}}}{local}"
 
 
 def _xml_bytes(element: ET.Element) -> bytes:
     return ET.tostring(element, encoding="utf-8", xml_declaration=True)
+
+
+_XML_ILLEGAL = re.compile("[\x00-\x08\x0b\x0c\x0e-\x1f\ufffe\uffff]")
+
+
+def _xml_safe(text: str) -> str:
+    """Drop characters XML 1.0 cannot carry, so pasted text can never corrupt the Word file."""
+    return _XML_ILLEGAL.sub("", text)
 
 
 def _paragraph(
@@ -258,8 +289,8 @@ def _paragraph(
     if page_break:
         ET.SubElement(run, _qn(_W, "br"), {_qn(_W, "type"): "page"})
     elif text:
-        node = ET.SubElement(run, _qn(_W, "t"))
-        node.text = text
+        node = ET.SubElement(run, _qn(_W, "t"), {"{http://www.w3.org/XML/1998/namespace}space": "preserve"})
+        node.text = _xml_safe(text)
     return paragraph
 
 
@@ -289,25 +320,50 @@ def _dedupe_texts(values: list[str]) -> list[str]:
     return result
 
 
-def _captured_values(record: dict[str, Any], field: str) -> list[str]:
-    values: list[str] = []
-    captures = record.get("workflows", {}).get("after_lecture", {}).get("captures", [])
-    for capture in captures:
-        captured = capture.get("entries", {}).get(field, [])
-        if field != "lecture_notes":
-            values.extend(captured)
+def _reflection_items(record: dict[str, Any], field: str) -> list[dict[str, Any]]:
+    """Current wording of the student's entries for one field, de-duplicated, with date and correction flag.
+
+    Corrections are applied here (the capture itself is never edited); withdrawn and answered entries are
+    left out, and ``corrected`` lets exports say so.
+    """
+    items: list[dict[str, Any]] = []
+    seen: set[str] = set()
+    for entry in effective_entries(record):
+        if entry["field"] != field or entry["status"] not in ("active", "corrected"):
             continue
-        # Labelled questions and uncertainties already have a dedicated open-items
-        # section, so omit those lines from the notes surface to avoid duplication.
-        for note in captured:
-            for line in note.splitlines():
-                cleaned = line.strip()
-                if not cleaned:
-                    continue
-                if _extract_explicit_uncertainties([cleaned]) or _extract_explicit_questions([cleaned]):
-                    continue
-                values.append(cleaned)
-    return _dedupe_texts(values)
+        texts = [entry["text"]]
+        if field == "lecture_notes":
+            # Labelled questions and uncertainties already have a dedicated open-items section, so omit
+            # those lines from the notes surface to avoid duplication.
+            texts = [
+                line.strip() for line in _xml_safe(entry["text"]).splitlines()
+                if line.strip()
+                and not _extract_explicit_uncertainties([line.strip()])
+                and not _extract_explicit_questions([line.strip()])
+            ]
+        for text in texts:
+            key = " ".join(text.split()).casefold()
+            if key and key not in seen:
+                seen.add(key)
+                items.append({
+                    "text": text.strip(),
+                    "date": (entry.get("captured_at") or "")[:10] or None,
+                    "corrected": entry["status"] == "corrected",
+                })
+    return items
+
+
+def _reflection_suffix(item: dict[str, Any], dated: bool) -> str:
+    parts = []
+    if item.get("corrected"):
+        parts.append("corrected by student")
+    if dated and item.get("date"):
+        parts.append(f"recorded {item['date']}")
+    return f" ({'; '.join(parts)})" if parts else ""
+
+
+def _has_multiple_captures(record: dict[str, Any]) -> bool:
+    return len(record.get("workflows", {}).get("after_lecture", {}).get("captures", [])) > 1
 
 
 def _open_learning_items(record: dict[str, Any]) -> list[dict[str, Any]]:
@@ -381,6 +437,11 @@ def _render_teach_interaction(
         ):
             _paragraph(body, title, style="Heading3")
             _source_items(body, generated.get(field, []), source_by_id)
+    checks = generated.get("check_questions", [])
+    if checks:
+        _paragraph(body, "Check your understanding (try before looking back)", style="Heading3")
+        for check in checks:
+            _paragraph(body, check.get("text", ""), bullet=True)
     unknowns = generated.get("unknowns", [])
     if unknowns:
         _paragraph(body, "Limits and unknowns", style="Heading3")
@@ -388,111 +449,253 @@ def _render_teach_interaction(
             _paragraph(body, item, bullet=True)
 
 
+# ----- shared export model ---------------------------------------------------------------------------------
+
+_LABEL_UNIVERSITY = "University source"
+_LABEL_STUDENT = "Student-reported"
+_LABEL_AI = "AI-generated study aid"
+
+_REFLECTION_NOTE_FIELDS = (
+    ("covered", "What the lecture covered"),
+    ("understood", "What I understood"),
+    ("examples_cases", "Examples the lecturer mentioned"),
+    ("lecturer_emphasis", "What the lecturer emphasised"),
+    ("lecture_notes", "My own notes and reflections"),
+)
+
+
+def _quiz_questions(record: dict[str, Any]) -> list[dict[str, str]]:
+    """Quiz questions only (TEACH check questions appear under their taught topic). Reference answers are never exported."""
+    seen: set[str] = set()
+    result: list[dict[str, str]] = []
+    for quiz in record.get("learning", {}).get("quiz_history", {}).get("attempts", []):
+        for question in quiz.get("questions", []):
+            text = str(question.get("question", "")).strip()
+            key = task_text_hash(text)
+            if text and key not in seen:
+                seen.add(key)
+                result.append({"text": text, "kind": str(question.get("question_type", "")).title()})
+    return result
+
+
+def _evidence_and_priorities(record: dict[str, Any]) -> dict[str, Any]:
+    """Recorded-answer standings and revision priorities, from fixed rules over the local record only."""
+    from .learning_digest import ACTIVITY, DEMONSTRATED, STANDING_TEXT, build_learning_digest, _short
+    from .reflections import open_reflection_items
+
+    digest = build_learning_digest(record)
+    evidence = [{"standing": STANDING_TEXT[i["standing"]], "task": i["task"], "attempts": i["attempts"]}
+                for i in digest["items"]]
+    priorities = [{"activity": ACTIVITY[i["standing"]], "task": _short(i["task"]), "basis": "Recorded answer"}
+                  for i in digest["items"] if i["standing"] != DEMONSTRATED]
+    for item in open_reflection_items(record, limit=5):
+        verb = "Get an answer to" if item["kind"] == "question" else "Clarify"
+        priorities.append({"activity": f"{verb} your own {item['kind']}.", "task": _short(item["text"]),
+                           "basis": "Student-reported"})
+    return {
+        "evidence": evidence,
+        "priorities": priorities,
+        "untested": digest["untested_capabilities"] if digest["status"] == "SOME" else [],
+        "limits": digest["limits"] if digest["status"] == "SOME" else [],
+        "has_evidence": digest["status"] == "SOME",
+    }
+
+
+def _export_model(record: dict[str, Any]) -> dict[str, Any]:
+    prepare = record.get("workflows", {}).get("prepare_me", {}) or {}
+    brief = prepare.get("result") or {}
+    sources = record.get("sources", [])
+    module = record.get("module", {})
+    week = record.get("week", {})
+    return {
+        "module": module,
+        "week": week,
+        "brief": brief,
+        "prepared": bool(brief),
+        "sources": sources,
+        "source_by_id": {s["source_id"]: s for s in sources if "source_id" in s},
+        "dated": _has_multiple_captures(record),
+        "reflections": [
+            (title, _reflection_items(record, field)) for field, title in _REFLECTION_NOTE_FIELDS
+            if _reflection_items(record, field)
+        ],
+        "assessment_remarks": _reflection_items(record, "assessment_comments"),
+        "open_items": _open_learning_items(record),
+        "resolved": resolved_values(record),
+        "interactions": _current_teach_interactions(record),
+        "questions": _quiz_questions(record),
+        **_evidence_and_priorities(record),
+    }
+
+
+def _week_line(model: dict[str, Any]) -> str:
+    week = model["week"]
+    parts = [f"Week {week.get('number')}"]
+    if week.get("topic"):
+        parts.append(str(week["topic"]))
+    if week.get("date"):
+        parts.append(str(week["date"]))
+    return " — ".join(parts)
+
+
+_LEGEND = (
+    (_LABEL_UNIVERSITY, "Cited from the course sources listed at the end, with source name and page. Summaries are produced by AI from those sources, but each claim cites them."),
+    (_LABEL_STUDENT, "Written by you after the lecture. Your recollection, not verified university material."),
+    (_LABEL_AI, "Generated from the sources and your context. A study aid, not a source, and not proof of mastery."),
+)
+
+
+# ----- DOCX -------------------------------------------------------------------------------------------------
+
 def _document_xml(record: dict[str, Any]) -> bytes:
     document = ET.Element(_qn(_W, "document"))
     body = ET.SubElement(document, _qn(_W, "body"))
-    module = record["module"]
-    week = record["week"]
-    brief = record["workflows"]["prepare_me"]["result"]
-    sources = record["sources"]
-    source_by_id = {source["source_id"]: source for source in sources}
+    model = _export_model(record)
+    module, brief = model["module"], model["brief"]
+    source_by_id, dated = model["source_by_id"], model["dated"]
 
-    _paragraph(body, module["code"], style="Eyebrow")
-    _paragraph(body, f"Week {week['number']} Study Pack", style="Title")
-    _paragraph(body, module["title"], style="Subtitle")
-    _paragraph(body, f"A coherent learning resource for {module['code']} Week {week['number']}.", style="Intro")
+    _paragraph(body, module.get("code", ""), style="Eyebrow")
+    _paragraph(body, f"Week {model['week'].get('number')} Study Pack", style="Title")
+    _paragraph(body, module.get("title", ""), style="Subtitle")
+    _paragraph(body, _week_line(model), style="Intro")
     _paragraph(
         body,
-        "Use this pack to prepare, consolidate your own notes, work through taught topics, "
-        "and keep open questions visible. Citations identify official university sources; "
-        "student notes and generated teaching are labelled separately.",
+        "Module code and title are as entered in your Serapis setup. Use this pack to prepare, consolidate "
+        "your own notes, work through taught topics, and keep open questions visible. It is regenerated "
+        "from your academic record, so download it again after you add reflections or answers.",
         style="StudyNote",
     )
+    _paragraph(body, "How to read the labels", style="Heading3")
+    for label, meaning in _LEGEND:
+        _paragraph(body, f"{label}: {meaning}", bullet=True)
 
     _paragraph(body, "1. Orientation", style="Heading1")
+    if not model["prepared"]:
+        _paragraph(
+            body,
+            "No source-based preparation has been generated for this week yet, so this part is empty. "
+            "Use “Prepare study workspace” in the Hub to add it. Your own reflections below are still included.",
+            style="Muted",
+        )
     for field, title in (
         ("week_overview", "Week overview"),
         ("before_class", "Before class"),
         ("lecture_attention", "Lecture focus"),
     ):
-        _paragraph(body, title, style="Heading2")
-        _source_items(body, brief.get(field, []), source_by_id)
+        if brief.get(field):
+            _paragraph(body, f"{title} (from university sources, AI-summarised)", style="Heading2")
+            _source_items(body, brief[field], source_by_id)
 
     _paragraph(body, "2. Core concepts and examples", style="Heading1")
-    _paragraph(body, "Core concepts", style="Heading2")
-    _source_items(body, brief.get("core_concepts", []), source_by_id)
-    _paragraph(body, "Important examples and cases", style="Heading2")
-    _source_items(body, brief.get("examples_cases", []), source_by_id)
+    if brief.get("core_concepts") or brief.get("examples_cases"):
+        _paragraph(body, "Core concepts", style="Heading2")
+        _source_items(body, brief.get("core_concepts", []), source_by_id)
+        _paragraph(body, "Important examples and cases", style="Heading2")
+        _source_items(body, brief.get("examples_cases", []), source_by_id)
+    else:
+        _paragraph(body, "Nothing recorded yet.", style="Muted")
 
     _paragraph(body, page_break=True)
-    _paragraph(body, "3. My lecture notes", style="Heading1")
+    _paragraph(body, "3. My reflections", style="Heading1")
     _paragraph(
         body,
-        "Student-reported material — your recollection, not verified university evidence.",
+        f"{_LABEL_STUDENT} — your recollection, not verified university evidence. Corrections you made "
+        "are shown with their current wording; the original is kept in your record.",
         style="StudentReported",
     )
-    note_sections = (
-        ("lecture_notes", "Lecture notes"),
-        ("lecturer_emphasis", "Lecturer emphasis"),
-        ("examples_cases", "Examples and cases discussed"),
-        ("understood", "What I understood"),
-    )
-    has_notes = False
-    for field, title in note_sections:
-        values = _captured_values(record, field)
-        if values:
-            has_notes = True
+    if model["reflections"]:
+        for title, items in model["reflections"]:
             _paragraph(body, title, style="Heading3")
-            for item in values:
-                _paragraph(body, item, bullet=True)
-    if not has_notes:
-        _paragraph(body, "No lecture notes have been captured yet.", style="Muted")
+            for item in items:
+                _paragraph(body, item["text"] + _reflection_suffix(item, dated), bullet=True)
+    else:
+        _paragraph(body, "No reflections have been recorded yet.", style="Muted")
 
     _paragraph(body, "4. Questions to resolve", style="Heading1")
-    _paragraph(body, "Questions suggested by the source material", style="Heading2")
-    _source_items(body, brief.get("after_class_questions", []), source_by_id)
-    _paragraph(body, "My open questions and uncertainties", style="Heading2")
-    open_items = _open_learning_items(record)
-    if open_items:
-        for item in open_items:
-            label = item.get("kind", "item").title()
-            _paragraph(body, f"{label}: {item['text']}", bullet=True)
+    if brief.get("after_class_questions"):
+        _paragraph(body, "Questions suggested by the source material (from university sources)", style="Heading2")
+        _source_items(body, brief["after_class_questions"], source_by_id)
+    _paragraph(body, f"My open questions and uncertainties ({_LABEL_STUDENT.lower()})", style="Heading2")
+    if model["open_items"]:
+        for item in model["open_items"]:
+            _paragraph(body, f"{item.get('kind', 'item').title()}: {item['text']}", bullet=True)
     else:
         _paragraph(body, "No student-reported open questions are recorded.", style="Muted")
+    if model["resolved"]:
+        _paragraph(body, "Marked as answered by me (not verified)", style="Heading3")
+        for item in model["resolved"]:
+            _paragraph(body, f"{item['kind'].title()}: {item['text']}", bullet=True)
 
     _paragraph(body, page_break=True)
     _paragraph(body, "5. Taught topics", style="Heading1")
     _paragraph(
         body,
-        "Generated learning derived from cited sources and student context. It is a study aid, "
-        "not a substitute for the university source material, and it does not establish mastery.",
+        f"{_LABEL_AI}, derived from cited sources and your context. It is not a substitute for the "
+        "university source material, and it does not establish mastery.",
         style="StudyNote",
     )
-    interactions = _current_teach_interactions(record)
-    if not interactions:
+    if not model["interactions"]:
         _paragraph(body, "No taught topic has been recorded yet.", style="Muted")
-    for interaction in interactions:
+    for interaction in model["interactions"]:
         _render_teach_interaction(body, interaction, source_by_id)
 
-    _paragraph(body, "6. Assessment connections", style="Heading1")
-    _paragraph(body, "Connections grounded in university sources", style="Heading2")
-    _source_items(body, brief.get("assessment_connections", []), source_by_id)
-    assessment_notes = _captured_values(record, "assessment_comments")
-    if assessment_notes:
-        _paragraph(body, "My captured assessment notes", style="Heading2")
-        _paragraph(body, "Student-reported and not verified against official sources.", style="StudentReported")
-        for item in assessment_notes:
-            _paragraph(body, item, bullet=True)
+    _paragraph(body, "6. Practice questions and recorded answers", style="Heading1")
+    _paragraph(
+        body,
+        f"Questions are an {_LABEL_AI}. Reference answers are deliberately not included, so you can "
+        "try each question before checking the cited sources. Standings are provisional judgements of single "
+        "answers, not grades.",
+        style="StudyNote",
+    )
+    if model["questions"]:
+        for question in model["questions"]:
+            _paragraph(body, f"{question['kind']}: {question['text']}" if question["kind"] else question["text"], bullet=True)
+    else:
+        _paragraph(body, "No quiz or check questions have been generated yet.", style="Muted")
+    _paragraph(body, "What your recorded answers show", style="Heading2")
+    if model["evidence"]:
+        for item in model["evidence"]:
+            _paragraph(body, f"{item['standing']} Question: {item['task']}", bullet=True)
+        for limit in model["limits"]:
+            _paragraph(body, limit, style="Muted")
+    else:
+        _paragraph(body, "No answers are recorded for this week yet. That is an evidence gap, not a weakness.", style="Muted")
 
-    _paragraph(body, "7. Sources and provenance", style="Heading1")
+    _paragraph(body, "7. Revision priorities", style="Heading1")
+    if model["priorities"]:
+        _paragraph(body, "Suggested from your recorded answers and open questions by fixed rules; a suggestion, "
+                   "not a measure of how well you know the topics.", style="StudyNote")
+        for number, item in enumerate(model["priorities"], start=1):
+            _paragraph(body, f"{number}. {item['activity']} ({item['task']}) — {item['basis']}", bullet=True)
+    else:
+        _paragraph(body, "No revision priorities can be drawn yet. Record answers or open questions first.", style="Muted")
+    if model["untested"]:
+        _paragraph(body, "Not tested yet (an evidence gap, not a weakness): "
+                   + ", ".join(c.lower() for c in model["untested"]) + ".", style="Muted")
+
+    _paragraph(body, "8. Assessment connections", style="Heading1")
+    if brief.get("assessment_connections"):
+        _paragraph(body, "Connections grounded in university sources", style="Heading2")
+        _source_items(body, brief["assessment_connections"], source_by_id)
+    if model["assessment_remarks"]:
+        _paragraph(body, "My captured assessment remarks", style="Heading2")
+        _paragraph(body, ASSESSMENT_CAVEAT, style="StudentReported")
+        for item in model["assessment_remarks"]:
+            _paragraph(body, item["text"] + _reflection_suffix(item, dated), bullet=True)
+    if not brief.get("assessment_connections") and not model["assessment_remarks"]:
+        _paragraph(body, "Nothing recorded yet.", style="Muted")
+
+    _paragraph(body, "9. Sources and provenance", style="Heading1")
     _paragraph(
         body,
         "Use the source names, IDs and PDF page numbers below to trace cited claims back to the "
         "university material.",
         style="Muted",
     )
-    for source in sources:
-        details = [source["title"], f"ID: {source['source_id']}"]
+    if not model["sources"]:
+        _paragraph(body, "No course sources are attached to this week yet.", style="Muted")
+    for source in model["sources"]:
+        details = [source.get("title", source.get("source_id", "")), f"ID: {source.get('source_id', '')}"]
         if source.get("authors"):
             details.insert(1, source["authors"])
         if source.get("academic_page_range"):
@@ -791,10 +994,38 @@ def _docx_bytes(record: dict[str, Any]) -> bytes:
     return buffer.getvalue()
 
 
+_MD_SPECIAL = re.compile(r"([\\`*_\[\]<>|])")
+_MD_LINE_START = re.compile(r"^(\s*)([#>+\-=~]|\d+[.)])")
+
+
+def _md_lines(text: str) -> list[str]:
+    """Escape untrusted text so it renders as plain text: no headings, links, HTML, tables or fences."""
+    lines = []
+    for line in _xml_safe(str(text)).splitlines() or [""]:
+        line = _MD_SPECIAL.sub(r"\\\1", line.rstrip())
+        lines.append(_MD_LINE_START.sub(r"\1\\\2", line))
+    return lines
+
+
+def _md(text: str) -> str:
+    """Escaped single-line form of ``text``."""
+    return " ".join(line.strip() for line in _md_lines(text) if line.strip())
+
+
+def _md_bullet(lines: list[str], text: str, *, label: str | None = None, suffix: str = "") -> None:
+    parts = _md_lines(text)
+    prefix = f"**{label}:** " if label else ""
+    lines.append(f"- {prefix}{parts[0]}" + ("" if len(parts) > 1 else suffix))
+    for extra in parts[1:-1]:
+        lines.append(f"  {extra}")
+    if len(parts) > 1:
+        lines.append(f"  {parts[-1]}{suffix}")
+
+
 def _markdown_citation(
     provenance: list[dict[str, Any]], source_by_id: dict[str, dict[str, Any]]
 ) -> str:
-    return f"_{_citation_text(provenance, source_by_id)}_"
+    return f"_{_md(_citation_text(provenance, source_by_id))}_"
 
 
 def _markdown_source_items(
@@ -806,103 +1037,125 @@ def _markdown_source_items(
         lines.extend(["No material is currently recorded.", ""])
         return
     for item in items:
-        lines.append(f"- {item['text']}")
+        _md_bullet(lines, item["text"], label=_LABEL_UNIVERSITY if item.get("provenance") else _LABEL_AI)
         if item.get("provenance"):
             lines.append(f"  {_markdown_citation(item['provenance'], source_by_id)}")
     lines.append("")
 
 
 def _notebooklm_markdown(record: dict[str, Any]) -> str:
-    """Create a readable, stable upload source without changing canonical state."""
-    module = record["module"]
-    week = record["week"]
-    brief = record["workflows"]["prepare_me"]["result"]
-    sources = record["sources"]
-    source_by_id = {source["source_id"]: source for source in sources}
+    """Create a readable, stable upload source without changing canonical state.
+
+    Every section heading and every student or generated bullet carries its provenance label, because
+    NotebookLM splits a source into passages and a heading alone may not travel with a quoted passage.
+    All free text is escaped, so a pasted note cannot create headings, links or fake provenance.
+    """
+    model = _export_model(record)
+    module, week, brief = model["module"], model["week"], model["brief"]
+    source_by_id, dated = model["source_by_id"], model["dated"]
     lines = [
-        f"# {module['code']} — Week {week['number']} Study Source",
+        f"# {_md(module.get('code', ''))} — Week {week.get('number')} Study Source",
         "",
-        f"## {module['title']}",
+        f"## {_md(module.get('title', ''))}",
         "",
-        "> Study source generated from Serapis. Claims from university materials include source names and PDF page numbers. Student notes and generated explanations are labelled separately.",
+        f"Week: {_md(_week_line(model))}",
         "",
-        "Official-source claims carry source IDs and PDF pages. Student notes are explicitly labelled as unverified. Generated teaching is a derived explanation, not a university source.",
+        "> Study source exported from Serapis for manual upload to NotebookLM. Module code and title are "
+        "as entered by the student. Claims from university materials include source names and PDF page "
+        "numbers. Student notes and generated explanations are labelled separately.",
         "",
-        "# 1. Orientation",
+        "Provenance labels used in this file:",
         "",
     ]
+    lines.extend(f"- **{label}:** {meaning}" for label, meaning in _LEGEND)
+    lines.extend([
+        "",
+        "Nothing in this file is confirmed by the university unless it carries a University source "
+        "citation. Answers generated by NotebookLM from this file are study aids, not university evidence.",
+        "",
+        f"# 1. Orientation — {_LABEL_UNIVERSITY}",
+        "",
+    ])
+    if not model["prepared"]:
+        lines.extend(["No source-based preparation has been generated for this week yet.", ""])
     for field, title in (
         ("week_overview", "Week overview"),
         ("before_class", "Before class"),
         ("lecture_attention", "Lecture focus"),
     ):
-        lines.extend([f"## {title}", ""])
-        _markdown_source_items(lines, brief.get(field, []), source_by_id)
+        if brief.get(field):
+            lines.extend([f"## {title}", ""])
+            _markdown_source_items(lines, brief[field], source_by_id)
 
-    lines.extend(["# 2. Core concepts and examples", "", "## Core concepts", ""])
-    _markdown_source_items(lines, brief.get("core_concepts", []), source_by_id)
-    lines.extend(["## Important examples and cases", ""])
-    _markdown_source_items(lines, brief.get("examples_cases", []), source_by_id)
+    lines.extend([f"# 2. Core concepts and examples — {_LABEL_UNIVERSITY}", ""])
+    if brief.get("core_concepts") or brief.get("examples_cases"):
+        lines.extend(["## Core concepts", ""])
+        _markdown_source_items(lines, brief.get("core_concepts", []), source_by_id)
+        lines.extend(["## Important examples and cases", ""])
+        _markdown_source_items(lines, brief.get("examples_cases", []), source_by_id)
+    else:
+        lines.extend(["Nothing recorded yet.", ""])
 
     lines.extend([
-        "# 3. My lecture notes",
+        f"# 3. My reflections — {_LABEL_STUDENT} (unverified)",
         "",
         "> Student-reported recollection; not verified against official university sources.",
         "",
     ])
-    any_notes = False
-    for field, title in (
-        ("lecture_notes", "Lecture notes"),
-        ("lecturer_emphasis", "Lecturer emphasis"),
-        ("examples_cases", "Examples and cases discussed"),
-        ("understood", "What I understood"),
-    ):
-        values = _captured_values(record, field)
-        if values:
-            any_notes = True
+    if model["reflections"]:
+        for title, items in model["reflections"]:
             lines.extend([f"## {title}", ""])
-            lines.extend(f"- {value}" for value in values)
+            for item in items:
+                _md_bullet(lines, item["text"], label=_LABEL_STUDENT, suffix=_reflection_suffix(item, dated))
             lines.append("")
-    if not any_notes:
-        lines.extend(["No lecture notes have been captured yet.", ""])
+    else:
+        lines.extend(["No reflections have been recorded yet.", ""])
 
-    lines.extend(["# 4. Questions to resolve", "", "## Questions suggested by the sources", ""])
-    _markdown_source_items(lines, brief.get("after_class_questions", []), source_by_id)
-    lines.extend(["## My open questions and uncertainties", ""])
-    open_items = _open_learning_items(record)
-    if open_items:
-        for item in open_items:
-            lines.append(f"- **{item.get('kind', 'item').title()}:** {item['text']}")
+    lines.extend(["# 4. Questions to resolve", "", f"## Questions suggested by the sources — {_LABEL_UNIVERSITY}", ""])
+    if brief.get("after_class_questions"):
+        _markdown_source_items(lines, brief["after_class_questions"], source_by_id)
+    else:
+        lines.extend(["No material is currently recorded.", ""])
+    lines.extend([f"## My open questions and uncertainties — {_LABEL_STUDENT}", ""])
+    if model["open_items"]:
+        for item in model["open_items"]:
+            _md_bullet(lines, item["text"], label=f"{_LABEL_STUDENT} {item.get('kind', 'item')}")
         lines.append("")
     else:
         lines.extend(["No student-reported open questions are recorded.", ""])
+    if model["resolved"]:
+        lines.extend(["## Marked as answered by the student (not verified)", ""])
+        for item in model["resolved"]:
+            _md_bullet(lines, item["text"], label=f"{_LABEL_STUDENT} {item['kind']}")
+        lines.append("")
 
     lines.extend([
-        "# 5. Taught topics",
+        f"# 5. Taught topics — {_LABEL_AI}",
         "",
         "> Generated learning derived from the cited sources. This section is a study aid, not a substitute for the university source material, and does not establish mastery.",
         "",
     ])
-    interactions = _current_teach_interactions(record)
-    if not interactions:
+    if not model["interactions"]:
         lines.extend(["No taught topic has been recorded yet.", ""])
-    for interaction in interactions:
+    for interaction in model["interactions"]:
         topic = interaction["topic"]
-        lines.extend([f"## {topic[:1].upper() + topic[1:]}", ""])
+        lines.extend([f"## {_md(topic[:1].upper() + topic[1:])}", ""])
         generated = interaction["generated_learning"]
         if "teaching_sequence" in generated:
             direct = generated["direct_explanation"]
-            lines.extend([direct["text"], "", _markdown_citation(direct["provenance"], source_by_id), ""])
+            _md_bullet(lines, direct["text"], label=_LABEL_AI)
+            lines.extend([f"  {_markdown_citation(direct['provenance'], source_by_id)}", ""])
             for move in generated["teaching_sequence"]:
-                lines.extend([f"### {move['title']}", ""])
+                lines.extend([f"### {_md(move['title'])}", ""])
                 if move.get("basis") == "GENERAL_GUIDANCE":
                     lines.extend(["> General study guidance, not from your course materials", ""])
-                lines.extend([move["explanation"], ""])
+                lines.extend([*_md_lines(move["explanation"]), ""])
                 if move.get("why_it_follows"):
-                    lines.extend([f"> Why it follows: {move['why_it_follows']}", ""])
+                    lines.extend([f"> Why it follows: {_md(move['why_it_follows'])}", ""])
                 lines.extend([_markdown_citation(move["provenance"], source_by_id), ""])
             mental_model = generated["mental_model"]
-            lines.extend(["### Mental model", "", mental_model["text"], "", _markdown_citation(mental_model["provenance"], source_by_id), ""])
+            lines.extend(["### Mental model", "", *_md_lines(mental_model["text"]), "",
+                          _markdown_citation(mental_model["provenance"], source_by_id), ""])
         else:
             for field, title in (
                 ("explanation", "Explanation"),
@@ -912,45 +1165,99 @@ def _notebooklm_markdown(record: dict[str, Any]) -> str:
             ):
                 lines.extend([f"### {title}", ""])
                 _markdown_source_items(lines, generated.get(field, []), source_by_id)
+        checks = generated.get("check_questions", [])
+        if checks:
+            lines.extend(["### Check your understanding (try before looking back)", ""])
+            for check in checks:
+                _md_bullet(lines, check.get("text", ""), label=_LABEL_AI)
+            lines.append("")
         if generated.get("unknowns"):
             lines.extend(["### Limits and unknowns", ""])
-            lines.extend(f"- {item}" for item in generated["unknowns"])
+            for item in generated["unknowns"]:
+                _md_bullet(lines, item)
             lines.append("")
 
-    lines.extend(["# 6. Assessment connections", "", "## Grounded connections", ""])
-    _markdown_source_items(lines, brief.get("assessment_connections", []), source_by_id)
-    assessment_notes = _captured_values(record, "assessment_comments")
-    if assessment_notes:
+    lines.extend([
+        f"# 6. Practice questions and recorded answers — {_LABEL_AI}",
+        "",
+        "> Questions only. Reference answers are not included so the student can attempt them first. Standings are provisional judgements of single answers, not grades.",
+        "",
+    ])
+    if model["questions"]:
+        for question in model["questions"]:
+            _md_bullet(lines, question["text"], label=question["kind"] or "Question")
+        lines.append("")
+    else:
+        lines.extend(["No quiz or check questions have been generated yet.", ""])
+    lines.extend(["## What the recorded answers show", ""])
+    if model["evidence"]:
+        for item in model["evidence"]:
+            lines.append(f"- {_md(item['standing'])} Question: {_md(item['task'])}")
+        lines.extend(f"- {_md(limit)}" for limit in model["limits"])
+        lines.append("")
+    else:
+        lines.extend(["No answers are recorded for this week yet. That is an evidence gap, not a weakness.", ""])
+
+    lines.extend(["# 7. Revision priorities — suggested", ""])
+    if model["priorities"]:
+        lines.extend(["> Suggested from recorded answers and the student's open questions by fixed rules; not a measure of how well the topics are known.", ""])
+        for number, item in enumerate(model["priorities"], start=1):
+            lines.append(f"- {number}\\. {_md(item['activity'])} ({_md(item['task'])}) — {_md(item['basis'])}")
+        lines.append("")
+    else:
+        lines.extend(["No revision priorities can be drawn yet.", ""])
+    if model["untested"]:
+        lines.extend(["Not tested yet (an evidence gap, not a weakness): " + ", ".join(c.lower() for c in model["untested"]) + ".", ""])
+
+    lines.extend(["# 8. Assessment connections", "", f"## Grounded connections — {_LABEL_UNIVERSITY}", ""])
+    if brief.get("assessment_connections"):
+        _markdown_source_items(lines, brief["assessment_connections"], source_by_id)
+    else:
+        lines.extend(["No grounded assessment connections are recorded.", ""])
+    if model["assessment_remarks"]:
         lines.extend([
-            "## My captured assessment notes",
+            f"## Assessment remarks — {_LABEL_STUDENT}, unconfirmed",
             "",
-            "> Student-reported and not verified against official sources.",
+            f"> {ASSESSMENT_CAVEAT}",
             "",
         ])
-        lines.extend(f"- {item}" for item in assessment_notes)
+        for item in model["assessment_remarks"]:
+            _md_bullet(lines, item["text"], label=_LABEL_STUDENT, suffix=_reflection_suffix(item, dated))
         lines.append("")
 
     lines.extend([
-        "# 7. Source guide",
+        "# 9. Source guide",
         "",
         "Use these source names, stable IDs and PDF page numbers to trace claims back to the university material.",
         "",
     ])
-    for source in sources:
-        details = [source["title"], f"ID: {source['source_id']}"]
+    if not model["sources"]:
+        lines.extend(["No course sources are attached to this week yet.", ""])
+    for source in model["sources"]:
+        details = [source.get("title", source.get("source_id", "")), f"ID: {source.get('source_id', '')}"]
         if source.get("authors"):
             details.insert(1, source["authors"])
         if source.get("academic_page_range"):
             details.append(f"assigned pages {source['academic_page_range']}")
-        lines.append(f"- {' — '.join(details)}")
+        lines.append(f"- {_md(' — '.join(details))}")
     lines.extend([
         "",
         "---",
         "",
-        "Use NotebookLM to ask questions and generate study aids from this file. Verify important claims against the cited university sources; NotebookLM output is not itself university evidence.",
+        "Use NotebookLM to ask questions and generate study aids from this file. Verify important claims against the cited university sources; NotebookLM output is not itself university evidence and should not be imported back into Serapis as such.",
         "",
     ])
     return "\n".join(lines)
+
+
+def build_study_pack_docx(record: dict[str, Any]) -> bytes:
+    """The Word study pack for ``record``, built in memory (no write, no model call)."""
+    return _docx_bytes(record)
+
+
+def build_notebooklm_markdown(record: dict[str, Any]) -> str:
+    """The NotebookLM-ready Markdown source for ``record``, built in memory (no write, no model call)."""
+    return _notebooklm_markdown(record)
 
 
 def _workspace_paths(
@@ -1061,6 +1368,8 @@ def capture_after_lecture(
     uncertainties: list[str] | None = None,
     questions: list[str] | None = None,
     assessment_comments: list[str] | None = None,
+    covered: list[str] | None = None,
+    state: dict[str, Any] | None = None,
     workspace_root: Path | None = None,
     captured_at: str | None = None,
 ) -> CaptureResult:
@@ -1070,7 +1379,12 @@ def capture_after_lecture(
     Hub/CLI write cannot be lost.
     """
     record_path, _, _ = _workspace_paths(module_code, week_number, workspace_root)
-    with record_lock(record_path):
+    # A week with no record yet starts from a bare in-memory one, written only if the capture succeeds. It is
+    # built before locking so an unknown module or week fails without creating any directory.
+    bare = _bare_record(state, module_code, week_number) if state is not None and not record_path.exists() else None
+    with record_lock(record_path, create_dir=bare is not None):
+        if bare is not None and record_path.exists():
+            bare = None  # another writer created the record while this one was being built
         return _capture_after_lecture_locked(
             module_code,
             week_number,
@@ -1082,8 +1396,10 @@ def capture_after_lecture(
             uncertainties=uncertainties,
             questions=questions,
             assessment_comments=assessment_comments,
+            covered=covered,
             workspace_root=workspace_root,
             captured_at=captured_at,
+            initial_record=bare,
         )
 
 
@@ -1099,21 +1415,26 @@ def _capture_after_lecture_locked(
     uncertainties: list[str] | None = None,
     questions: list[str] | None = None,
     assessment_comments: list[str] | None = None,
+    covered: list[str] | None = None,
     workspace_root: Path | None = None,
     captured_at: str | None = None,
+    initial_record: dict[str, Any] | None = None,
 ) -> CaptureResult:
     """Append a deterministic student report and rebuild its derived study pack."""
     record_path, study_pack_path, notebooklm_path = _workspace_paths(
         module_code, week_number, workspace_root
     )
-    try:
-        record = json.loads(record_path.read_text(encoding="utf-8"))
-    except FileNotFoundError as exc:
-        raise StateError(
-            f"Academic record not found: {record_path}; run workspace first"
-        ) from exc
-    except json.JSONDecodeError as exc:
-        raise StateError(f"Invalid academic record JSON: {record_path}") from exc
+    if initial_record is not None:
+        record = initial_record
+    else:
+        try:
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+        except FileNotFoundError as exc:
+            raise StateError(
+                f"Academic record not found: {record_path}; run workspace first"
+            ) from exc
+        except json.JSONDecodeError as exc:
+            raise StateError(f"Invalid academic record JSON: {record_path}") from exc
 
     if record.get("module", {}).get("code", "").upper() != module_code.upper() or record.get(
         "week", {}
@@ -1154,6 +1475,7 @@ def _capture_after_lecture_locked(
             explicit_questions.append(item)
 
     entries = {
+        "covered": _normalise_entries(covered),
         "lecture_notes": lecture_notes,
         "lecturer_emphasis": _normalise_entries(lecturer_emphasis),
         "examples_cases": _normalise_entries(examples_cases),
@@ -1164,6 +1486,16 @@ def _capture_after_lecture_locked(
     }
     if not any(entries.values()):
         raise StateError("After-lecture capture requires notes or at least one reported item")
+    for field, values in entries.items():
+        if len(values) > MAX_ENTRIES_PER_FIELD:
+            raise StateError(f"Too many entries for '{field}' (at most {MAX_ENTRIES_PER_FIELD} per reflection)")
+        if any(len(value) > MAX_ENTRY_CHARS for value in values):
+            raise StateError(f"An entry for '{field}' is longer than {MAX_ENTRY_CHARS} characters; split it up")
+    previous = (record.get("workflows", {}).get("after_lecture", {}).get("captures") or [{}])[-1]
+    if previous.get("entries") and {k: v for k, v in previous["entries"].items() if v} == {
+        k: v for k, v in entries.items() if v
+    }:
+        raise StateError("This reflection is identical to your last one, so it was not saved twice")
     if any(entries[field] for field, _ in _CAPTURE_FIELDS if field != "lecture_notes") and not any(
         source["type"] == "direct_text" for source in input_sources
     ):
@@ -1204,11 +1536,15 @@ def _capture_after_lecture_locked(
     unresolved = learning.setdefault(
         "unresolved_items", {"status": "none_recorded", "items": []}
     )
-    for kind, values in (("uncertainty", explicit_uncertainties), ("question", explicit_questions)):
-        for text in values:
+    for kind, field, values in (
+        ("uncertainty", "uncertainties", explicit_uncertainties),
+        ("question", "questions", explicit_questions),
+    ):
+        for index, text in enumerate(values):
             unresolved.setdefault("items", []).append(
                 {
                     "item_id": f"{capture_id}-{kind}-{len(unresolved['items']) + 1:04d}",
+                    "entry_id": make_entry_id(capture_id, field, index),
                     "capture_id": capture_id,
                     "kind": kind,
                     "text": text,
@@ -1223,6 +1559,140 @@ def _capture_after_lecture_locked(
     record.setdefault("knowledge_classification", _knowledge_classification())
     _write_workspace(record, record_path, study_pack_path, notebooklm_path)
     return CaptureResult(record_path, study_pack_path, notebooklm_path, capture_id, timestamp)
+
+
+def correct_after_lecture_entry(
+    module_code: str,
+    week_number: int,
+    entry_id: str,
+    *,
+    action: str,
+    new_text: str | None = None,
+    reason: str | None = None,
+    workspace_root: Path | None = None,
+    corrected_at: str | None = None,
+) -> dict[str, Any]:
+    """Append a correction to one reflection entry; the original capture is never edited.
+
+    ``action`` is ``correct`` (new wording), ``withdraw`` (retract), ``resolve`` (mark a question or
+    confusion answered) or ``reopen``. Open-item status follows so TEACH and recommendations use the
+    current wording, while superseded items stay in the record with their status.
+    """
+    record_path, study_pack_path, notebooklm_path = _workspace_paths(module_code, week_number, workspace_root)
+    if action not in CORRECTION_ACTIONS:
+        raise StateError(f"Unknown correction action: {action!r}")
+    parsed = parse_entry_id(entry_id)
+    if parsed is None:
+        raise StateError("That reflection entry could not be identified")
+    capture_id, field, index = parsed
+    with record_lock(record_path):
+        try:
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+        except FileNotFoundError as exc:
+            raise StateError("No reflections are recorded for this week yet") from exc
+        except json.JSONDecodeError as exc:
+            raise StateError(f"Invalid academic record JSON: {record_path}") from exc
+        if record.get("module", {}).get("code", "").upper() != module_code.upper() or record.get(
+            "week", {}
+        ).get("number") != week_number:
+            raise StateError("Academic record module/week does not match the requested correction")
+        entry = next((e for e in effective_entries(record) if e["entry_id"] == entry_id), None)
+        if entry is None:
+            raise StateError("That reflection entry does not exist in this module and week")
+        status = entry["status"]
+        cleaned_reason = " ".join((reason or "").split())[:500] or None
+        text = (new_text or "").strip()
+        if action == "correct":
+            if not text:
+                raise StateError("Write the corrected wording, or withdraw the entry instead")
+            if len(text) > MAX_ENTRY_CHARS:
+                raise StateError(f"The corrected entry is longer than {MAX_ENTRY_CHARS} characters")
+            if text == entry["text"] and status != "withdrawn":
+                raise StateError("The corrected wording is the same as the current wording")
+        elif action == "withdraw" and status == "withdrawn":
+            raise StateError("That entry is already withdrawn")
+        elif action in ("resolve", "reopen"):
+            if field not in OPEN_ITEM_FIELDS:
+                raise StateError("Only questions and points you found confusing can be marked answered")
+            if action == "resolve" and status != "active" and status != "corrected":
+                raise StateError("That entry is not open")
+            if action == "reopen" and status != "resolved":
+                raise StateError("That entry is not marked answered")
+        if status == "withdrawn" and action != "correct":
+            raise StateError("A withdrawn entry can only be restored by writing it again")
+
+        after = record.setdefault("workflows", {}).setdefault("after_lecture", {"status": "recorded", "captures": []})
+        corrections = after.setdefault("corrections", [])
+        correction_id = f"correction-{len(corrections) + 1:04d}"
+        timestamp = corrected_at or datetime.now(timezone.utc).replace(microsecond=0).isoformat()
+        correction = {
+            "correction_id": correction_id,
+            "corrected_at": timestamp,
+            "action": action,
+            "corrects": {"capture_id": capture_id, "field": field, "index": index},
+            "previous_text": entry["text"],
+            "reason": cleaned_reason,
+            "provenance": {
+                "classification": "student_reported",
+                "verification_status": "unverified_against_official_sources",
+            },
+        }
+        if action == "correct":
+            correction["corrected_text"] = text
+        corrections.append(correction)
+
+        if field in OPEN_ITEM_FIELDS:
+            _sync_open_item(record, entry, correction, text if action == "correct" else None)
+        record["workspace_schema_version"] = WORKSPACE_SCHEMA_VERSION
+        _write_workspace(record, record_path, study_pack_path, notebooklm_path)
+    return {"module_code": module_code.upper(), "week": week_number, "correction_id": correction_id,
+            "corrected_at": timestamp, "action": action}
+
+
+def _sync_open_item(
+    record: dict[str, Any], entry: dict[str, Any], correction: dict[str, Any], new_text: str | None
+) -> None:
+    """Keep ``learning.unresolved_items`` consistent with a correction without deleting any item."""
+    unresolved = record.setdefault("learning", {}).setdefault(
+        "unresolved_items", {"status": "none_recorded", "items": []}
+    )
+    items = unresolved.setdefault("items", [])
+    kind = OPEN_ITEM_FIELDS[entry["field"]]
+    current = " ".join(entry["text"].split()).casefold()
+    target = next(
+        (
+            item for item in reversed(items)
+            if item.get("capture_id") == entry["capture_id"] and item.get("kind") == kind
+            and (item.get("entry_id") == entry["entry_id"]
+                 or (not item.get("entry_id") and " ".join(item.get("text", "").split()).casefold() == current))
+        ),
+        None,
+    )
+    action = correction["action"]
+    stamp = {"status_changed_at": correction["corrected_at"], "status_changed_by": correction["correction_id"]}
+    if action == "correct":
+        if target is not None:
+            target.update({"status": "superseded", "superseded_by": correction["correction_id"], **stamp})
+        provenance = {
+            "classification": "student_reported",
+            "capture_id": entry["capture_id"],
+            "captured_at": entry["captured_at"],
+            "corrected_at": correction["corrected_at"],
+            "correction_id": correction["correction_id"],
+            "verification_status": "unverified_against_official_sources",
+        }
+        items.append({
+            "item_id": f"{entry['capture_id']}-{kind}-{len(items) + 1:04d}",
+            "entry_id": entry["entry_id"],
+            "capture_id": entry["capture_id"],
+            "kind": kind,
+            "text": new_text,
+            "status": "open",
+            "provenance": provenance,
+        })
+    elif target is not None:
+        target.update({"status": {"withdraw": "withdrawn", "resolve": "student_resolved", "reopen": "open"}[action], **stamp})
+    unresolved["status"] = "open" if any(i.get("status") == "open" for i in items) else "none_open"
 
 
 def _topic_terms(value: str) -> set[str]:
@@ -1345,7 +1815,7 @@ def teach_week(
     context["prepare_me"] = {
         "classification": "source_grounded_preparation",
         "note": "Generated PREPARE_ME material is guidance, not an additional official source.",
-        "result": deepcopy(record["workflows"]["prepare_me"]["result"]),
+        "result": deepcopy(record["workflows"]["prepare_me"].get("result") or {}),
     }
     context["student_context"] = deepcopy(student_context)
     from .learning_digest import build_learning_digest, model_view, relevant_to_topic
@@ -1452,7 +1922,10 @@ def materialize_week_workspace(
             existing_after_lecture = existing.get("workflows", {}).get("after_lecture", {})
             existing_teach = existing.get("workflows", {}).get("teach", {})
             record["sources"] = existing.get("sources", record["sources"])
+            fresh_prepare = record["workflows"]["prepare_me"]
             record["workflows"] = existing.get("workflows", record["workflows"])
+            if (record["workflows"].get("prepare_me") or {}).get("status") != "completed":
+                record["workflows"]["prepare_me"] = fresh_prepare  # reflections-only record: now prepared
             prior_learning = existing.get("learning", {})
             record["learning"].update(prior_learning)
             record["learning"].setdefault("evidence", [])

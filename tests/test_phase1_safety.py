@@ -518,14 +518,14 @@ class ExportRegenerationTests(unittest.TestCase):
                                          root=workspace_root)
             self.assertEqual((docx.read_bytes(), md.read_bytes()), (docx_before, md_before))
 
-            # The exports do not render learning evidence, so skipping them loses nothing:
+            # On-disk exports are snapshots refreshed by reflection, TEACH and prepare writes; Hub downloads are built fresh:
             rebuilt = capture_after_lecture("SYN101", 1, questions=["Why?"], workspace_root=workspace_root)
             self.assertTrue(rebuilt.study_pack_path.is_file())
             record = json.loads(rebuilt.record_path.read_text())
             self.assertEqual(len(record["learning"]["evidence"]), 1)  # evidence kept by explicit rebuild
             self.assertIn("Why?", rebuilt.notebooklm_path.read_text())
 
-    def test_export_text_is_independent_of_learning_evidence(self) -> None:
+    def test_export_shows_evidence_standing_but_never_the_answer_text(self) -> None:
         from university_jarvis.workspace import _notebooklm_markdown
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp)
@@ -536,11 +536,15 @@ class ExportRegenerationTests(unittest.TestCase):
                 built = materialize_week_workspace({}, "SYN101", 1, provider=PrepareProvider(),
                                                    cache_dir=cache_dir, workspace_root=workspace_root)
             before = json.loads(built.record_path.read_text())
-            record_learning_attempt("SYN101", 1, capability="RECALL", task="t", origin="o",
-                                    response="r", root=workspace_root)
+            record_learning_attempt("SYN101", 1, capability="RECALL", task="Define framing?", origin="o",
+                                    response="my private answer text", root=workspace_root)
             after = json.loads(built.record_path.read_text())
             self.assertNotEqual(before, after)
-            self.assertEqual(_notebooklm_markdown(before), _notebooklm_markdown(after))
+            self.assertNotEqual(_notebooklm_markdown(before), _notebooklm_markdown(after))
+            self.assertIn("Define framing?", _notebooklm_markdown(after))
+            self.assertNotIn("my private answer text", _notebooklm_markdown(after))
+            # Deterministic: the same record always renders the same text.
+            self.assertEqual(_notebooklm_markdown(after), _notebooklm_markdown(json.loads(json.dumps(after))))
 
 
 if __name__ == "__main__":

@@ -23,7 +23,7 @@ from xml.sax.saxutils import escape
 from .state import StateError
 
 MARKER = ".serapis-demo"
-ENV_KEYS = ("SERAPIS_HOME", "JARVIS_WORKSPACE_DIR", "JARVIS_CACHE_DIR", "JARVIS_STATE_FILE", "JARVIS_LEDGER_FILE")
+ENV_KEYS = tuple(f"{prefix}_{name}" for prefix in ("SERAPIS", "JARVIS") for name in ("WORKSPACE_DIR", "CACHE_DIR", "STATE_FILE", "LEDGER_FILE")) + ("SERAPIS_HOME",)
 
 # Original, invented teaching content. Plain statements, written for this demonstration.
 BUS101_WEEK1 = ("Week 1 - Organisations and stakeholders (synthetic)", [
@@ -92,10 +92,11 @@ def demo_environment(home: Path) -> Iterator[Path]:
     """Point every Serapis path at ``home`` for the duration, restoring the previous environment after."""
     previous = {key: os.environ.get(key) for key in ENV_KEYS}
     os.environ["SERAPIS_HOME"] = str(home)
-    os.environ["JARVIS_WORKSPACE_DIR"] = str(home / "workspace")
-    os.environ["JARVIS_CACHE_DIR"] = str(home / "cache")
-    os.environ["JARVIS_LEDGER_FILE"] = str(home / "intake-ledger.json")
-    os.environ.pop("JARVIS_STATE_FILE", None)
+    os.environ["SERAPIS_WORKSPACE_DIR"] = str(home / "workspace")
+    os.environ["SERAPIS_CACHE_DIR"] = str(home / "cache")
+    os.environ["SERAPIS_LEDGER_FILE"] = str(home / "intake-ledger.json")
+    for legacy in ("JARVIS_WORKSPACE_DIR", "JARVIS_CACHE_DIR", "JARVIS_LEDGER_FILE", "JARVIS_STATE_FILE", "SERAPIS_STATE_FILE"):
+        os.environ.pop(legacy, None)  # a stale legacy value must not override the demo directory
     try:
         yield home
     finally:
@@ -137,7 +138,7 @@ def seed_demo(home: Path, provider: Any | None = None) -> dict[str, Any]:
     from .student_setup import add_module, edit_profile, import_material, initialize_personal_state, save_assessment
 
     provider = provider or ScriptedStudyProvider()
-    root = Path(os.environ["JARVIS_WORKSPACE_DIR"])
+    root = Path(os.environ["SERAPIS_WORKSPACE_DIR"])
     initialize_personal_state()
     edit_profile(university="Example University (fictional)", programme="BA Business Studies (fictional)")
     add_module("BUS101", "Introduction to Business (synthetic)")
@@ -164,6 +165,18 @@ def seed_demo(home: Path, provider: Any | None = None) -> dict[str, Any]:
     weak = hub_service.answer_quiz_question("BUS101", 1, quiz["quiz_id"], "q2", "Stakeholders are people.", workspace_root=root)
     for attempt in (good, weak):
         hub_service.evaluate_learning_attempt("BUS101", 1, attempt["attempt_id"], state=state, provider=provider, workspace_root=root)
+    # Week 1 gets a reflection written the way a student would after the lecture (week 2 is left blank to try).
+    hub_service.capture_after_lecture_note(
+        "BUS101", 1, covered=["Who counts as a stakeholder, and how their interests can pull in different directions."],
+        understood=["Primary stakeholders have a direct financial or operational link to the organisation."],
+        uncertainties=["How to tell a secondary stakeholder from a primary one"],
+        questions=["Do community groups count as stakeholders"],
+        examples_cases=["A local shop deciding whether to extend opening hours"],
+        assessment_comments=["Lecturer hinted the report might favour a real organisation (unconfirmed)"],
+        state=state, workspace_root=root)
+    hub_service.correct_reflection("BUS101", 1, "capture-0001:questions:0", action="correct",
+                                   new_text="Do community groups count as stakeholders, and are they primary or secondary?",
+                                   reason="made the question clearer", workspace_root=root)
     hub_service.teach_topic("BUS101", 1, topic="stakeholders", state=state, provider=provider, workspace_root=root)
 
     assessment = next(a for a in state["modules"][0]["assessments"] if a["title"] == "Reflective report")

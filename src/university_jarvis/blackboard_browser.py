@@ -64,7 +64,7 @@ def run_interactive_authentication(
     """
     if not base_url:
         raise BlackboardError(
-            "Blackboard host is required. Set JARVIS_BLACKBOARD_BASE_URL or pass --base-url."
+            "Blackboard host is required. Set SERAPIS_BLACKBOARD_BASE_URL or pass --base-url."
         )
     try:
         from playwright.sync_api import sync_playwright
@@ -126,7 +126,7 @@ class _BrowserTransport:
     def __init__(self, profile_dir: Path, base_url: str | None = DEFAULT_BASE_URL) -> None:
         if not base_url:
             raise BlackboardError(
-                "Blackboard host is required. Set JARVIS_BLACKBOARD_BASE_URL or pass --base-url."
+                "Blackboard host is required. Set SERAPIS_BLACKBOARD_BASE_URL or pass --base-url."
             )
         self._profile_dir = profile_dir
         self._base_url = base_url
@@ -183,7 +183,7 @@ def open_browser_client(
     """
     if not base_url:
         raise BlackboardError(
-            "Blackboard host is required. Set JARVIS_BLACKBOARD_BASE_URL or pass --base-url."
+            "Blackboard host is required. Set SERAPIS_BLACKBOARD_BASE_URL or pass --base-url."
         )
     with _BrowserTransport(profile_dir, base_url) as transport:
         session = BlackboardSession(base_url=base_url)

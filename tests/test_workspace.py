@@ -386,15 +386,16 @@ class AcademicWorkspaceTests(unittest.TestCase):
             with ZipFile(second.study_pack_path) as document:
                 xml = ET.fromstring(document.read("word/document.xml"))
             text = " ".join(node.text or "" for node in xml.iter() if node.tag.endswith("}t"))
-            self.assertIn("3. My lecture notes", text)
-            self.assertIn("Student-reported material", text)
+            self.assertIn("3. My reflections", text)
+            self.assertIn("Student-reported", text)
             self.assertIn("My general lecture recollection.", text)
             self.assertIn("What should I revisit next?", text)
             self.assertIn("Grounded study content for core_concepts.", text)
-            self.assertIn("not verified against official sources", text)
+            self.assertIn("not a confirmed deadline", text)
             notebooklm = second.notebooklm_path.read_text(encoding="utf-8")
             self.assertIn("# 4. Questions to resolve", notebooklm)
-            self.assertEqual(notebooklm.count("How should the distinction be applied?"), 1)
+            questions_section = notebooklm.split("# 4. Questions to resolve")[1].split("# 5.")[0]
+            self.assertEqual(questions_section.count("How should the distinction be applied?"), 1)
             self.assertIn("My general lecture recollection.", notebooklm)
             self.assertIn("A reported comment about the assessment.", notebooklm)
 

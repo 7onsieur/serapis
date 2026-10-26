@@ -3,7 +3,7 @@
 This module exists so the Hub (and, later, a voice interface) can call
 Serapis the same way the CLI does -- by importing and calling the
 already-tested domain functions directly -- without either shelling out to
-``jarvis`` and parsing its printed text, or reimplementing any business
+``serapis`` and parsing its printed text, or reimplementing any business
 logic here. Every function below does exactly two things: (1) resolve the
 same optional defaults ``cli.py`` already resolves (``load_state()``,
 ``load_ledger()``) when the caller omits them, and (2) convert the resulting
@@ -63,7 +63,10 @@ from .state import StateError, load_state
 from .tutor_policy import reference_problem, requires_calculation
 from .university import check_university
 from .workflows import build_assignment_context, build_week_context
-from .workspace import (capture_after_lecture, materialize_week_workspace, teach_week,
+from .reflections import (open_reflection_items, next_step_from_reflections, reflection_context,
+                          reflection_view)
+from .workspace import (capture_after_lecture, correct_after_lecture_entry, materialize_week_workspace, teach_week,
+                        build_notebooklm_markdown, build_study_pack_docx,
                         record_learning_attempt, save_learning_evaluation, _learning_record,
                         _workspace_paths, _write_record, LEARNING_CAPABILITIES, task_exposure_keys,
                         exposed_task_hashes, task_text_hash, effective_outcome)
@@ -145,15 +148,18 @@ def capture_after_lecture_note(
     uncertainties: list[str] | None = None,
     questions: list[str] | None = None,
     assessment_comments: list[str] | None = None,
+    covered: list[str] | None = None,
+    state: dict[str, Any] | None = None,
     workspace_root: Path | None = None,
     captured_at: str | None = None,
 ) -> dict[str, Any]:
     """LOCAL WRITE only: record a student after-lecture report.
 
     Delegates entirely to ``workspace.capture_after_lecture`` -- no network
-    or model call. Raises ``state.StateError`` (unchanged) if no
-    academic-record.json exists yet for this module/week, exactly as the
-    CLI's ``after-lecture`` command does today.
+    or model call. With ``state`` a week that has no academic record yet gets
+    a bare one (no AI preparation), so reflecting never needs a provider;
+    without ``state`` it raises ``state.StateError`` if no record exists,
+    exactly as the CLI's ``after-lecture`` command does.
     """
     result = capture_after_lecture(
         module_code,
@@ -166,10 +172,63 @@ def capture_after_lecture_note(
         uncertainties=uncertainties,
         questions=questions,
         assessment_comments=assessment_comments,
+        covered=covered,
+        state=state,
         workspace_root=workspace_root,
         captured_at=captured_at,
     )
     return _jsonable(result)
+
+
+def correct_reflection(
+    module_code: str,
+    week_number: int,
+    entry_id: str,
+    *,
+    action: str,
+    new_text: str | None = None,
+    reason: str | None = None,
+    workspace_root: Path | None = None,
+) -> dict[str, Any]:
+    """LOCAL WRITE only: append a correction to one reflection entry (the original is kept)."""
+    return _jsonable(correct_after_lecture_entry(
+        module_code, week_number, entry_id, action=action, new_text=new_text, reason=reason,
+        workspace_root=workspace_root))
+
+
+def reflection_overview(module_code: str, week_number: int, *, workspace_root: Path | None = None) -> dict[str, Any]:
+    """READ-ONLY: the week's reflections (current wording plus correction history), newest first."""
+    try:
+        record, *_ = _learning_record(module_code, week_number, workspace_root)
+    except StateError:
+        return {"captures": [], "count": 0, "open_count": 0}
+    return _jsonable(reflection_view(record))
+
+
+EXPORT_KINDS = {
+    "study-pack": ("docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"),
+    "notebooklm": ("md", "text/markdown; charset=utf-8"),
+}
+
+
+def export_week(module_code: str, week_number: int, kind: str, *,
+                workspace_root: Path | None = None) -> tuple[str, str, bytes]:
+    """READ-ONLY: build a study export from the week's current record, in memory.
+
+    Returns ``(filename, media_type, content)``. Nothing is written and no model is called, so the file
+    always reflects the record as it is now. Raises ``StateError`` when the week has no record yet.
+    """
+    if kind not in EXPORT_KINDS:
+        raise StateError(f"Unknown export: {kind!r}")
+    try:
+        record, *_ = _learning_record(module_code, week_number, workspace_root)
+    except StateError as exc:
+        raise StateError("Nothing to export yet: record a reflection or prepare this week first.") from exc
+    extension, media_type = EXPORT_KINDS[kind]
+    stem = f"{record['module']['code']}-Week-{week_number:02d}-" + ("Study-Pack" if kind == "study-pack" else "NotebookLM")
+    stem = re.sub(r"[^A-Za-z0-9_-]+", "-", stem)
+    content = build_study_pack_docx(record) if kind == "study-pack" else build_notebooklm_markdown(record).encode("utf-8")
+    return f"{stem}.{extension}", media_type, content
 
 
 def materialize_workspace(
@@ -377,7 +436,9 @@ def learning_view(module_code: str, week_number: int, *, workspace_root: Path | 
             teach_questions.append({"task": q.get("text", ""), "topic": interaction.get("topic"),
                                     "source_references": q.get("provenance", [])})
     return {"summary": summary, "recommendation": select_next_study_task(attempts, record.get("sources", [])),
-            "latest_unevaluated": pending, "teach_questions": teach_questions}
+            "latest_unevaluated": pending, "teach_questions": teach_questions,
+            "reflection_step": next_step_from_reflections(record),
+            "open_reflection_items": open_reflection_items(record, limit=5)}
 
 
 def select_next_study_task(attempts: list[dict[str, Any]], sources: list[dict[str, Any]]) -> dict[str, str]:
@@ -468,6 +529,18 @@ def _is_rejected(entries: list[dict[str, Any]], task: dict[str, Any]) -> bool:
                and e.get("fingerprints") == fingerprints for e in entries)
 
 
+def _prefer_reflection_topics(candidates: list[dict[str, Any]], record: dict[str, Any]) -> list[dict[str, Any]]:
+    """Stable tie-break only: among valid tasks, show first the ones sharing terms with the student's open
+    questions. It never changes which capability is recommended or which tasks are eligible."""
+    from .learning_digest import _terms
+    wanted: set[str] = set()
+    for item in open_reflection_items(record):
+        wanted |= _terms(item["text"])
+    if not wanted:
+        return candidates
+    return sorted(candidates, key=lambda task: -len(wanted & _terms(task.get("task", ""))))
+
+
 def continue_learning_task(module_code: str, week_number: int, *, state: dict[str, Any],
                            provider: ReasoningProvider, workspace_root: Path | None = None,
                            allow_generation: bool = True) -> dict[str, Any]:
@@ -495,6 +568,7 @@ def continue_learning_task(module_code: str, week_number: int, *, state: dict[st
         candidates = [task for task in candidates if task["assistance_status"] == "UNAIDED" and not task["prompt_help"]]
     rejected = _unverified_entries(record)
     candidates = [task for task in candidates if not _is_rejected(rejected, task)]
+    candidates = _prefer_reflection_topics(candidates, record)
     if candidates:
         return {"recommendation": recommendation, "task": candidates[0], "generated": False}
     failed_generated = sum(1 for e in rejected if e.get("capability") == capability
@@ -667,11 +741,15 @@ def generate_revision_brief(
     evidence = model_view(digest)
     if evidence is not None:
         context["learning_evidence"] = evidence
+    reflections = reflection_context(record)
+    if reflections is not None:
+        context["student_reflections"] = reflections
     result = _run_sectioned_workflow(
         context, REVISE_WORKFLOW, provider=provider, cache_dir=cache_dir
     )
     return {"module_code": context["module"]["code"], "week": week_number, **result,
             "evidence_rendered": render_digest(digest), "evidence_status": digest["status"],
+            "reflections_used": reflections is not None,
             "evidence_items": [{k: v for k, v in i.items() if k != "source_references"} for i in digest["items"]]}
 
 
@@ -755,6 +833,48 @@ def has_any_observed_material(picture: dict[str, Any]) -> bool:
         for module in picture.get("modules", [])
         for week in module.get("weeks", [])
     )
+
+
+def week_journey(module_code: str, week_number: int, *, workspace_root: Path | None = None) -> dict[str, Any]:
+    """READ-ONLY: PREPARE -> attend -> reflect -> TEACH -> QUIZ -> REVISE -> export for one week.
+
+    A step is done only when the record holds evidence of it. Attending a lecture and revising leave no
+    record, so they are never marked done; the next step is the first recorded step still missing.
+    """
+    try:
+        record, *_ = _learning_record(module_code, week_number, workspace_root)
+    except StateError:
+        record = None
+    workflows = (record or {}).get("workflows", {})
+    learning = (record or {}).get("learning", {})
+    prepared = (workflows.get("prepare_me") or {}).get("status") == "completed"
+    reflected = bool((workflows.get("after_lecture") or {}).get("captures"))
+    taught = bool((workflows.get("teach") or {}).get("interactions"))
+    practised = bool(learning.get("evidence")) or bool((learning.get("quiz_history") or {}).get("attempts"))
+    has_sources = bool((record or {}).get("sources"))
+    open_items = open_reflection_items(record, limit=1)
+    teach_detail = ("Ask TEACH about your open " + open_items[0]["kind"] + ": “" + open_items[0]["text"][:120] + "”"
+                    if open_items else "Ask TEACH to explain one topic from this week's sources.")
+    steps = [
+        {"id": "prepare", "label": "Prepare", "done": prepared, "href": "#actions",
+         "detail": "Build this week's study workspace from your course materials (uses AI once you confirm)."
+                   if has_sources or record is None else "Attach course materials to this week first, then prepare."},
+        {"id": "attend", "label": "Attend the lecture", "done": False, "offline": True, "href": None,
+         "detail": "Away from the screen. Serapis does not track attendance."},
+        {"id": "reflect", "label": "Reflect", "done": reflected, "href": "#reflect",
+         "detail": "Right after the lecture, note what you understood and what is still unclear. No AI needed."},
+        {"id": "teach", "label": "TEACH", "done": taught, "href": "#actions", "detail": teach_detail},
+        {"id": "quiz", "label": "Quiz", "done": practised, "href": "#learning",
+         "detail": "Answer a few questions so your revision can use what you actually answered."},
+        {"id": "revise", "label": "REVISE", "done": False, "optional": True, "href": "#actions",
+         "detail": "Get a revision brief that puts your open questions and weaker answers first."},
+        {"id": "export", "label": "Export", "done": False, "optional": True, "href": "#export",
+         "detail": "Download a Word study pack, or a Markdown file to upload to NotebookLM yourself."},
+    ]
+    nxt = next((st for st in steps if not st["done"] and not st.get("offline") and not st.get("optional")), None)
+    if nxt is None:
+        nxt = next((st for st in steps if st["id"] == "revise"), None)
+    return {"steps": steps, "next": nxt, "has_record": record is not None}
 
 
 def build_student_journey(
