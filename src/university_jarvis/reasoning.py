@@ -952,6 +952,8 @@ def _trusted_fact_groups(
                 evidence_item["location"] = reference["location"]
             if source.get("source_class"):
                 evidence_item["source_class"] = source["source_class"]
+            if source.get("source_class") == "STUDENT_ENTERED":
+                evidence_item["authority_note"] = STUDENT_SOURCE_NOTE
             if source.get("title"):
                 evidence_item["title"] = source["title"]
             evidence.append(evidence_item)
@@ -977,17 +979,21 @@ def _fact_evidence_ids(value: Any) -> set[str]:
     return found
 
 
+STUDENT_SOURCE_NOTE = "Student-provided file; its origin and authority are not verified by Serapis. Usable for study, not as confirmation of an academic fact."
+
+
+def _source_for_model(source: dict[str, Any], keys: tuple[str, ...]) -> dict[str, Any]:
+    described = {key: source.get(key) for key in keys if source.get(key) is not None}
+    if source.get("source_class") == "STUDENT_ENTERED":
+        described["authority_note"] = STUDENT_SOURCE_NOTE
+    return described
+
+
 def build_reasoning_context(context: dict[str, Any]) -> dict[str, Any]:
     """Expose only selected state and bounded academic context to a provider."""
     sources = []
     for source in context["sources"]:
-        sources.append(
-            {
-                key: source.get(key)
-                for key in ("id", "type", "title", "authors", "pages", "source_class", "extraction")
-                if source.get(key) is not None
-            }
-        )
+        sources.append(_source_for_model(source, ("id", "type", "title", "authors", "pages", "source_class", "extraction")))
     source_by_id = {
         source["id"]: source
         for source in context.get("truth_sources", context.get("sources", []))
@@ -1019,11 +1025,7 @@ def build_reasoning_context(context: dict[str, Any]) -> dict[str, Any]:
         source = source_by_id.get(source_id)
         if source is None:
             continue
-        fact_evidence_sources.append({
-            key: source.get(key)
-            for key in ("id", "type", "title", "authors", "pages", "source_class")
-            if source.get(key) is not None
-        })
+        fact_evidence_sources.append(_source_for_model(source, ("id", "type", "title", "authors", "pages", "source_class")))
     reasoning_context = {
         "workflow": context["workflow"],
         "objective_context": context["objective_context"],

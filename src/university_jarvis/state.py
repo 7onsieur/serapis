@@ -23,6 +23,17 @@ SOURCE_CLASSES = {
 }
 ACADEMIC_TRUTH_SCHEMA_VERSION = 1
 
+# Only these classes may support a CONFIRMED fact. Files a student uploads are
+# STUDENT_ENTERED: usable for study and citation, never confirming evidence.
+# Sources imported before this rule may still be UNIVERSITY_MATERIAL even though
+# the student supplied them; that label does not establish verified origin and
+# legacy records are deliberately not reclassified.
+CONFIRMING_SOURCE_CLASSES = frozenset({"UNIVERSITY_MATERIAL", "MACHINE_OBSERVED_LMS"})
+
+# Student-chosen label for an uploaded file. Purely organisational: it is
+# independent of ``source_class`` and never confers academic authority.
+MATERIAL_KINDS = ("lecture", "seminar", "reading", "assessment_brief", "other")
+
 _MODULE_FACTS = ("code", "title", "semester", "academic_year")
 _ASSESSMENT_FACTS = (
     "title", "deadline", "deadline_status", "weight_percent", "requirements"
@@ -196,7 +207,7 @@ def _validate_state(state: dict[str, Any]) -> None:
                 sources_by_id[ref["source_id"]].get("source_class")
                 for ref in evidence
             }
-            if not confirming_classes.intersection({"UNIVERSITY_MATERIAL", "MACHINE_OBSERVED_LMS"}):
+            if not confirming_classes.intersection(CONFIRMING_SOURCE_CLASSES):
                 raise StateError(
                     f"Confirmed fact {module_code}.{field} requires university or explicitly reconciled LMS evidence"
                 )
@@ -245,6 +256,16 @@ def _validate_state(state: dict[str, Any]) -> None:
             ):
                 raise StateError(f"Invalid assessment requirements for {module_code}.{assessment_id}")
     for source in state["sources"]:
+        kind = source.get("material_kind")
+        if kind is not None and kind not in MATERIAL_KINDS:
+            raise StateError(f"Invalid material_kind for source {source['id']}")
+        linked = source.get("assessment_id")
+        if linked is not None:
+            if kind != "assessment_brief":
+                raise StateError(f"Source {source['id']} links an assessment but is not an assessment brief")
+            owner = next((m for m in state["modules"] if str(m.get("code", "")).upper() == str(source.get("module_code", "")).upper()), None)
+            if owner is None or not any(a.get("id") == linked for a in owner.get("assessments", [])):
+                raise StateError(f"Source {source['id']} links an assessment outside its module")
         scoped_module = source.get("module_code")
         if scoped_module is not None and str(scoped_module).upper() not in module_codes:
             raise StateError(f"Source {source['id']} references unknown module {scoped_module}")

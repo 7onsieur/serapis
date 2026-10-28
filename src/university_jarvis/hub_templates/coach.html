@@ -42,6 +42,7 @@
     &middot; Deadline: {{ session.assessment.deadline or "unknown" }} <span class="tag trust-{{ session.assessment.fact_status.deadline|lower }}">{{ trust[session.assessment.fact_status.deadline] }}</span>
     &middot; Weight: {{ (session.assessment.weight_percent ~ "%") if session.assessment.weight_percent is not none else "unknown" }} <span class="tag trust-{{ session.assessment.fact_status.weight_percent|lower }}">{{ trust[session.assessment.fact_status.weight_percent] }}</span>
   </p>
+  {% if linked_briefs %}<p class="note">Linked assessment brief{{ 's' if linked_briefs|length > 1 else '' }} (a file you linked; not verified or extracted): {% for b in linked_briefs %}{{ b.title }}{{ ', ' if not loop.last else '' }}{% endfor %}</p>{% endif %}
   <p class="anchors"><a href="#progress">Progress</a><a href="#conversation">Conversation</a><a href="#plan">Plan</a><a href="#evidence">Evidence</a><a href="#questions">Questions</a><a href="#brief">Brief &amp; criteria</a><a href="#materials">Materials</a></p>
 </div>
 

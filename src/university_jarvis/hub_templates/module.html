@@ -12,6 +12,23 @@
     {% endfor %}
   </details>{% elif status == "NEEDS_VERIFICATION" %}<small class="fact-evidence-note">No source linked</small>{% endif %}
 {%- endmacro %}
+{% macro assessment_form(action, key, button, a=None) -%}
+  {% set v = form_values if form_target == key else {} %}
+  {% set title = v.title if v else (a.title if a else '') %}
+  {% set tbc = v.deadline_tbc if v else (a is not none and a.deadline_status == 'TBC') %}
+  {% set deadline = v.deadline if v else (a.deadline if a and a.deadline else '') %}
+  {% set weight = v.weight if v else ((a.weight_percent if a.weight_percent is not none else '') if a else '') %}
+  {% set reqs = v.requirements if v else ((a.requirements or [])|join('\n') if a else '') %}
+  <form method="post" action="{{ action }}" class="assessment-form" data-assessment-form>
+    {% if form_target == key and action_error %}<p class="action-error">{{ action_error }}</p>{% endif %}
+    <label>Title <input name="title" value="{{ title }}" required></label>
+    <label>Deadline date (optional) <input name="deadline" type="date" value="{{ deadline }}" {{ 'disabled' if tbc else '' }}></label>
+    <label><input type="checkbox" name="deadline_tbc" value="1" {{ 'checked' if tbc else '' }}> Deadline not announced yet (TBC)</label>
+    <label>Weight % (optional) <input name="weight" type="number" min="0" max="100" step="any" value="{{ weight }}"></label>
+    <label>Requirements (one per line) <textarea name="requirements">{{ reqs }}</textarea></label>
+    <button type="submit">{{ button }}</button>
+  </form>
+{%- endmacro %}
 {% block content %}
 {% if dataset_kind == "fictional_example" or module.dataset_kind == "fictional_example" %}<div class="feature-panel"><strong>FICTIONAL SAMPLE DATA</strong> — All institutions, modules and assessment facts shown here are invented examples.</div>{% endif %}
 <p class="breadcrumb"><a href="/modules">&larr; Modules</a></p>
@@ -49,25 +66,31 @@
 </div>
 {% endif %}
 
+{% if imported_duplicate %}<div class="action-result" role="status"><strong>This file was already in your materials, so it was not added again.</strong> {% if duplicate_changed %}Updated: {{ duplicate_changed|join(" and ") }}.{% else %}Its existing type and links were left as they were.{% endif %}</div>{% endif %}
 {% if imported %}<div class="action-result" role="status"><strong>Material added.</strong> Open a week below to study from it, or use the Assignment Coach on an assessment.</div>{% endif %}
-<div class="section card">
-  <h2>Edit module</h2>
+<p class="note">Add <a href="#assessments">assessments</a> and <a href="#materials">course materials</a> below, then open a week to study.</p>
+<details class="section card" id="edit-module">
+  <summary>Edit module (rename or remove)</summary>
   <form method="post" action="/modules/{{ module.module_code }}/edit">
     <label>Module code <input name="code" value="{{ module.module_code }}" required></label>
     <label>Module title <input name="title" value="{{ module.title or '' }}" required></label>
     <button type="submit">Save module</button>
   </form>
   <form method="post" action="/modules/{{ module.module_code }}/remove" onsubmit="return confirm('Remove this module and its material records?');"><button type="submit">Remove module</button></form>
-</div>
+</details>
 
 <div class="section" id="materials">
   <div class="section-head"><h2>Course materials</h2></div>
-  {% if materials %}<ul>{% for source in materials %}<li>{{ source.title }} — {% if source.locator.endswith('.pptx') %}text extraction supported; file must contain readable slide text{% elif source.locator.endswith('.pdf') %}{{ 'PDF text extraction is supported on macOS' if is_macos else 'PDF is stored locally; text extraction is macOS-only' }}{% endif %}
+  <p class="note">Add the files Serapis should study from: lecture slides, seminar or tutorial sheets, readings and assessment briefs (PDF or PowerPoint .pptx). Choosing a type is optional; it only helps you find files again and never marks anything as verified by your university.</p>
+  {% if materials %}<ul>{% for source in materials %}<li>{{ source.title }} <span class="tag">{{ material_kinds.get(source.material_kind, 'Uncategorised') }}</span>{% if source.assessment_id %}{% for a in module.assessments if a.assessment_id == source.assessment_id %} <span class="note">Brief for: {{ a.title }}</span>{% endfor %}{% endif %} — {% if source.locator.endswith('.pptx') %}text extraction supported; file must contain readable slide text{% elif source.locator.endswith('.pdf') %}{{ 'PDF text extraction is supported on macOS' if is_macos else 'PDF is stored locally; text extraction is macOS-only' }}{% endif %}
+    <form method="post" action="/materials/{{ source.id }}/details"><label>Type <select name="material_kind"><option value="">Uncategorised</option>{% for key, label in material_kinds.items() %}<option value="{{ key }}" {{ 'selected' if source.material_kind == key else '' }}>{{ label }}</option>{% endfor %}</select></label>{% if module.assessments %}<label>Brief for assessment (briefs only) <select name="assessment_id"><option value="">Not linked</option>{% for a in module.assessments %}<option value="{{ a.assessment_id }}" {{ 'selected' if source.assessment_id == a.assessment_id else '' }}>{{ a.title }}</option>{% endfor %}</select></label>{% endif %}<button type="submit">Save type</button></form>
     <form method="post" enctype="multipart/form-data" action="/materials/{{ source.id }}/replace"><label>Replace file <input type="file" name="file" accept=".pdf,.pptx" required></label><button type="submit">Replace</button></form>
     <form method="post" action="/materials/{{ source.id }}/reassign"><label>Module <input name="module_code" value="{{ module.module_code }}" required></label><label>Week (optional) <input name="week" type="number" min="1" value="{{ source.week if source.week else '' }}"></label><button type="submit">Save location</button></form>
     <form method="post" action="/materials/{{ source.id }}/remove"><button type="submit">Remove</button></form></li>{% endfor %}</ul>{% else %}<p class="empty">No materials yet.</p>{% endif %}
   <form method="post" enctype="multipart/form-data" action="/modules/{{ module.module_code }}/materials">
     <label>Choose PDF or PowerPoint file <input type="file" name="file" accept=".pdf,.pptx" required></label>
+    <label>Type (optional) <select name="material_kind"><option value="">Uncategorised</option>{% for key, label in material_kinds.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}</select></label>
+    {% if module.assessments %}<label>Brief for assessment (only if this is an assessment brief) <select name="assessment_id"><option value="">Not linked</option>{% for a in module.assessments %}<option value="{{ a.assessment_id }}">{{ a.title }}</option>{% endfor %}</select></label>{% endif %}
     <label>Week (optional) <input name="week" type="number" min="1"></label>
     <button type="submit">Add material</button>
   </form>
@@ -131,7 +154,9 @@
         {% else %}
         <form method="post" action="/modules/{{ module.module_code }}/assessments/{{ assessment.assessment_id }}/coach/start"><input type="hidden" name="client_request_id" value="{{ coach_request_id }}{{ loop.index }}"><button type="submit">Open in Assignment Coach</button></form>
         {% endif %}
-        <details><summary>Edit</summary><form method="post" action="/modules/{{ module.module_code }}/assessments/{{ assessment.assessment_id }}/edit"><label>Title <input name="title" value="{{ assessment.title or '' }}" required></label><label>Deadline <input name="deadline" type="date" value="{{ assessment.deadline or '' }}"></label><label>Weight % <input name="weight" type="number" min="0" max="100" step="any" value="{{ assessment.weight_percent if assessment.weight_percent is not none else '' }}"></label><label>Requirements <textarea name="requirements">{{ (assessment.requirements or [])|join('\n') }}</textarea></label><button type="submit">Save assessment</button></form></details><form method="post" action="/modules/{{ module.module_code }}/assessments/{{ assessment.assessment_id }}/remove"><button type="submit">Remove</button></form></td>
+        {% set briefs = materials|selectattr("assessment_id", "equalto", assessment.assessment_id)|list %}
+        {% if briefs %}<p class="note">Linked brief{{ 's' if briefs|length > 1 else '' }} (not verified or extracted): {% for b in briefs %}{{ b.title }}{{ ', ' if not loop.last else '' }}{% endfor %}</p>{% endif %}
+        <details {{ 'open' if form_target == assessment.assessment_id else '' }}><summary>Edit</summary>{{ assessment_form("/modules/" ~ module.module_code ~ "/assessments/" ~ assessment.assessment_id ~ "/edit", assessment.assessment_id, "Save assessment", assessment) }}</details><form method="post" action="/modules/{{ module.module_code }}/assessments/{{ assessment.assessment_id }}/remove"><button type="submit">Remove</button></form></td>
     </tr>
     {% endfor %}
   </table>
@@ -142,14 +167,8 @@
   <div class="card"><p class="empty">No assessments are recorded for this module yet.</p></div>
   {% endif %}
   <h3>Add assessment</h3>
-  <form method="post" action="/modules/{{ module.module_code }}/assessments">
-    <label>Title <input name="title" required></label>
-    <label>Deadline (optional, YYYY-MM-DD) <input name="deadline" type="date"></label>
-    <label>Weight % (optional) <input name="weight" type="number" min="0" max="100" step="any"></label>
-    <label>Requirements (one per line) <textarea name="requirements"></textarea></label>
-    <p class="note">Details you enter are marked “Needs checking” until supported by an appropriate source.</p>
-    <button type="submit">Add assessment</button>
-  </form>
+  {{ assessment_form("/modules/" ~ module.module_code ~ "/assessments", "new", "Add assessment") }}
+  <p class="note">Details you enter are marked “Needs checking” until supported by an appropriate source.</p>
 </div>
 
 <div class="section">
@@ -165,4 +184,10 @@
     </form>
   </div>
 </div>
+<script>
+  document.querySelectorAll("[data-assessment-form]").forEach(function (form) {
+    var date = form.elements["deadline"], tbc = form.elements["deadline_tbc"];
+    tbc.addEventListener("change", function () { if (tbc.checked) { date.value = ""; } date.disabled = tbc.checked; });
+  });
+</script>
 {% endblock %}

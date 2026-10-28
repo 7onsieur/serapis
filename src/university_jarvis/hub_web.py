@@ -83,7 +83,19 @@ from fastapi.templating import Jinja2Templates
 from . import assignment_coach, hub_service, tutoring
 from .hub_security import MAX_UPLOAD_BYTES, HubSecurityMiddleware
 from .reasoning import OpenAIReasoningProvider, ReasoningProvider
-from .state import StateError, load_state
+from .state import MATERIAL_KINDS, StateError, load_state
+
+MATERIAL_KIND_LABELS = {
+    "lecture": "Lecture", "seminar": "Seminar / tutorial", "reading": "Reading",
+    "assessment_brief": "Assessment brief", "other": "Other",
+}
+assert tuple(MATERIAL_KIND_LABELS) == MATERIAL_KINDS
+
+
+def _assessment_form_values(form: dict[str, str]) -> dict[str, Any]:
+    """Submitted assessment fields, echoed back so a failed save loses nothing."""
+    return {"title": form.get("title", ""), "deadline": form.get("deadline", ""), "weight": form.get("weight", ""),
+            "requirements": form.get("requirements", ""), "deadline_tbc": form.get("deadline_tbc") == "1"}
 
 TEMPLATES_DIR = Path(__file__).resolve().parent / "hub_templates"
 
@@ -301,6 +313,8 @@ def create_app(
         status_code: int = 200,
         action_result: dict[str, Any] | None = None,
         action_error: str | None = None,
+        form_values: dict[str, Any] | None = None,
+        form_target: str | None = None,
     ) -> HTMLResponse:
         picture = _picture(request)
         module = _find_module(picture, module_code)
@@ -325,10 +339,15 @@ def create_app(
                 "coach_sessions": coach,
                 "coach_request_id": secrets.token_hex(12),
                 "imported": request.query_params.get("imported") == "1",
+                "imported_duplicate": request.query_params.get("imported") == "duplicate",
+                "duplicate_changed": [x for x in request.query_params.get("changed", "").split(",") if x in ("category", "assessment link")],
                 "action_rows": _present_action_result(action_result),
                 "action_rendered": _action_rendered_text(action_result),
                 "action_evidence": _action_evidence_text(action_result),
                 "action_error": action_error,
+                "form_values": form_values or {},
+                "form_target": form_target,
+                "material_kinds": MATERIAL_KIND_LABELS,
             },
             status_code=status_code,
         )
@@ -491,10 +510,10 @@ def create_app(
         from .student_setup import save_assessment
         form = await _form_fields(request)
         try:
-            save_assessment(module_code, title=form.get("title", ""), deadline=form.get("deadline", ""), weight_percent=form.get("weight", ""), requirements=form.get("requirements", ""))
+            save_assessment(module_code, title=form.get("title", ""), deadline=form.get("deadline", ""), weight_percent=form.get("weight", ""), requirements=form.get("requirements", ""), deadline_tbc=form.get("deadline_tbc") == "1")
             return RedirectResponse(f"/modules/{module_code}#assessments", status_code=303)
         except StateError as exc:
-            return _render_module(request, module_code, status_code=400, action_error=f"Assessment was not saved: {exc}")
+            return _render_module(request, module_code, status_code=400, action_error=f"Assessment was not saved: {exc}", form_values=_assessment_form_values(form), form_target="new")
 
     @app.post("/modules/{module_code}/assessments/{assessment_id}/remove")
     def remove_assessment_route(request: Request, module_code: str, assessment_id: str) -> Response:
@@ -510,10 +529,10 @@ def create_app(
         from .student_setup import save_assessment
         form = await _form_fields(request)
         try:
-            save_assessment(module_code, assessment_id=assessment_id, title=form.get("title", ""), deadline=form.get("deadline", ""), weight_percent=form.get("weight", ""), requirements=form.get("requirements", ""))
+            save_assessment(module_code, assessment_id=assessment_id, title=form.get("title", ""), deadline=form.get("deadline", ""), weight_percent=form.get("weight", ""), requirements=form.get("requirements", ""), deadline_tbc=form.get("deadline_tbc") == "1")
             return RedirectResponse(f"/modules/{module_code}#assessments", status_code=303)
         except StateError as exc:
-            return _render_module(request, module_code, status_code=400, action_error=f"Assessment was not saved: {exc}")
+            return _render_module(request, module_code, status_code=400, action_error=f"Assessment was not saved: {exc}", form_values=_assessment_form_values(form), form_target=assessment_id)
 
     @app.post("/modules/{module_code}/materials", response_class=HTMLResponse)
     async def add_material_route(request: Request, module_code: str) -> HTMLResponse:
@@ -531,9 +550,12 @@ def create_app(
             scratch_dir = Path(tempfile.mkdtemp(prefix="serapis-upload-"))
             try:
                 scratch = await _stream_upload_to_private_file(upload, scratch_dir)
-                result = import_material(module_code, scratch, week=week)
+                result = import_material(module_code, scratch, week=week, material_kind=str(form.get("material_kind", "")), assessment_id=str(form.get("assessment_id", "")))
             finally:
                 shutil.rmtree(scratch_dir, ignore_errors=True)
+            if result["duplicate"]:
+                from urllib.parse import quote
+                return RedirectResponse(f"/modules/{module_code}?imported=duplicate&changed={quote(','.join(result['metadata_changed']))}#materials", status_code=303)
             return RedirectResponse(f"/modules/{module_code}?imported=1#materials", status_code=303)
         except (StateError, ValueError, OSError) as exc:
             message = "Week must be a whole number." if isinstance(exc, ValueError) and not isinstance(exc, StateError) else str(exc)
@@ -566,6 +588,20 @@ def create_app(
             return _render_modules_error(request, f"Replacement was not saved: {exc}")
         finally:
             shutil.rmtree(scratch_dir, ignore_errors=True)
+
+    @app.post("/materials/{source_id}/details")
+    async def material_details_route(request: Request, source_id: str) -> Response:
+        """LOCAL WRITE: set, change or clear a file's category and brief link. Organisation only."""
+        from .student_setup import set_material_details
+        form = await _form_fields(request)
+        module_code = next((s.get("module_code") for s in _state(request).get("sources", []) if s["id"] == source_id), None)
+        try:
+            set_material_details(source_id, material_kind=form.get("material_kind", ""), assessment_id=form.get("assessment_id", ""))
+            return RedirectResponse(f"/modules/{module_code}#materials", status_code=303)
+        except StateError as exc:
+            if module_code:
+                return _render_module(request, module_code, status_code=400, action_error=f"Material details were not saved: {exc}")
+            return _render_modules_error(request, f"Material details were not saved: {exc}")
 
     @app.post("/materials/{source_id}/reassign")
     async def reassign_material_route(request: Request, source_id: str) -> RedirectResponse:
@@ -1058,9 +1094,11 @@ def create_app(
         loaded = assignment_coach.load_session(
             module["module_code"], session_view["session_id"],
             workspace_root=request.app.state.hub_workspace_root, state=state)
+        linked_briefs = [s for s in state.get("sources", []) if s.get("assessment_id") == session_view["assessment_id"]
+                         and str(s.get("module_code", "")).upper() == module["module_code"].upper()]
         return templates.TemplateResponse(
             request, "coach.html",
-            {"module": module, "session": loaded, "assessment": assessment, "error": error, "draft": draft,
+            {"module": module, "session": loaded, "assessment": assessment, "linked_briefs": linked_briefs, "error": error, "draft": draft,
              "draft_shared": draft_shared, "new_turn_id": secrets.token_hex(12), "active_nav": "modules",
              "stages": assignment_coach.STAGES, "section_statuses": assignment_coach.SECTION_STATUSES,
              "evidence_kinds": assignment_coach.EVIDENCE_KINDS,

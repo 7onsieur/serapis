@@ -658,18 +658,24 @@ def main(
                     print(f"Could not add module: {exc}")
                     continue
                 if input("Add an assessment now? [y/N] ").strip().lower() == "y":
-                    atitle = input("Assessment title: ").strip()
-                    deadline = input("Deadline (YYYY-MM-DD, optional): ").strip()
-                    weight = input("Weight % (optional): ").strip()
+                    values = {"title": input("Assessment title: ").strip(),
+                              "deadline": input("Deadline (YYYY-MM-DD, TBC if not announced, optional): ").strip(),
+                              "weight_percent": input("Weight % (optional): ").strip()}
                     requirements = []
                     while True:
                         line = input("Requirement (press Enter when finished): ").strip()
                         if not line: break
                         requirements.append(line)
-                    try:
-                        save_assessment(code, title=atitle, deadline=deadline, weight_percent=weight, requirements="\n".join(requirements))
-                    except StateError as exc:
-                        print(f"Assessment was not saved: {exc}")
+                    while True:
+                        try:
+                            save_assessment(code, requirements="\n".join(requirements), **values)
+                            break
+                        except StateError as exc:
+                            print(f"Assessment was not saved: {exc}")
+                            field = "title" if "title" in str(exc).lower() else ("weight_percent" if "weight" in str(exc).lower() else "deadline")
+                            retry = input(f"Enter a corrected {field.replace('_percent', '')} (press Enter to skip this assessment): ").strip()
+                            if not retry: break
+                            values[field] = retry
                 if input("Add a course file now? [y/N] ").strip().lower() == "y":
                     from .student_setup import import_material
                     from pathlib import Path
@@ -682,7 +688,7 @@ def main(
                         print(f"Material was not added: {exc}")
                 if input("Add another module? [y/N] ").strip().lower() != "y": break
             print(f"Your private Serapis data is stored in: {personal_data_dir()}")
-            print("Next: run 'serapis hub' to inspect your modules and add course materials.")
+            print("Next: run 'serapis hub' and open the address it prints to review your modules and add course materials.")
             if not args.no_open and input("Open the Hub now? [y/N] ").strip().lower() == "y":
                 import webbrowser
                 import threading

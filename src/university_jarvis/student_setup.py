@@ -13,7 +13,7 @@ from typing import Any
 
 from .locking import record_lock
 from .sources import PROJECT_ROOT
-from .state import env_setting, StateError, _validate_state, normalize_academic_truth, personal_data_dir, save_state
+from .state import MATERIAL_KINDS, env_setting, StateError, _validate_state, normalize_academic_truth, personal_data_dir, save_state
 
 
 def personal_state_path() -> Path:
@@ -177,8 +177,12 @@ def remove_module(code: str, *, path: Path | None = None) -> dict[str, Any]:
     return result
 
 
+_ASSESSMENT_FIELDS = ("title", "deadline", "deadline_status", "weight_percent", "requirements")
+PENDING_DEADLINE_WORDS = {"tba", "tbc", "to be confirmed", "to be announced"}
+
+
 @_state_transaction
-def save_assessment(module_code: str, *, assessment_id: str | None = None, title: str, deadline: str = "", weight_percent: str = "", requirements: str = "", path: Path | None = None) -> dict[str, Any]:
+def save_assessment(module_code: str, *, assessment_id: str | None = None, title: str, deadline: str = "", weight_percent: str = "", requirements: str = "", deadline_tbc: bool = False, path: Path | None = None) -> dict[str, Any]:
     state, target = _load(path)
     module = next((m for m in state["modules"] if m["code"].upper() == module_code.upper()), None)
     if module is None: raise StateError(f"Module {module_code} was not found.")
@@ -187,6 +191,10 @@ def save_assessment(module_code: str, *, assessment_id: str | None = None, title
         raise StateError("That assessment could not be found. Refresh the module and try again.")
     if not title.strip(): raise StateError("Enter an assessment title.")
     deadline = deadline.strip()
+    if deadline.lower() in PENDING_DEADLINE_WORDS:
+        deadline, deadline_tbc = "", True
+    elif deadline_tbc and deadline:
+        raise StateError("Choose either a deadline date or 'TBC', not both.")
     weight: float | None = None
     if weight_percent.strip():
         try: weight = float(weight_percent)
@@ -195,10 +203,24 @@ def save_assessment(module_code: str, *, assessment_id: str | None = None, title
     import datetime
     if deadline:
         try: datetime.date.fromisoformat(deadline)
-        except ValueError as exc: raise StateError("Enter a date as YYYY-MM-DD, or leave it blank.") from exc
+        except ValueError as exc: raise StateError("Enter a date as YYYY-MM-DD, write TBC if it has not been announced, or leave it blank.") from exc
     record = existing or {"id": "assessment-" + uuid.uuid4().hex[:12], "category": "ASSESSMENT"}
-    record.update({"title": title.strip(), "deadline": deadline or None, "deadline_status": "unverified" if deadline else None, "weight_percent": weight, "requirements": [x.strip() for x in requirements.splitlines() if x.strip()] or None})
-    _facts(record, ("title", "deadline", "deadline_status", "weight_percent", "requirements"))
+    old_values = {field: record.get(field) for field in _ASSESSMENT_FIELDS}
+    old_provenance = record.get("fact_provenance") or {}
+    new_deadline = deadline or None
+    if new_deadline is not None and new_deadline == old_values["deadline"] and old_values["deadline_status"]:
+        new_status = old_values["deadline_status"]  # same date: keep whatever status it already had
+    else:
+        new_status = "unverified" if new_deadline else ("TBC" if deadline_tbc else None)
+    new_values = {"title": title.strip(), "deadline": new_deadline, "deadline_status": new_status, "weight_percent": weight,
+                  "requirements": [x.strip() for x in requirements.splitlines() if x.strip()] or None}
+    record.update(new_values)
+    # A fact keeps its status and evidence unless its stored value actually changed.
+    record["fact_provenance"] = {
+        **old_provenance,
+        **{field: old_provenance[field] if existing is not None and field in old_provenance and old_values[field] == new_values[field] else _fact(new_values[field], field=field)
+        for field in _ASSESSMENT_FIELDS}
+    }
     if existing is None: module["assessments"].append(record)
     return _save(state, target)
 
@@ -209,6 +231,45 @@ def remove_assessment(module_code: str, assessment_id: str, *, path: Path | None
     module = next((m for m in state["modules"] if m["code"].upper() == module_code.upper()), None)
     if module is None: raise StateError(f"Module {module_code} was not found.")
     module["assessments"] = [a for a in module.get("assessments", []) if a["id"] != assessment_id]
+    for source in state["sources"]:
+        if source.get("assessment_id") == assessment_id and str(source.get("module_code", "")).upper() == module["code"].upper():
+            source.pop("assessment_id", None)
+    return _save(state, target)
+
+
+def _check_material_details(module: dict[str, Any], material_kind: str | None, assessment_id: str | None, *, current_kind: str | None = None) -> tuple[str | None, str | None]:
+    """Validate the optional student label and brief link; returns cleaned values.
+
+    ``current_kind`` is the file's existing category, used when only a link is submitted.
+    """
+    kind = (material_kind or "").strip() or None
+    link = (assessment_id or "").strip() or None
+    if kind is not None and kind not in MATERIAL_KINDS:
+        raise StateError("Choose one of: lecture, seminar/tutorial, reading, assessment brief, other.")
+    if link is not None:
+        if (kind or current_kind) != "assessment_brief":
+            raise StateError("Only a file marked as an assessment brief can be linked to an assessment.")
+        if not any(a.get("id") == link for a in module.get("assessments", [])):
+            raise StateError("Choose an assessment from the same module as this file.")
+    return kind, link
+
+
+@_state_transaction
+def set_material_details(source_id: str, *, material_kind: str | None = None, assessment_id: str | None = None, path: Path | None = None) -> dict[str, Any]:
+    """Set, change or clear a material's category and (for briefs) its assessment link.
+
+    A label and a link are organisation only: they never touch ``source_class``
+    or any fact's provenance.
+    """
+    state, target = _load(path)
+    source = next((s for s in state["sources"] if s["id"] == source_id), None)
+    if source is None: raise StateError("Material could not be found.")
+    module = next((m for m in state["modules"] if m["code"].upper() == str(source.get("module_code", "")).upper()), None)
+    if module is None: raise StateError("This material is not in a module; move it to a module first.")
+    kind, link = _check_material_details(module, material_kind, assessment_id)
+    for key, value in (("material_kind", kind), ("assessment_id", link)):
+        if value is None: source.pop(key, None)
+        else: source[key] = value
     return _save(state, target)
 
 
@@ -251,13 +312,14 @@ def validate_material_content(path: Path) -> None:
 
 
 @_state_transaction
-def import_material(module_code: str, source_path: Path, *, week: int | None = None, source_id: str | None = None, path: Path | None = None) -> dict[str, Any]:
+def import_material(module_code: str, source_path: Path, *, week: int | None = None, source_id: str | None = None, material_kind: str | None = None, assessment_id: str | None = None, path: Path | None = None) -> dict[str, Any]:
     state, target = _load(path)
     module = next((m for m in state["modules"] if m["code"].upper() == module_code.upper()), None)
     if module is None: raise StateError(f"Module {module_code} was not found.")
     source_path = source_path.expanduser().resolve()
     if not source_path.is_file(): raise StateError(f"Could not find the selected file: {source_path.name}")
     capability = material_capability(source_path)
+    _check_material_details(module, material_kind, None)  # category must be valid before any file is copied
     if week is not None and (isinstance(week, bool) or week < 1): raise StateError("Week must be a number greater than zero.")
     materials_dir = (target.parent / "materials" / module["code"]) if path is not None else (personal_data_dir() / "materials" / module["code"])
     materials_dir.mkdir(parents=True, exist_ok=True)
@@ -267,19 +329,33 @@ def import_material(module_code: str, source_path: Path, *, week: int | None = N
         if destination.read_bytes() == source_path.read_bytes():
             existing = next((s for s in state["sources"] if Path(s.get("locator", "")).resolve() == destination.resolve()), None)
             if existing:
+                # Explicit, valid choices are applied to the existing file; omitted ones leave it as it was.
+                kind, link = _check_material_details(module, material_kind, assessment_id, current_kind=existing.get("material_kind"))
+                changed = []
+                if kind and kind != existing.get("material_kind"):
+                    existing["material_kind"] = kind
+                    if kind != "assessment_brief": existing.pop("assessment_id", None)
+                    changed.append("category")
+                if link and link != existing.get("assessment_id"):
+                    existing["assessment_id"] = link
+                    changed.append("assessment link")
+                if changed: state = _save(state, target)
                 if week is not None and (existing.get("module_code") != module["code"] or existing.get("week") != week):
                     reassigned = reassign_material(existing["id"], module["code"], week, path=target)
                     state = reassigned
                     existing["week"] = week
-                return {"state": state, "source": existing, "capability": capability, "duplicate": True}
+                return {"state": state, "source": existing, "capability": capability, "duplicate": True, "metadata_changed": changed}
         destination = materials_dir / f"{source_path.stem}-{uuid.uuid4().hex[:8]}{source_path.suffix.lower()}"
     temp = destination.with_name(destination.name + ".importing")
+    material_kind, assessment_id = _check_material_details(module, material_kind, assessment_id)
     try:
         shutil.copyfile(source_path, temp)
         os.replace(temp, destination)
         sid = source_id or "src-" + uuid.uuid4().hex
         if any(s["id"] == sid for s in state["sources"]): raise StateError("A generated source identifier collided; retry the import.")
-        source = {"id": sid, "module_code": module["code"], "type": "course_material", "source_class": "UNIVERSITY_MATERIAL", "title": source_path.name, "availability": "content_available", "locator": str(destination), "original_filename": source_path.name}
+        source = {"id": sid, "module_code": module["code"], "type": "course_material", "source_class": "STUDENT_ENTERED", "title": source_path.name, "availability": "content_available", "locator": str(destination), "original_filename": source_path.name}
+        if material_kind: source["material_kind"] = material_kind
+        if assessment_id: source["assessment_id"] = assessment_id
         if week is not None:
             existing_week = next((w for w in module["weeks"] if w["week"] == week), None)
             if existing_week is None:
@@ -297,7 +373,7 @@ def import_material(module_code: str, source_path: Path, *, week: int | None = N
         if destination.exists() and not any(s.get("locator") == str(destination) for s in state.get("sources", [])):
             destination.unlink(missing_ok=True)
         raise
-    return {"state": state, "source": source, "capability": capability, "duplicate": False}
+    return {"state": state, "source": source, "capability": capability, "duplicate": False, "metadata_changed": []}
 
 
 @_state_transaction
@@ -309,6 +385,8 @@ def reassign_material(source_id: str, module_code: str, week: int | None, *, pat
     old_module = next((m for m in state["modules"] if m["code"].upper() == str(source.get("module_code", "")).upper()), None)
     if old_module:
         for old_week in old_module.get("weeks", []): old_week["source_ids"] = [sid for sid in old_week.get("source_ids", []) if sid != source_id]
+    if str(source.get("module_code", "")).upper() != module["code"].upper():
+        source.pop("assessment_id", None)
     source["module_code"] = module["code"]
     source.pop("week", None)
     if week is not None:

@@ -52,14 +52,16 @@ cd serapis
 python3 -m venv .venv
 .venv/bin/python -m pip install --upgrade pip
 .venv/bin/pip install -e .
-.venv/bin/serapis setup
-```
-
-Setup creates or continues your personal workspace and can open the Hub when finished. You can also start it later with:
-
-```sh
 .venv/bin/serapis hub
 ```
+
+`serapis hub` starts Serapis on your computer and prints its address (normally `http://127.0.0.1:8765`; open it in your browser). You do not need to answer any Terminal questions:
+
+1. The Hub first shows a clearly labelled **fictional sample**. Choose **Start my own workspace** to create your own empty one; the sample is never changed.
+2. Enter your university and programme on the Profile page.
+3. Add a module, then its assessments (a deadline can be left blank or set to TBC) and your course materials.
+
+Command-line users can still run `.venv/bin/serapis setup` for a question-and-answer setup in the Terminal; it creates the same workspace.
 
 The Hub is local to your computer and defaults to `http://127.0.0.1:8765`. In the Hub, add modules and assessments, then add PDF or PPTX course materials to the relevant module/week. You can manage your modules and assessments there without editing JSON files. The current setup and Hub have been tested as a Python application, but the project is still early-stage software; the Blackboard browser integration in particular may require platform-specific browser setup.
 
