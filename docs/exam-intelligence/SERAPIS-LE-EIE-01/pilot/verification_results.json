@@ -1,0 +1,245 @@
+{
+  "total_marks": 45,
+  "results": [
+    {
+      "id": "Q01",
+      "marks": 3,
+      "checks": [
+        {
+          "name": "sympy roots equal expected",
+          "pass": true
+        },
+        {
+          "name": "every expected root substitutes to 0 exactly",
+          "pass": true
+        },
+        {
+          "name": "factor identity expands equal",
+          "pass": true
+        }
+      ],
+      "all_pass": true
+    },
+    {
+      "id": "Q02",
+      "marks": 3,
+      "checks": [
+        {
+          "name": "sympy roots equal expected",
+          "pass": true
+        },
+        {
+          "name": "every expected root substitutes to 0 exactly",
+          "pass": true
+        }
+      ],
+      "all_pass": true
+    },
+    {
+      "id": "Q03",
+      "marks": 3,
+      "checks": [
+        {
+          "name": "sympy roots equal expected",
+          "pass": true
+        },
+        {
+          "name": "every expected root substitutes to 0 exactly",
+          "pass": true
+        },
+        {
+          "name": "factor identity expands equal",
+          "pass": true
+        }
+      ],
+      "all_pass": true
+    },
+    {
+      "id": "Q04",
+      "marks": 3,
+      "checks": [
+        {
+          "name": "sympy roots equal expected",
+          "pass": true
+        },
+        {
+          "name": "every expected root substitutes to 0 exactly",
+          "pass": true
+        },
+        {
+          "name": "no rational root (not integer-factorisable)",
+          "pass": true
+        }
+      ],
+      "all_pass": true
+    },
+    {
+      "id": "Q05",
+      "marks": 3,
+      "checks": [
+        {
+          "name": "roots rounded to 2 dp = ['0.28', '2.39']",
+          "pass": true
+        }
+      ],
+      "all_pass": true
+    },
+    {
+      "id": "Q06",
+      "marks": 4,
+      "checks": [
+        {
+          "name": "roots rounded to 3 sf = ['1.92', '-3.92']",
+          "pass": true
+        },
+        {
+          "name": "rearranged form 2x^2+4x-15",
+          "pass": true
+        },
+        {
+          "name": "discriminant 136 (non-square)",
+          "pass": true
+        }
+      ],
+      "all_pass": true
+    },
+    {
+      "id": "Q07",
+      "marks": 4,
+      "checks": [
+        {
+          "name": "completed-square form expands to expression",
+          "pass": true
+        },
+        {
+          "name": "stated surd roots are roots",
+          "pass": true
+        },
+        {
+          "name": "sympy roots equal stated",
+          "pass": true
+        }
+      ],
+      "all_pass": true
+    },
+    {
+      "id": "Q08",
+      "marks": 4,
+      "checks": [
+        {
+          "name": "completed-square form expands to expression",
+          "pass": true
+        },
+        {
+          "name": "minimum point (x)",
+          "pass": true
+        },
+        {
+          "name": "minimum value (y)",
+          "pass": true
+        },
+        {
+          "name": "leading coefficient positive (minimum)",
+          "pass": true
+        }
+      ],
+      "all_pass": true
+    },
+    {
+      "id": "Q09",
+      "marks": 6,
+      "checks": [
+        {
+          "name": "shown equation 2w^2+3w-77 = 0",
+          "pass": true
+        },
+        {
+          "name": "exactly one positive root",
+          "pass": true
+        },
+        {
+          "name": "positive root = 11/2",
+          "pass": true
+        },
+        {
+          "name": "perimeter = 39",
+          "pass": true
+        },
+        {
+          "name": "discriminant 625 = 25^2",
+          "pass": true
+        }
+      ],
+      "all_pass": true
+    },
+    {
+      "id": "Q10",
+      "marks": 5,
+      "checks": [
+        {
+          "name": "shown equation 2x^2+4x-77 = 0",
+          "pass": true
+        },
+        {
+          "name": "one positive root",
+          "pass": true
+        },
+        {
+          "name": "x to 3 sf",
+          "pass": true
+        },
+        {
+          "name": "Pythagoras holds exactly for exact root",
+          "pass": true
+        },
+        {
+          "name": "discriminant 632 (non-square)",
+          "pass": true
+        }
+      ],
+      "all_pass": true
+    },
+    {
+      "id": "Q11",
+      "marks": 4,
+      "checks": [
+        {
+          "name": "one positive root",
+          "pass": true
+        },
+        {
+          "name": "t to 2 dp",
+          "pass": true
+        },
+        {
+          "name": "other root negative (rejection valid)",
+          "pass": true
+        },
+        {
+          "name": "height at root is zero",
+          "pass": true
+        }
+      ],
+      "all_pass": true
+    },
+    {
+      "id": "Q12",
+      "marks": 3,
+      "checks": [
+        {
+          "name": "completed-square form expands to expression",
+          "pass": true
+        },
+        {
+          "name": "minimum value equals 1",
+          "pass": true
+        },
+        {
+          "name": "no real roots (disc < 0)",
+          "pass": true
+        }
+      ],
+      "all_pass": true
+    }
+  ]
+}

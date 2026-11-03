@@ -1,0 +1,487 @@
+[
+  {
+    "id": "Q01",
+    "title": "Factorise then solve (a=1)",
+    "ao": "AO1 (3a routine procedure)",
+    "difficulty_hypothesis": "grade 4-5 [I]",
+    "calculator": "non-calculator",
+    "generation": "root-first: roots 9 and -2 chosen, then expanded",
+    "text": "(a) Factorise x² − 7x − 18  [2 marks]\n(b) Hence solve x² − 7x − 18 = 0  [1 mark]",
+    "marks": 3,
+    "solution": "(a) Need two numbers with product −18 and sum −7: −9 and +2. x² − 7x − 18 = (x − 9)(x + 2).\n(b) (x − 9)(x + 2) = 0, so x = 9 or x = −2.",
+    "marking": [
+      "(a) M1 for a correct attempt: (x ± p)(x ± q) with pq = −18 or p + q = ±7; A1 for (x − 9)(x + 2).",
+      "(b) B1 for x = 9 and x = −2 (follow-through from their factors in (a) if both factors are linear).",
+      "Accept answer to (b) without working if both values correct."
+    ],
+    "check": {
+      "type": "solve",
+      "poly": "x**2-7*x-18",
+      "var": "x",
+      "expected": [
+        "9",
+        "-2"
+      ],
+      "factor_identity": [
+        "x**2-7*x-18",
+        "(x-9)*(x+2)"
+      ]
+    },
+    "limitations": "Easiest item; may be below Higher-tier targeting on its own. Intended as a both-tiers prerequisite check.",
+    "tier_areas": [
+      [
+        "LO-Q1",
+        "DfE Alg 4 factorising x²+bx+c",
+        "Area 2 (underlined in DfE source: assessed at both tiers; Higher candidates expected confident)"
+      ],
+      [
+        "LO-Q3",
+        "DfE Alg 18 solve by factorising",
+        "Area 2 (underlined in DfE source: assessed at both tiers; Higher candidates expected confident)"
+      ]
+    ]
+  },
+  {
+    "id": "Q02",
+    "title": "Solve after rearranging (a=1)",
+    "ao": "AO1 (3a/3b)",
+    "difficulty_hypothesis": "grade 5 [I]",
+    "calculator": "non-calculator",
+    "generation": "root-first: roots 3 and -10, equation presented unrearranged",
+    "text": "Solve x² + 7x = 30  [3 marks]",
+    "marks": 3,
+    "solution": "x² + 7x − 30 = 0. Numbers with product −30 and sum 7: 10 and −3. (x + 10)(x − 3) = 0, so x = −10 or x = 3.",
+    "marking": [
+      "M1 for rearranging to x² + 7x − 30 = 0 (may be implied by correct factors).",
+      "M1 for a correct attempt to factorise: (x ± p)(x ± q) with pq = −30 or p + q = ±7.",
+      "A1 for x = −10 and x = 3.",
+      "Both roots stated without working: teacher to decide whether this earns full marks (not specified by the sources)."
+    ],
+    "check": {
+      "type": "solve",
+      "poly": "x**2+7*x-30",
+      "var": "x",
+      "expected": [
+        "3",
+        "-10"
+      ]
+    },
+    "limitations": "The 'rearrangement' element is bold (Higher-only) in the DfE text; the factorising itself is Area 2.",
+    "tier_areas": [
+      [
+        "LO-Q3",
+        "DfE Alg 18 solve by factorising incl. rearrangement",
+        "Area 3 (bold in DfE source: Higher tier only)"
+      ],
+      [
+        "LO-Q1",
+        "DfE Alg 4 factorising x²+bx+c",
+        "Area 2 (underlined in DfE source: assessed at both tiers; Higher candidates expected confident)"
+      ]
+    ]
+  },
+  {
+    "id": "Q03",
+    "title": "Factorise and solve (a>1)",
+    "ao": "AO1 (3b multi-step)",
+    "difficulty_hypothesis": "grade 6 [I]",
+    "calculator": "non-calculator",
+    "generation": "root-first with rational roots 4/3 and -5/2",
+    "text": "Solve 6x² + 7x − 20 = 0  [3 marks]",
+    "marks": 3,
+    "solution": "6x² + 7x − 20 = (3x − 4)(2x + 5) (check: 6x² + 15x − 8x − 20). So x = 4/3 or x = −5/2.",
+    "marking": [
+      "M1 for a correct attempt to factorise: (3x ± p)(2x ± q) or (6x ± p)(x ± q) with pq = ±20, or use of the quadratic formula with correct substitution.",
+      "A1 for (3x − 4)(2x + 5), or for a fully correct formula substitution.",
+      "A1 for x = 4/3 (or 1⅓) and x = −5/2 (or −2.5). Decimal approximations of 4/3 lose the final A mark."
+    ],
+    "check": {
+      "type": "solve",
+      "poly": "6*x**2+7*x-20",
+      "var": "x",
+      "expected": [
+        "4/3",
+        "-5/2"
+      ],
+      "factor_identity": [
+        "6*x**2+7*x-20",
+        "(3*x-4)*(2*x+5)"
+      ]
+    },
+    "limitations": "Alternative valid method: quadratic formula (discriminant 529 = 23²). Mark scheme must accept it.",
+    "tier_areas": [
+      [
+        "LO-Q2",
+        "DfE Alg 4 factorising ax²+bx+c",
+        "Area 3 (bold in DfE source: Higher tier only)"
+      ],
+      [
+        "LO-Q3",
+        "DfE Alg 18 solve by factorising",
+        "Area 2 (underlined in DfE source: assessed at both tiers; Higher candidates expected confident)"
+      ]
+    ]
+  },
+  {
+    "id": "Q04",
+    "title": "Quadratic formula, exact answer",
+    "ao": "AO1 (3b)",
+    "difficulty_hypothesis": "grade 6 [I]",
+    "calculator": "non-calculator",
+    "generation": "coefficient-first: discriminant 57 chosen non-square so no integer factorisation exists",
+    "text": "Solve 2x² + 5x − 4 = 0\nGive your solutions in the form (p ± √q)/r where p, q and r are integers.  [3 marks]",
+    "marks": 3,
+    "solution": "a = 2, b = 5, c = −4. b² − 4ac = 25 + 32 = 57. x = (−5 ± √57)/4.",
+    "marking": [
+      "M1 for correct substitution into the quadratic formula (the formula is expected to be on the formulae sheet; see blueprint v0.2).",
+      "M1 for evaluating the discriminant as 57 (accept unsimplified 25 − 4×2×(−4)).",
+      "A1 for (−5 ± √57)/4 or equivalent with p = −5, q = 57, r = 4.",
+      "Decimal answers only (−3.14, 0.64): max M1 M1 A0."
+    ],
+    "check": {
+      "type": "solve",
+      "poly": "2*x**2+5*x-4",
+      "var": "x",
+      "expected": [
+        "(-5+sqrt(57))/4",
+        "(-5-sqrt(57))/4"
+      ],
+      "no_rational_roots": true
+    },
+    "limitations": "Whether the board sheet supplies the formula (and its exact presentation) is not verified from a board source; teacher to confirm. Mark scheme must not give credit for merely copying the formula from the sheet.",
+    "tier_areas": [
+      [
+        "LO-Q4",
+        "DfE Alg 18 quadratic formula",
+        "Area 3 (bold in DfE source: Higher tier only)"
+      ],
+      [
+        "NUM-SURD",
+        "DfE Num 8 exact surds",
+        "Area 3 (bold in DfE source: Higher tier only)"
+      ]
+    ]
+  },
+  {
+    "id": "Q05",
+    "title": "Quadratic formula, rounded",
+    "ao": "AO1 (3b)",
+    "difficulty_hypothesis": "grade 5-6 [I]",
+    "calculator": "calculator",
+    "generation": "coefficient-first: discriminant 40",
+    "text": "Solve 3x² − 8x + 2 = 0\nGive your solutions correct to 2 decimal places.  [3 marks]",
+    "marks": 3,
+    "solution": "a = 3, b = −8, c = 2. b² − 4ac = 64 − 24 = 40. x = (8 ± √40)/6 = 2.3874… or 0.2792…  So x = 2.39 or x = 0.28.",
+    "marking": [
+      "M1 for correct substitution into the quadratic formula.",
+      "M1 for a correct simplified or evaluated discriminant (40) or one correct unrounded value.",
+      "A1 for 2.39 and 0.28 (both required).",
+      "Answers given to a different accuracy: A0 unless the unrounded values are shown and the rounding slip is the only error (teacher decision)."
+    ],
+    "check": {
+      "type": "round",
+      "poly": "3*x**2-8*x+2",
+      "var": "x",
+      "dp": 2,
+      "expected": [
+        "0.28",
+        "2.39"
+      ]
+    },
+    "limitations": "Calculator-dependent items need a stated calculator policy per question.",
+    "tier_areas": [
+      [
+        "LO-Q4",
+        "DfE Alg 18 quadratic formula",
+        "Area 3 (bold in DfE source: Higher tier only)"
+      ],
+      [
+        "NUM-ROUND",
+        "DfE Num 15 rounding",
+        "Area 1 (standard font)"
+      ]
+    ]
+  },
+  {
+    "id": "Q06",
+    "title": "Expand, rearrange, formula (non-factorisable)",
+    "ao": "AO1 (3b multi-step)",
+    "difficulty_hypothesis": "grade 6-7 [I]",
+    "calculator": "calculator",
+    "generation": "coefficient-first: equation presented in unrearranged form; discriminant 136 non-square",
+    "text": "Solve (2x − 1)(x + 4) = 3x + 11\nGive your solutions correct to 3 significant figures.  [4 marks]",
+    "marks": 4,
+    "solution": "(2x − 1)(x + 4) = 2x² + 7x − 4. So 2x² + 7x − 4 = 3x + 11, i.e. 2x² + 4x − 15 = 0. b² − 4ac = 16 + 120 = 136. x = (−4 ± √136)/4 = 1.9154… or −3.9154… So x = 1.92 or x = −3.92.",
+    "marking": [
+      "M1 for expanding to 2x² + 7x − 4 (at most one sign or term error).",
+      "M1 for rearranging to a three-term quadratic = 0, e.g. 2x² + 4x − 15 = 0.",
+      "M1 for substitution into the quadratic formula using their a, b, c.",
+      "A1 for 1.92 and −3.92 (both).",
+      "Follow-through on the final M1 and A1 only if their quadratic is still three-term with a ≠ 0."
+    ],
+    "check": {
+      "type": "round_expr",
+      "lhs": "(2*x-1)*(x+4)",
+      "rhs": "3*x+11",
+      "var": "x",
+      "sf": 3,
+      "expected": [
+        "1.92",
+        "-3.92"
+      ]
+    },
+    "limitations": "Not solvable by integer factorisation (discriminant 136). Mark scheme must say how many significant figures an unrounded -3.9154 earns.",
+    "tier_areas": [
+      [
+        "LO-Q4",
+        "DfE Alg 18 quadratic formula incl. rearrangement",
+        "Area 3 (bold in DfE source: Higher tier only)"
+      ],
+      [
+        "ALG-EXP",
+        "DfE Alg 4 expanding two binomials",
+        "Area 2 (underlined in DfE source: assessed at both tiers; Higher candidates expected confident)"
+      ],
+      [
+        "NUM-ROUND",
+        "DfE Num 15 rounding",
+        "Area 1 (standard font)"
+      ]
+    ]
+  },
+  {
+    "id": "Q07",
+    "title": "Complete the square then solve exactly",
+    "ao": "AO1 (3b); AO2 link between parts",
+    "difficulty_hypothesis": "grade 7 [I]",
+    "calculator": "non-calculator",
+    "generation": "coefficient-first: x²+10x−3; discriminant-style value 28 not a perfect square",
+    "text": "(a) Write x² + 10x − 3 in the form (x + a)² + b  [2 marks]\n(b) Hence solve x² + 10x − 3 = 0\n    Give your solutions in the form p ± q√r, where p, q and r are integers and r is as small as possible.  [2 marks]",
+    "marks": 4,
+    "solution": "(a) x² + 10x − 3 = (x + 5)² − 25 − 3 = (x + 5)² − 28.\n(b) (x + 5)² = 28, x + 5 = ±√28 = ±2√7. x = −5 ± 2√7.",
+    "marking": [
+      "(a) M1 for (x + 5)² seen; A1 for (x + 5)² − 28.",
+      "(b) M1 for (x + 5)² = 28 (or follow-through from (a)) and square root of both sides with ±; A1 for −5 ± 2√7.",
+      "Follow-through from an incorrect (a) for the M1 only.",
+      "−5 ± √28: A0 (simplest-surd condition not met)."
+    ],
+    "check": {
+      "type": "cts",
+      "expr": "x**2+10*x-3",
+      "var": "x",
+      "form": "(x+5)**2-28",
+      "solutions": [
+        "-5+2*sqrt(7)",
+        "-5-2*sqrt(7)"
+      ]
+    },
+    "limitations": "Part (b) 'r as small as possible' needs teacher check for clarity.",
+    "tier_areas": [
+      [
+        "LO-Q5",
+        "DfE Alg 18 completing the square",
+        "Area 3 (bold in DfE source: Higher tier only)"
+      ],
+      [
+        "NUM-SURD",
+        "DfE Num 8 surds",
+        "Area 3 (bold in DfE source: Higher tier only)"
+      ]
+    ]
+  },
+  {
+    "id": "Q08",
+    "title": "Completing the square, a>1, turning point",
+    "ao": "AO1 (3b)",
+    "difficulty_hypothesis": "grade 7 [I]",
+    "calculator": "non-calculator",
+    "generation": "coefficient-first",
+    "text": "(a) Write 2x² − 12x + 7 in the form a(x + p)² + q  [3 marks]\n(b) Write down the coordinates of the minimum point of the curve y = 2x² − 12x + 7  [1 mark]",
+    "marks": 4,
+    "solution": "(a) 2x² − 12x + 7 = 2(x² − 6x) + 7 = 2[(x − 3)² − 9] + 7 = 2(x − 3)² − 18 + 7 = 2(x − 3)² − 11.\n(b) Minimum at x = 3 (the squared term is zero), y = −11: (3, −11).",
+    "marking": [
+      "(a) M1 for factoring out 2 and (x − 3)² seen; M1 for 2(x − 3)² − 18 + 7 or equivalent; A1 for 2(x − 3)² − 11 (a = 2, p = −3, q = −11).",
+      "(b) B1 for (3, −11) (follow-through from (a) where the form is a(x + p)² + q with a > 0)."
+    ],
+    "check": {
+      "type": "cts",
+      "expr": "2*x**2-12*x+7",
+      "var": "x",
+      "form": "2*(x-3)**2-11",
+      "min_point": [
+        "3",
+        "-11"
+      ]
+    },
+    "limitations": "Turning-point reading assumes students link completed square to vertex; 'minimum' is justified by a > 0, which is not asked for.",
+    "tier_areas": [
+      [
+        "LO-Q5",
+        "DfE Alg 11 turning points by completing the square",
+        "Area 3 (bold in DfE source: Higher tier only)"
+      ]
+    ]
+  },
+  {
+    "id": "Q09",
+    "title": "Rectangle: form, solve, reject, use",
+    "ao": "(a) AO2 (chain to given result); (b)-(c) AO3 strands 1b, 3, 4b with AO1 for routine solve",
+    "difficulty_hypothesis": "grade 7 [I]",
+    "calculator": "either",
+    "generation": "context first, then verified: roots 11/2 and -7 (non-integer positive root)",
+    "text": "A rectangular garden has width w metres. Its length is (2w + 3) metres. The area of the garden is 77 m².\n(a) Show that 2w² + 3w − 77 = 0  [2 marks]\n(b) Work out the width of the garden.  [3 marks]\n(c) Work out the perimeter of the garden.  [1 mark]",
+    "marks": 6,
+    "solution": "(a) w(2w + 3) = 77, so 2w² + 3w = 77, so 2w² + 3w − 77 = 0.\n(b) 2w² + 3w − 77 = (2w − 11)(w + 7) = 0 (or use the formula: disc = 9 + 616 = 625 = 25²). w = 11/2 = 5.5 or w = −7. A width cannot be negative so w = 5.5 m.\n(c) Length = 2 × 5.5 + 3 = 14 m. Perimeter = 2(5.5 + 14) = 39 m.",
+    "marking": [
+      "(a) M1 for w(2w + 3) = 77; A1 for expanding and rearranging to the given result with no errors.",
+      "(b) M1 for a correct attempt to solve (factorise or formula); A1 for w = 5.5 and w = −7; B1 (or A1) for rejecting −7 with a reason (length cannot be negative) and stating 5.5 m.",
+      "(c) B1 for 39 (follow-through using their positive width if valid).",
+      "AO attribution: the solve in (b) is routine procedure so credited AO1; interpretation/rejection credited AO3 (S3 notes)."
+    ],
+    "check": {
+      "type": "rectangle",
+      "w_expr": "w",
+      "len_expr": "2*w+3",
+      "area": "77",
+      "expected_w": "11/2",
+      "expected_perimeter": "39"
+    },
+    "limitations": "Combined AO2/AO3 marks; teacher to confirm AO split. Could be written without 'Show that' in an alternative AO3-only version.",
+    "tier_areas": [
+      [
+        "LO-Q6",
+        "DfE Alg 21 form and solve in context",
+        "Area 2 (underlined in DfE source: assessed at both tiers; Higher candidates expected confident)"
+      ],
+      [
+        "LO-Q3",
+        "DfE Alg 18 solve",
+        "Area 2 (underlined in DfE source: assessed at both tiers; Higher candidates expected confident)"
+      ],
+      [
+        "LO-Q2",
+        "DfE Alg 4 ax²+bx+c factorising (if factorising used)",
+        "Area 3 (bold in DfE source: Higher tier only)"
+      ]
+    ]
+  },
+  {
+    "id": "Q10",
+    "title": "Right-angled triangle, formula, not factorisable",
+    "ao": "(a) AO2; (b) AO3 with AO1",
+    "difficulty_hypothesis": "grade 7-8 [I]",
+    "calculator": "calculator",
+    "generation": "context first; discriminant 632 non-square",
+    "text": "The diagram shows a right-angled triangle. The two shorter sides have lengths x cm and (x + 2) cm. The hypotenuse is 9 cm.\n[Diagram: right angle at bottom-left; vertical side x, horizontal side x + 2, hypotenuse 9. Not drawn accurately.]\n(a) Show that 2x² + 4x − 77 = 0  [2 marks]\n(b) Work out the value of x. Give your answer correct to 3 significant figures.  [3 marks]",
+    "marks": 5,
+    "solution": "(a) By Pythagoras x² + (x + 2)² = 9². x² + x² + 4x + 4 = 81. 2x² + 4x − 77 = 0.\n(b) a = 2, b = 4, c = −77. disc = 16 + 616 = 632. x = (−4 ± √632)/4 = 5.2849… or −7.2849… x is a length so x = 5.28 cm.",
+    "marking": [
+      "(a) M1 for x² + (x + 2)² = 81 (or 9²); A1 for expanding and simplifying to the given result with no errors.",
+      "(b) M1 for correct substitution into the quadratic formula; A1 for 5.28 (3 sf); B1 for rejecting the negative root (−7.28) or stating x must be positive.",
+      "Do not accept the unrounded 5.2849… for the A mark."
+    ],
+    "check": {
+      "type": "pythag",
+      "short": "x",
+      "other": "x+2",
+      "hyp": "9",
+      "target_poly": "2*x**2+4*x-77",
+      "expected_x_sf3": "5.28"
+    },
+    "limitations": "Needs an accurate diagram in production; the pilot uses a text description only. The word 'diagram' must not appear without one.",
+    "tier_areas": [
+      [
+        "LO-Q6",
+        "DfE Alg 21 context",
+        "Area 2 (underlined in DfE source: assessed at both tiers; Higher candidates expected confident)"
+      ],
+      [
+        "LO-Q4",
+        "DfE Alg 18 formula",
+        "Area 3 (bold in DfE source: Higher tier only)"
+      ],
+      [
+        "GEO-PYTH",
+        "DfE Appendix Pythagoras",
+        "formula"
+      ]
+    ]
+  },
+  {
+    "id": "Q11",
+    "title": "Projectile height, formula",
+    "ao": "AO3 (strands 1b, 3) with AO1 for routine solve",
+    "difficulty_hypothesis": "grade 7 [I]",
+    "calculator": "calculator",
+    "generation": "context first; coefficients not designed for integer roots",
+    "text": "A ball is thrown upwards. Its height, h metres, above the ground after t seconds is given by\nh = 1.5 + 12t − 4.9t²\nWork out the time the ball takes to hit the ground.\nGive your answer in seconds correct to 2 decimal places.  [4 marks]",
+    "marks": 4,
+    "solution": "The ball hits the ground when h = 0. 4.9t² − 12t − 1.5 = 0. a = 4.9, b = −12, c = −1.5. disc = 144 + 29.4 = 173.4. t = (12 ± √173.4)/9.8 = 2.5682… or −0.1192… Time cannot be negative so t = 2.57 s.",
+    "marking": [
+      "M1 for h = 0 and a correct equation, e.g. 1.5 + 12t − 4.9t² = 0 (accept 4.9t² − 12t − 1.5 = 0).",
+      "M1 for correct substitution into the quadratic formula (signs of a, b, c consistent).",
+      "A1 for t = 2.57 (2.5682… seen or implied) .",
+      "B1 for rejecting the negative root with a reason."
+    ],
+    "check": {
+      "type": "ball",
+      "poly": "1.5+12*t-4.9*t**2",
+      "var": "t",
+      "expected_t": "2.57"
+    },
+    "limitations": "Contextual model (g ≈ 9.8) is a simplification; the question does not ask students to critique it. The root −0.12 s has no physical meaning in the model's domain: wording relies on students inferring t ≥ 0.",
+    "tier_areas": [
+      [
+        "LO-Q6",
+        "DfE Alg 21 context",
+        "Area 2 (underlined in DfE source: assessed at both tiers; Higher candidates expected confident)"
+      ],
+      [
+        "LO-Q4",
+        "DfE Alg 18 formula",
+        "Area 3 (bold in DfE source: Higher tier only)"
+      ],
+      [
+        "NUM-ROUND",
+        "DfE Num 15",
+        "Area 1 (standard font)"
+      ]
+    ]
+  },
+  {
+    "id": "Q12",
+    "title": "Prove no real solutions / always positive",
+    "ao": "AO2 (4b proof; Higher only per Ofqual guidance)",
+    "difficulty_hypothesis": "grade 8 [I]",
+    "calculator": "non-calculator",
+    "generation": "coefficient-first: x² − 6x + 10 → (x − 3)² + 1",
+    "text": "Show that x² − 6x + 10 is greater than 0 for all values of x.  [3 marks]",
+    "marks": 3,
+    "solution": "x² − 6x + 10 = (x − 3)² − 9 + 10 = (x − 3)² + 1. For any real x, (x − 3)² ≥ 0, so (x − 3)² + 1 ≥ 1 > 0.",
+    "marking": [
+      "M1 for (x − 3)² seen; A1 for (x − 3)² + 1.",
+      "B1 for a statement that a squared real number is ≥ 0 (or never negative) and a conclusion that the expression is ≥ 1 or > 0 for all x.",
+      "Conclusion via discriminant (b² − 4ac = −4 < 0 and a > 0): award full marks if both conditions stated (alternative valid method; the item is not claimed to require completing the square)."
+    ],
+    "check": {
+      "type": "positive",
+      "expr": "x**2-6*x+10",
+      "var": "x",
+      "form": "(x-3)**2+1",
+      "min_value": "1"
+    },
+    "limitations": "Alternative discriminant proof is acceptable but changes which skill is evidenced. Teacher decision whether to prescribe 'by completing the square'.",
+    "tier_areas": [
+      [
+        "LO-Q5",
+        "DfE Alg 18 / Alg 11 completing the square",
+        "Area 3 (bold in DfE source: Higher tier only)"
+      ],
+      [
+        "ALG-PROOF",
+        "DfE Alg 6 proof",
+        "A3 (bold 'and proofs')"
+      ]
+    ]
+  }
+]
