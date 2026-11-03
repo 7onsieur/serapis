@@ -33,3 +33,7 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 university_jarvis = ["hub_templates/*.html"]
+
+[tool.pytest.ini_options]
+# Resolve university_jarvis from this checkout/worktree, not from an editable install of another checkout.
+pythonpath = ["src"]
